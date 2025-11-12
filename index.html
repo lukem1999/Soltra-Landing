@@ -1,14 +1,47 @@
-<!doctypehtml>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Soltra - Stablecoin Contractor Payouts</title>
+  <title>Soltra Labs — Stablecoin Contractor Payouts</title>
   <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Soltra</h1>
-  <p>Global stablecoin contractor payouts. Clean records. No spreadsheets.</p>
-  <a href="mailto:you@example.com.">Join the waitlist</a>
+  <header class="navbar">
+    <div class="logo">S</div>
+    <span class="brand">Soltra Labs</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Global stablecoin payouts.<br><span class="highlight">Clean records. No spreadsheets.</span></h1>
+      <p>Pay contractors in USDC and keep organized, auditable records built for Web3 teams and DAOs.</p>
+      <a class="btn" href="mailto:founder@soltralabs.com">Join the Waitlist</a>
+    </section>
+
+    <section class="features">
+      <div class="feature">
+        <h3>💸 Payout Logs</h3>
+        <p>Track USDC transactions with TX hashes and timestamps.</p>
+      </div>
+      <div class="feature">
+        <h3>📊 Reports</h3>
+        <p>Instant CSV/PDF exports for accountants or audits.</p>
+      </div>
+      <div class="feature">
+        <h3>🔐 Non-Custodial</h3>
+        <p>We never touch funds — Soltra keeps your records clean, not your money.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <span id="year"></span> Soltra Labs Inc · Built for the future of finance</p>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
