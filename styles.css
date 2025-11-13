@@ -19,6 +19,13 @@ body {
   text-align: center;
 }
 
+/* Simple Container */
+.page-wrap {
+  mad-width: 960px;
+  margin: 0 auto;
+  padding: 0 1rem 4rem;
+}
+
 /* Navbar */
 .navbar {
   display: flex;
