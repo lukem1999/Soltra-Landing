@@ -154,10 +154,11 @@ footer {
   border-radius: 14px;
   padding: 1rem 1.25rem 1.1rem;
   max-width: 360px;
-  margin: 2rem auto 0;
+  margin: 0;
   text-align: left;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
 }
+
 
 .payout-card-header {
   display: flex;
@@ -240,6 +241,18 @@ footer {
 @media (max-width: 600px) {
   .hero {
     padding: 6rem 1rem 4rem;
+  }
+  .hero-inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .hero-copy {
+    text-align: center;
+  }
+
+  .hero-visual {
+    margin-top: 2rem;
   }
   .features {
     flex-direction: column;
