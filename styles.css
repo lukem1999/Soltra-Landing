@@ -58,23 +58,43 @@ body {
   
 /* Hero Section */
 .hero {
-  padding: 8rem 1rem 6rem;
-  max-width: 800px;
-  margin: 0 auto;
+  padding: 6rem 1rem 5rem;
 }
+
+.hero-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.hero-copy {
+  text-align: left;
+}
+
 .hero h1 {
   font-size: clamp(2rem, 5vw, 3.5rem);
   line-height: 1.2;
   margin-bottom: 1rem;
 }
+
+.hero p {
+  color: var(--muted);
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
 .highlight {
   color: var(--gold);
 }
-.hero p {
-  color: var(--muted);
-  font-size: 1.1rem;
-  margin-bottom: 2rem;
+
+.hero-visual {
+  display: flex;
+  justify-content: center;
 }
+
 .btn {
   background: var(--gold);
   color: var(--bg);
