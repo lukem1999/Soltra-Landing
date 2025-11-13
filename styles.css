@@ -1,12 +1,13 @@
 /* Soltra Labs — Fintech look */
 :root {
   --bg: #0f1724;
-  --navy: #121a2b;
+  --navy: #111a2a;
   --gold: #f6c453;
+  --amber: #ffb547;
   --text: #e9edf3;
   --muted: #9fb0c4;
-  --font: "Space Grotesk", sans-serif;
 }
+
 
 body {
   margin: 0;
