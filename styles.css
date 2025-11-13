@@ -76,7 +76,7 @@ body {
 }
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(246, 196, 83, 0.3);
+  box-shadow: 0 8px 20px rgba(246, 196, 83, 0.35);
 }
 
 /* Features */
@@ -85,7 +85,7 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 1.5rem;
-  padding: 4rem 1rem 6rem;
+  padding: 5rem 1rem 7rem;
   background: var(--navy);
 }
 .feature {
@@ -102,6 +102,11 @@ body {
 .feature p {
   color: var(--muted);
 }
+.feature:hover {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+  transition: 0.2s ease;
+}
 
 /* Footer */
 footer {
@@ -110,4 +115,26 @@ footer {
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+
+@media (max-width: 600px) {
+  .hero {
+    padding: 6rem 1rem 4rem;
+  }
+  .features {
+    flex-direction: column;
+    align-items: center;
+  }
+  .navbar {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+}
+
+
+
+
+
+
+
 
