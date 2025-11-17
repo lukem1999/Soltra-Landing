@@ -284,5 +284,35 @@
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
+
+  <script>
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const views = {
+    dashboard: document.getElementById('view-dashboard'),
+    contractors: document.getElementById('view-contractors'),
+    payouts: document.getElementById('view-payouts'),
+    reports: document.getElementById('view-reports'),
+  };
+
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Update active tab
+      tabButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Show correct view
+      const target = btn.dataset.target;
+      Object.entries(views).forEach(([key, el]) => {
+        if (key === target) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+    });
+  });
+</script>
+
+  
 </body>
 </html>
