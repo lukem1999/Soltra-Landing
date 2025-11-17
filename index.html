@@ -55,6 +55,210 @@
   </div>
 </section>
 
+    <section class="app-shell">
+  <h2>Soltra App Preview</h2>
+  <p class="app-subtitle">This is what the first version of Soltra will feel like.</p>
+
+  <div class="app-container">
+    <div class="app-tabs">
+      <button class="tab-button active" data-target="dashboard">Dashboard</button>
+      <button class="tab-button" data-target="contractors">Contractors</button>
+      <button class="tab-button" data-target="payouts">Payouts</button>
+      <button class="tab-button" data-target="reports">Reports</button>
+    </div>
+
+    <div class="app-views">
+      <!-- Dashboard view -->
+      <div class="app-view" id="view-dashboard">
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <span class="kpi-label">Total paid this month</span>
+            <span class="kpi-value">$3,750</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Active contractors</span>
+            <span class="kpi-value">9</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Payouts logged</span>
+            <span class="kpi-value">3</span>
+          </div>
+        </div>
+
+        <h3 class="table-title">Recent payouts</h3>
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Contractor</th>
+              <th>Amount</th>
+              <th>Chain</th>
+              <th>Hash</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Anna L</td>
+              <td>1,200 USDC</td>
+              <td>Base</td>
+              <td>0x9F1C…72a3</td>
+              <td>Sep 12</td>
+            </tr>
+            <tr>
+              <td>Marcus V</td>
+              <td>850 USDC</td>
+              <td>Base</td>
+              <td>0xA8B7…19f0</td>
+              <td>Sep 10</td>
+            </tr>
+            <tr>
+              <td>Sora K</td>
+              <td>1,700 USDC</td>
+              <td>Base</td>
+              <td>0xD233…44b1</td>
+              <td>Sep 08</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Contractors view -->
+      <div class="app-view hidden" id="view-contractors">
+        <div class="list-header">
+          <h3>Contractors</h3>
+          <button class="mini-btn">+ Add contractor</button>
+        </div>
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Wallet</th>
+              <th>Role</th>
+              <th>Country</th>
+              <th>Last paid</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Anna L</td>
+              <td>0xA3…7f9</td>
+              <td>DevOps</td>
+              <td>EE</td>
+              <td>Sep 12</td>
+            </tr>
+            <tr>
+              <td>Marcus V</td>
+              <td>0x93…c21</td>
+              <td>Analyst</td>
+              <td>US</td>
+              <td>Sep 10</td>
+            </tr>
+            <tr>
+              <td>Sora K</td>
+              <td>0x12…ab4</td>
+              <td>Research</td>
+              <td>JP</td>
+              <td>Sep 08</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Payouts view -->
+      <div class="app-view hidden" id="view-payouts">
+        <h3>Log new payout</h3>
+        <form class="payout-form">
+          <label>
+            Contractor
+            <select>
+              <option>Select contractor</option>
+              <option>Anna L</option>
+              <option>Marcus V</option>
+              <option>Sora K</option>
+            </select>
+          </label>
+          <label>
+            Amount (USDC)
+            <input type="number" placeholder="1200">
+          </label>
+          <label>
+            Chain
+            <select>
+              <option>Base</option>
+              <option>Polygon</option>
+            </select>
+          </label>
+          <label>
+            Transaction hash
+            <input type="text" placeholder="0x...">
+          </label>
+          <label>
+            Date
+            <input type="date">
+          </label>
+          <label>
+            Notes (optional)
+            <textarea rows="2" placeholder="Weekly contributor payout"></textarea>
+          </label>
+          <button type="button" class="btn full-width">Save payout (mock)</button>
+        </form>
+      </div>
+
+      <!-- Reports view -->
+      <div class="app-view hidden" id="view-reports">
+        <div class="list-header">
+          <h3>Reports</h3>
+          <button class="mini-btn">Export CSV</button>
+        </div>
+        <div class="filters-row">
+          <select>
+            <option>September 2025</option>
+            <option>August 2025</option>
+          </select>
+          <select>
+            <option>All contractors</option>
+            <option>Anna L</option>
+            <option>Marcus V</option>
+          </select>
+          <select>
+            <option>All chains</option>
+            <option>Base</option>
+            <option>Polygon</option>
+          </select>
+        </div>
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Contractor</th>
+              <th>Amount</th>
+              <th>USD value</th>
+              <th>Hash</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sep 12</td>
+              <td>Anna L</td>
+              <td>1,200 USDC</td>
+              <td>$1,200</td>
+              <td>0x9F1C…72a3</td>
+            </tr>
+            <tr>
+              <td>Sep 10</td>
+              <td>Marcus V</td>
+              <td>850 USDC</td>
+              <td>$850</td>
+              <td>0xA8B7…19f0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 
 
     <section class="features">
