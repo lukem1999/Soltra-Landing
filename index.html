@@ -128,6 +128,15 @@
           <h3>Contractors</h3>
           <button class="mini-btn">+ Add contractor</button>
         </div>
+
+        <form class="add-contractor-form" id="add-contractor-form">
+          <input type="text" name="name" placeholder="Name" required>
+          <input type="text" name="wallet_address" placeholder="Wallet address (0x...)" required>
+          <input type="text" name="role" placeholder="Role (e.g. DevOps)">
+          <input type="text" name="country" placeholder="Country (e.g. US)">
+          <button type="submit" class="mini-btn">+ Add contractor</button>
+        </form>
+        
         <table class="app-table">
           <thead>
             <tr>
