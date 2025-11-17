@@ -384,6 +384,35 @@ footer {
   margin-bottom: 0.8rem;
 }
 
+.add-contractor-form {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  align-items: center;
+}
+
+.add-contractor-form input {
+  background: #0f1724;
+  border-radius: 8px;
+  border: 1px solid #1c2740;
+  padding: 0.45rem 0.6rem;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.8rem;
+}
+
+.add-contractor-form input::placeholder {
+  color: var(--muted);
+}
+
+@media (max-width: 800px) {
+  .add-contractor-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 .mini-btn {
   font-size: 0.8rem;
   padding: 0.35rem 0.8rem;
