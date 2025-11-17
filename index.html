@@ -154,43 +154,65 @@
 
       <!-- Payouts view -->
       <div class="app-view hidden" id="view-payouts">
-        <h3>Log new payout</h3>
-        <form class="payout-form">
-          <label>
-            Contractor
-            <select>
-              <option>Select contractor</option>
-              <option>Anna L</option>
-              <option>Marcus V</option>
-              <option>Sora K</option>
-            </select>
-          </label>
-          <label>
-            Amount (USDC)
-            <input type="number" placeholder="1200">
-          </label>
-          <label>
-            Chain
-            <select>
-              <option>Base</option>
-              <option>Polygon</option>
-            </select>
-          </label>
-          <label>
-            Transaction hash
-            <input type="text" placeholder="0x...">
-          </label>
-          <label>
-            Date
-            <input type="date">
-          </label>
-          <label>
-            Notes (optional)
-            <textarea rows="2" placeholder="Weekly contributor payout"></textarea>
-          </label>
-          <button type="button" class="btn full-width">Save payout (mock)</button>
-        </form>
-      </div>
+  <h3>Log new payout</h3>
+
+  <form class="payout-form" id="payout-form">
+    <label>
+      Contractor
+      <select name="contractor_id" id="payout-contractor" required>
+        <option value="">Select contractor</option>
+        <!-- options filled from contractors table -->
+      </select>
+    </label>
+
+    <label>
+      Amount (USDC)
+      <input type="number" name="amount" step="0.01" placeholder="1200" required>
+    </label>
+
+    <label>
+      Chain
+      <select name="chain" required>
+        <option value="base">Base</option>
+        <option value="polygon">Polygon</option>
+      </select>
+    </label>
+
+    <label>
+      Transaction hash
+      <input type="text" name="tx_hash" placeholder="0x..." required>
+    </label>
+
+    <label>
+      Date
+      <input type="date" name="tx_date">
+    </label>
+
+    <label>
+      Notes (optional)
+      <textarea name="note" rows="2" placeholder="Weekly contributor payout"></textarea>
+    </label>
+
+    <button type="submit" class="btn full-width">Save payout</button>
+  </form>
+
+  <h3 class="table-title">Recent payouts</h3>
+  <table class="app-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Contractor</th>
+        <th>Amount</th>
+        <th>Chain</th>
+        <th>Hash</th>
+      </tr>
+    </thead>
+    <tbody id="payouts-body">
+      <!-- filled dynamically -->
+    </tbody>
+  </table>
+</div>
+
 
       <!-- Reports view -->
       <div class="app-view hidden" id="view-reports">
@@ -301,15 +323,19 @@
   });
 </script>
 
-  <script>
+<script>
+  // === Supabase config (DEV ONLY) ===
   const SUPABASE_URL = 'https://lvuvkgnkhrzpwlssupyh.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dXZrZ25raHJ6cHdsc3N1cHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDkyOTIsImV4cCI6MjA3ODkyNTI5Mn0.9C1-3Di7tXJCgb_7ZHj7mz6QL5fDMvnvmBziYqgGeDs';
 
+  let contractorsCache = [];
+
+  // ---- Contractors ----
   async function loadContractors() {
     const tbody = document.getElementById('contractors-body');
-    if (!tbody) return;
-
-    tbody.innerHTML = '<tr><td colspan="5">Loading contractors...</td></tr>';
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="5">Loading contractors...</td></tr>';
+    }
 
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/contractors?select=*`, {
@@ -320,39 +346,60 @@
       });
 
       if (!res.ok) {
-        tbody.innerHTML = `<tr><td colspan="5">Error loading data (${res.status})</td></tr>`;
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="5">Error loading data (${res.status})</td></tr>`;
+        }
         return;
       }
 
       const data = await res.json();
+      contractorsCache = data; // cache for payouts
 
-      if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="5">No contractors yet.</td></tr>';
-        return;
+      // Fill contractors table
+      if (tbody) {
+        if (!data.length) {
+          tbody.innerHTML = '<tr><td colspan="5">No contractors yet.</td></tr>';
+        } else {
+          tbody.innerHTML = '';
+          data.forEach(c => {
+            const tr = document.createElement('tr');
+            const lastPaid = c.last_paid_at
+              ? new Date(c.last_paid_at).toLocaleDateString()
+              : '—';
+            tr.innerHTML = `
+              <td>${c.name || ''}</td>
+              <td>${c.wallet_address || ''}</td>
+              <td>${c.role || ''}</td>
+              <td>${c.country || ''}</td>
+              <td>${lastPaid}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
       }
 
-      tbody.innerHTML = '';
-
-      data.forEach(c => {
-        const tr = document.createElement('tr');
-
-        const lastPaid = c.last_paid_at
-          ? new Date(c.last_paid_at).toLocaleDateString()
-          : '—';
-
-        tr.innerHTML = `
-          <td>${c.name || ''}</td>
-          <td>${c.wallet_address || ''}</td>
-          <td>${c.role || ''}</td>
-          <td>${c.country || ''}</td>
-          <td>${lastPaid}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+      populateContractorSelect();
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="5">Error loading contractors.</td></tr>';
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="5">Error loading contractors.</td></tr>';
+      }
     }
+  }
+
+  function populateContractorSelect() {
+    const select = document.getElementById('payout-contractor');
+    if (!select) return;
+
+    // keep first "Select contractor" option
+    select.innerHTML = '<option value="">Select contractor</option>';
+
+    contractorsCache.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id; // uuid
+      opt.textContent = c.name || c.wallet_address;
+      select.appendChild(opt);
+    });
   }
 
   async function addContractor(event) {
@@ -380,12 +427,7 @@
           'Content-Type': 'application/json',
           Prefer: 'return=representation'
         },
-        body: JSON.stringify({
-          name,
-          wallet_address: wallet,
-          role,
-          country
-        })
+        body: JSON.stringify({ name, wallet_address: wallet, role, country })
       });
 
       if (!res.ok) {
@@ -394,24 +436,147 @@
         return;
       }
 
-      // Clear form and reload table
       form.reset();
-      loadContractors();
+      await loadContractors(); // refresh + repopulate select
     } catch (err) {
       console.error(err);
       alert('Network error adding contractor.');
     }
   }
 
+  // ---- Payouts ----
+  async function loadPayouts() {
+    const tbody = document.getElementById('payouts-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="5">Loading payouts...</td></tr>';
+
+    try {
+      // Use PostgREST embedding to get contractor name
+      const url = `${SUPABASE_URL}/rest/v1/payouts?select=*,contractors(name)&order=tx_timestamp.desc&limit=15`;
+      const res = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+
+      if (!res.ok) {
+        tbody.innerHTML = `<tr><td colspan="5">Error loading payouts (${res.status})</td></tr>`;
+        return;
+      }
+
+      const data = await res.json();
+
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="5">No payouts yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      data.forEach(p => {
+        const tr = document.createElement('tr');
+
+        const date = p.tx_timestamp
+          ? new Date(p.tx_timestamp).toLocaleDateString()
+          : '—';
+
+        const name = p.contractors?.name || 'Unknown';
+
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${name}</td>
+          <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
+          <td>${p.chain}</td>
+          <td>${p.tx_hash}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="5">Error loading payouts.</td></tr>';
+    }
+  }
+
+  async function addPayout(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const contractor_id = formData.get('contractor_id');
+    const amountStr = formData.get('amount');
+    const chain = formData.get('chain');
+    const tx_hash = formData.get('tx_hash')?.trim();
+    const tx_date = formData.get('tx_date');
+    const note = formData.get('note')?.trim();
+
+    if (!contractor_id || !amountStr || !chain || !tx_hash) {
+      alert('Contractor, amount, chain, and tx hash are required.');
+      return;
+    }
+
+    const amount = Number(amountStr);
+    if (!amount || amount <= 0) {
+      alert('Amount must be a positive number.');
+      return;
+    }
+
+    const tx_timestamp = tx_date
+      ? new Date(tx_date).toISOString()
+      : new Date().toISOString();
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/payouts`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        },
+        body: JSON.stringify({
+          contractor_id,
+          amount,
+          asset_symbol: 'USDC',
+          chain,
+          tx_hash,
+          tx_timestamp,
+          note
+        })
+      });
+
+      if (!res.ok) {
+        console.error('Error inserting payout', await res.text());
+        alert('Error saving payout.');
+        return;
+      }
+
+      form.reset();
+      await loadPayouts();
+    } catch (err) {
+      console.error(err);
+      alert('Network error saving payout.');
+    }
+  }
+
+  // ---- Init ----
   document.addEventListener('DOMContentLoaded', () => {
     loadContractors();
+    loadPayouts();
 
-    const addForm = document.getElementById('add-contractor-form');
-    if (addForm) {
-      addForm.addEventListener('submit', addContractor);
+    const addContractorForm = document.getElementById('add-contractor-form');
+    if (addContractorForm) {
+      addContractorForm.addEventListener('submit', addContractor);
+    }
+
+    const payoutForm = document.getElementById('payout-form');
+    if (payoutForm) {
+      payoutForm.addEventListener('submit', addPayout);
     }
   });
 </script>
+
 
 
 
