@@ -138,28 +138,7 @@
               <th>Last paid</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>Anna L</td>
-              <td>0xA3…7f9</td>
-              <td>DevOps</td>
-              <td>EE</td>
-              <td>Sep 12</td>
-            </tr>
-            <tr>
-              <td>Marcus V</td>
-              <td>0x93…c21</td>
-              <td>Analyst</td>
-              <td>US</td>
-              <td>Sep 10</td>
-            </tr>
-            <tr>
-              <td>Sora K</td>
-              <td>0x12…ab4</td>
-              <td>Research</td>
-              <td>JP</td>
-              <td>Sep 08</td>
-            </tr>
+          <tbody id="contractors-body">
           </tbody>
         </table>
       </div>
@@ -312,6 +291,67 @@
     });
   });
 </script>
+
+  <script>
+  // === Supabase config (DEV ONLY, RLS OFF) ===
+  const SUPABASE_URL = 'https://lvuvkgnkhrzpwlssupyh.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dXZrZ25raHJ6cHdsc3N1cHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDkyOTIsImV4cCI6MjA3ODkyNTI5Mn0.9C1-3Di7tXJCgb_7ZHj7mz6QL5fDMvnvmBziYqgGeDs';
+
+  async function loadContractors() {
+    const tbody = document.getElementById('contractors-body');
+    if (!tbody) return;
+
+    // Clear existing rows
+    tbody.innerHTML = '<tr><td colspan="5">Loading contractors...</td></tr>';
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/contractors?select=*`, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+
+      if (!res.ok) {
+        tbody.innerHTML = `<tr><td colspan="5">Error loading data (${res.status})</td></tr>`;
+        return;
+      }
+
+      const data = await res.json();
+
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="5">No contractors yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = ''; // Clear loading row
+
+      data.forEach(c => {
+        const tr = document.createElement('tr');
+
+        const lastPaid = c.last_paid_at
+          ? new Date(c.last_paid_at).toLocaleDateString()
+          : '—';
+
+        tr.innerHTML = `
+          <td>${c.name || ''}</td>
+          <td>${c.wallet_address || ''}</td>
+          <td>${c.role || ''}</td>
+          <td>${c.country || ''}</td>
+          <td>${lastPaid}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="5">Error loading contractors.</td></tr>';
+    }
+  }
+
+  // Load contractors on page load
+  document.addEventListener('DOMContentLoaded', loadContractors);
+</script>
+
 
   
 </body>
