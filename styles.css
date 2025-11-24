@@ -15,7 +15,9 @@
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top center, rgba(15, 23, 36, 0.6), transparent 55%),
+    #0f1724;
   color: var(--text);
   font-family: "Inter", system-ui, sans-serif;
 }
@@ -62,7 +64,7 @@ a {
 /* ===== Hero ===== */
 
 .hero {
-  padding: 5rem 1rem 5rem;
+  padding: 4.25rem 1rem 4.75rem;
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -82,10 +84,10 @@ a {
 
 .hero-eyebrow {
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  font-size: 0.74rem;
   color: var(--muted);
-  margin: 0 0 0.6rem;
+  margin: 0 0 0.5rem;
 }
 
 .highlight {
@@ -94,9 +96,9 @@ a {
 
 .hero-sub {
   color: var(--muted);
-  font-size: 0.98rem;
+  font-size: 0.97rem;
   max-width: 30rem;
-  margin: 0 0 1.8rem;
+  margin: 0 0 1.6rem;
 }
 
 .hero-actions {
@@ -118,7 +120,7 @@ a {
 /* Hero stats card */
 
 .hero-card {
-  background: radial-gradient(circle at top left, rgba(246,196,83,0.15), transparent 55%),
+  background: radial-gradient(circle at top left, rgba(246,196,83,0.12), transparent 60%),
               #050814;
   border-radius: 18px;
   border: 1px solid #1b2438;
@@ -130,8 +132,8 @@ a {
 
 .hero-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 26px 70px rgba(0,0,0,0.9);
-  border-color: rgba(246,196,83,0.6);
+  box-shadow: 0 26px 70px rgba(0,0,0,0.95);
+  border-color: rgba(246,196,83,0.7);
 }
 
 .hero-card-header {
@@ -199,7 +201,7 @@ a {
 @media (max-width: 900px) {
   .hero-inner {
     grid-template-columns: 1fr;
-    gap: 2.5rem;
+    gap: 2.4rem;
   }
 
   .hero-card {
@@ -207,6 +209,36 @@ a {
     margin: 0 auto;
   }
 }
+
+/* CTA button micro-interactions */
+
+.btn {
+  position: relative;
+  border: none;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--gold), var(--amber));
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.btn span {
+  position: relative;
+  z-index: 1;
+}
+
+.btn:hover::before {
+  opacity: 1;
+}
+
 
 
 /* ===== Section divider between hero and feature cards ===== */
@@ -218,7 +250,7 @@ a {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(246,196,83,0.6),
+    rgba(246,196,83,0.55),
     transparent
   );
   opacity: 0.5;
@@ -231,7 +263,7 @@ a {
   flex-wrap: wrap;
   justify-content: center;
   gap: 1.5rem;
-  padding: 3.5rem 1rem 6rem;
+  padding: 3.25rem 1rem 5.5rem;
   background: var(--navy);
 }
 
