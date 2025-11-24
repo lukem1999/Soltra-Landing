@@ -125,6 +125,13 @@ a {
   box-shadow: 0 22px 55px rgba(0,0,0,0.8);
   padding: 1.1rem 1.1rem 1rem;
   font-size: 0.8rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.hero-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 26px 70px rgba(0,0,0,0.9);
+  border-color: rgba(246,196,83,0.6);
 }
 
 .hero-card-header {
@@ -239,6 +246,8 @@ a {
   color: var(--text);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+  transform: translateY(0);
 }
 
 .feature-icon {
@@ -631,6 +640,8 @@ footer {
   padding: 3rem 1rem 0;
   display: flex;
   justify-content: center;
+  margin-top: 3rem;  /* was 4rem */
+  margin-bottom: 1.8rem;
 }
 
 .auth-card {
