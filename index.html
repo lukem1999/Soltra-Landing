@@ -163,6 +163,28 @@
       <div class="app-main-inner">
         <!-- DASHBOARD VIEW -->
 <div class="app-view" id="view-dashboard">
+  <div class="dash-filters">
+  <div class="dash-filter-group">
+    <label for="dash-range">Range</label>
+    <select id="dash-range">
+      <option value="7d">Last 7 days</option>
+      <option value="30d" selected>Last 30 days</option>
+      <option value="90d">Last 90 days</option>
+      <option value="all">All time</option>
+    </select>
+  </div>
+
+  <div class="dash-filter-group">
+    <label for="dash-chain">Chain</label>
+    <select id="dash-chain">
+      <option value="all" selected>All chains</option>
+      <option value="BASE">Base</option>
+      <option value="POLYGON">Polygon</option>
+      <option value="ETHEREUM">Ethereum</option>
+    </select>
+  </div>
+</div>
+
   <!-- KPI cards -->
   <div class="kpi-row">
     <div class="kpi-card">
@@ -430,6 +452,10 @@
   let contractorsCache = [];
   let authMode = 'signin'; // 'signin' | 'signup'
 
+  // Dashboard / payouts filters
+  let filterRange = '30d'; // '7d' | '30d' | '90d' | 'all'
+  let filterChain = 'all'; // 'all' or chain code like 'BASE'
+
   // === UTILITIES ===
   function formatUSD(amount) {
     if (!amount || isNaN(amount)) return '$0';
@@ -606,18 +632,38 @@
   }
 
   // === PAYOUTS ===
-  async function loadPayouts() {
+    async function loadPayouts() {
     const tbody = document.getElementById('payouts-body');
     if (!tbody) return;
 
     tbody.innerHTML = '<tr><td colspan="5">Loading payouts...</td></tr>';
 
-    try {
-      const url =
-        `${SUPABASE_URL}/rest/v1/payouts` +
-        `?select=*,contractors(name)` +
-        `&order=tx_timestamp.desc&limit=50`;
+    // date filter
+    let sinceISO = null;
+    if (filterRange !== 'all') {
+      const since = new Date();
+      if (filterRange === '7d') since.setDate(since.getDate() - 7);
+      else if (filterRange === '30d') since.setDate(since.getDate() - 30);
+      else if (filterRange === '90d') since.setDate(since.getDate() - 90);
+      sinceISO = since.toISOString();
+    }
 
+    const params = [
+      'select=*,contractors(name)',
+      'order=tx_timestamp.desc',
+      'limit=50',
+    ];
+
+    if (sinceISO) {
+      params.push(`tx_timestamp=gte.${encodeURIComponent(sinceISO)}`);
+    }
+    if (filterChain !== 'all') {
+      params.push(`chain=eq.${encodeURIComponent(filterChain)}`);
+    }
+
+    const url = `${SUPABASE_URL}/rest/v1/payouts?` + params.join('&');
+
+    try {
       const res = await fetch(url, {
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -633,7 +679,8 @@
       const data = await res.json();
 
       if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="5">No payouts yet.</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="5">No payouts for this range.</td></tr>';
         return;
       }
 
@@ -662,168 +709,7 @@
     }
   }
 
-  async function addPayout(event) {
-    event.preventDefault();
 
-    const form = event.target;
-    const formData = new FormData(form);
-
-    const contractor_id = formData.get('contractor_id');
-    const amountStr = formData.get('amount');
-    const chain = formData.get('chain');
-    const tx_hash = formData.get('tx_hash')?.trim();
-    const tx_date = formData.get('tx_date');
-    const note = formData.get('note')?.trim();
-
-    if (!contractor_id || !amountStr || !chain || !tx_hash) {
-      alert('Contractor, amount, chain, and tx hash are required.');
-      return;
-    }
-
-    const amount = Number(amountStr);
-    if (!amount || amount <= 0) {
-      alert('Amount must be a positive number.');
-      return;
-    }
-
-    const tx_timestamp = tx_date
-      ? new Date(tx_date).toISOString()
-      : new Date().toISOString();
-
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/payouts`, {
-        method: 'POST',
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-          Prefer: 'return=representation',
-        },
-        body: JSON.stringify({
-          contractor_id,
-          amount,
-          asset_symbol: 'USDC',
-          chain,
-          tx_hash,
-          tx_timestamp,
-          note,
-        }),
-      });
-
-      if (!res.ok) {
-        console.error('Error inserting payout', await res.text());
-        alert('Error saving payout.');
-        return;
-      }
-
-      form.reset();
-      await loadPayouts();
-      await loadDashboard();
-    } catch (err) {
-      console.error(err);
-      alert('Network error saving payout.');
-    }
-  }
-
-  // === DASHBOARD ===
-  async function loadDashboard() {
-    const totalEl = document.getElementById('dash-total-30d');
-    const payoutCountEl = document.getElementById('dash-payout-count');
-    const contractorsEl = document.getElementById('dash-contractors');
-    const chainsEl = document.getElementById('dash-chains');
-    const chainListEl = document.getElementById('dash-chain-list');
-    const tableBody = document.getElementById('dash-payouts-table');
-
-    if (!totalEl || !tableBody) return;
-
-    const since = new Date();
-    since.setDate(since.getDate() - 30);
-    const sinceISO = since.toISOString();
-
-    const url =
-      `${SUPABASE_URL}/rest/v1/payouts` +
-      `?select=*,contractors(name)` +
-      `&tx_timestamp=gte.${encodeURIComponent(sinceISO)}` +
-      `&order=tx_timestamp.desc&limit=200`;
-
-    try {
-      const res = await fetch(url, {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-      });
-
-      if (!res.ok) {
-        console.error('Dashboard fetch error', res.status, await res.text());
-        totalEl.textContent = '$0';
-        payoutCountEl.textContent = 'Error loading payouts';
-        return;
-      }
-
-      const data = await res.json();
-
-      const totalAmount = data.reduce(
-        (sum, p) => sum + (Number(p.amount) || 0),
-        0
-      );
-
-      const payoutCount = data.length;
-
-      const contractorIds = new Set(
-        data.map(p => p.contractor_id).filter(Boolean)
-      );
-
-      const chains = new Set(
-        data.map(p => (p.chain || '').toUpperCase()).filter(Boolean)
-      );
-
-      totalEl.textContent = formatUSD(totalAmount);
-      payoutCountEl.textContent =
-        payoutCount === 1 ? '1 payout' : `${payoutCount} payouts`;
-
-      if (contractorsEl) contractorsEl.textContent = contractorIds.size;
-      if (chainsEl) chainsEl.textContent = chains.size || 0;
-      if (chainListEl) {
-        chainListEl.textContent = chains.size
-          ? Array.from(chains).join(' · ')
-          : 'No payouts yet';
-      }
-
-      tableBody.innerHTML = '';
-
-      if (!data.length) {
-        tableBody.innerHTML =
-          '<tr><td colspan="5">No payouts in the last 30 days.</td></tr>';
-        return;
-      }
-
-      data.slice(0, 10).forEach(p => {
-        const tr = document.createElement('tr');
-
-        const date = p.tx_timestamp
-          ? new Date(p.tx_timestamp).toLocaleDateString()
-          : '—';
-
-        const name = p.contractors?.name || 'Unknown';
-
-        tr.innerHTML = `
-          <td>${date}</td>
-          <td>${name}</td>
-          <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
-          <td>${(p.chain || '').toUpperCase()}</td>
-          <td>${p.tx_hash}</td>
-        `;
-        tableBody.appendChild(tr);
-      });
-    } catch (err) {
-      console.error('Dashboard error', err);
-      totalEl.textContent = '$0';
-      payoutCountEl.textContent = 'Error loading data';
-      tableBody.innerHTML =
-        '<tr><td colspan="5">Error loading payouts.</td></tr>';
-    }
-  }
 
   // === AUTH ===
   async function handleAuthSubmit(e) {
@@ -893,6 +779,26 @@
     const form = e.target;
     const msgEl = document.getElementById('waitlist-message');
     const email = form.email.value.trim();
+        // Dashboard filters
+    const rangeSelect = document.getElementById('dash-range');
+    const chainSelect = document.getElementById('dash-chain');
+
+    if (rangeSelect) {
+      rangeSelect.addEventListener('change', () => {
+        filterRange = rangeSelect.value;
+        loadDashboard();
+        loadPayouts();
+      });
+    }
+
+    if (chainSelect) {
+      chainSelect.addEventListener('change', () => {
+        filterChain = chainSelect.value;
+        loadDashboard();
+        loadPayouts();
+      });
+    }
+
 
     if (!msgEl) return;
 
