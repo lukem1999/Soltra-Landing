@@ -436,7 +436,7 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 
-  <!-- Supabase client -->
+ <!-- Supabase client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -445,16 +445,14 @@
   const SUPABASE_ANON_KEY =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dXZrZ25raHJ6cHdsc3N1cHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDkyOTIsImV4cCI6MjA3ODkyNTI5Mn0.9C1-3Di7tXJCgb_7ZHj7mz6QL5fDMvnvmBziYqgGeDs';
 
-  // Supabase client (used for auth)
+  // Supabase client (for auth + REST)
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // === GLOBAL STATE ===
   let contractorsCache = [];
-  let authMode = 'signin'; // 'signin' | 'signup'
-
-  // Dashboard / payouts filters
-  let filterRange = '30d'; // '7d' | '30d' | '90d' | 'all'
-  let filterChain = 'all'; // 'all' or chain code like 'BASE'
+  let authMode = 'signin';       // 'signin' | 'signup'
+  let filterRange = '30d';       // '7d' | '30d' | '90d' | 'all'
+  let filterChain = 'all';       // 'all' | 'BASE' | 'POLYGON' | 'ETHEREUM'
 
   // === UTILITIES ===
   function formatUSD(amount) {
@@ -509,11 +507,8 @@
         const target = btn.dataset.target;
         Object.entries(views).forEach(([key, el]) => {
           if (!el) return;
-          if (key === target) {
-            el.classList.remove('hidden');
-          } else {
-            el.classList.add('hidden');
-          }
+          if (key === target) el.classList.remove('hidden');
+          else el.classList.add('hidden');
         });
       });
     });
@@ -536,7 +531,8 @@
 
       if (!res.ok) {
         if (tbody) {
-          tbody.innerHTML = `<tr><td colspan="5">Error loading data (${res.status})</td></tr>`;
+          tbody.innerHTML =
+            `<tr><td colspan="5">Error loading data (${res.status})</td></tr>`;
         }
         return;
       }
@@ -570,7 +566,8 @@
     } catch (err) {
       console.error(err);
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="5">Error loading contractors.</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="5">Error loading contractors.</td></tr>';
       }
     }
   }
@@ -632,7 +629,7 @@
   }
 
   // === PAYOUTS ===
-    async function loadPayouts() {
+  async function loadPayouts() {
     const tbody = document.getElementById('payouts-body');
     if (!tbody) return;
 
@@ -672,7 +669,8 @@
       });
 
       if (!res.ok) {
-        tbody.innerHTML = `<tr><td colspan="5">Error loading payouts (${res.status})</td></tr>`;
+        tbody.innerHTML =
+          `<tr><td colspan="5">Error loading payouts (${res.status})</td></tr>`;
         return;
       }
 
@@ -705,100 +703,193 @@
       });
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="5">Error loading payouts.</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="5">Error loading payouts.</td></tr>';
     }
   }
 
+  async function addPayout(event) {
+    event.preventDefault();
 
+    const form = event.target;
+    const formData = new FormData(form);
 
-  // === AUTH ===
-  async function handleAuthSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const email = form.email.value.trim();
-    const password = form.password.value;
+    const contractor_id = formData.get('contractor_id');
+    const amountStr = formData.get('amount');
+    const chain = formData.get('chain');
+    const tx_hash = formData.get('tx_hash')?.trim();
+    const tx_date = formData.get('tx_date');
+    const note = formData.get('note')?.trim();
 
-    if (!email || !password) {
-      setAuthMessage('Email and password are required.', 'error');
+    if (!contractor_id || !amountStr || !chain || !tx_hash) {
+      alert('Contractor, amount, chain, and tx hash are required.');
       return;
     }
 
-    setAuthMessage('Working...');
+    const amount = Number(amountStr);
+    if (!amount || amount <= 0) {
+      alert('Amount must be a positive number.');
+      return;
+    }
+
+    const tx_timestamp = tx_date
+      ? new Date(tx_date).toISOString()
+      : new Date().toISOString();
 
     try {
-      if (authMode === 'signup') {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        setAuthMessage('Account created. Check your email then sign in.', 'success');
-        setAuthMode('signin');
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        setAuthMessage('');
-        await onAuthChanged();
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/payouts`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify({
+          contractor_id,
+          amount,
+          asset_symbol: 'USDC',
+          chain,
+          tx_hash,
+          tx_timestamp,
+          note,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error('Error inserting payout', await res.text());
+        alert('Error saving payout.');
+        return;
       }
+
+      form.reset();
+      await loadPayouts();
+      await loadDashboard();
     } catch (err) {
       console.error(err);
-      setAuthMessage(err.message || 'Auth error.', 'error');
+      alert('Network error saving payout.');
     }
   }
 
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-    await onAuthChanged();
-  }
+  // === DASHBOARD ===
+  async function loadDashboard() {
+    const totalEl = document.getElementById('dash-total-30d');
+    const payoutCountEl = document.getElementById('dash-payout-count');
+    const contractorsEl = document.getElementById('dash-contractors');
+    const chainsEl = document.getElementById('dash-chains');
+    const chainListEl = document.getElementById('dash-chain-list');
+    const tableBody = document.getElementById('dash-payouts-table');
 
-  async function onAuthChanged() {
-    const { data } = await supabase.auth.getSession();
-    const session = data.session;
+    if (!totalEl || !tableBody) return;
 
-    const authWrapper = document.getElementById('auth-wrapper');
-    const appShell = document.querySelector('.app-shell');
-    const signoutBtn = document.getElementById('signout-btn');
+    // date filter
+    let sinceISO = null;
+    if (filterRange !== 'all') {
+      const since = new Date();
+      if (filterRange === '7d') since.setDate(since.getDate() - 7);
+      else if (filterRange === '30d') since.setDate(since.getDate() - 30);
+      else if (filterRange === '90d') since.setDate(since.getDate() - 90);
+      sinceISO = since.toISOString();
+    }
 
-    if (session) {
-      if (authWrapper) authWrapper.style.display = 'none';
-      if (appShell) appShell.style.display = 'block';
-      if (signoutBtn) signoutBtn.style.display = 'inline-block';
+    const params = [
+      'select=*,contractors(name)',
+      'order=tx_timestamp.desc',
+      'limit=200',
+    ];
 
-      // Load views
-      loadDashboard();
-      loadContractors();
-      loadPayouts();
-    } else {
-      if (authWrapper) authWrapper.style.display = 'flex';
-      if (appShell) appShell.style.display = 'none';
-      if (signoutBtn) signoutBtn.style.display = 'none';
+    if (sinceISO) {
+      params.push(`tx_timestamp=gte.${encodeURIComponent(sinceISO)}`);
+    }
+    if (filterChain !== 'all') {
+      params.push(`chain=eq.${encodeURIComponent(filterChain)}`);
+    }
+
+    const url = `${SUPABASE_URL}/rest/v1/payouts?` + params.join('&');
+
+    try {
+      const res = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+      });
+
+      if (!res.ok) {
+        console.error('Dashboard fetch error', res.status, await res.text());
+        totalEl.textContent = '$0';
+        payoutCountEl.textContent = 'Error loading payouts';
+        return;
+      }
+
+      const data = await res.json();
+
+      const totalAmount = data.reduce(
+        (sum, p) => sum + (Number(p.amount) || 0),
+        0
+      );
+      const payoutCount = data.length;
+
+      const contractorIds = new Set(
+        data.map(p => p.contractor_id).filter(Boolean)
+      );
+      const chains = new Set(
+        data.map(p => (p.chain || '').toUpperCase()).filter(Boolean)
+      );
+
+      totalEl.textContent = formatUSD(totalAmount);
+      payoutCountEl.textContent =
+        payoutCount === 1 ? '1 payout' : `${payoutCount} payouts`;
+
+      if (contractorsEl) contractorsEl.textContent = contractorIds.size;
+      if (chainsEl) chainsEl.textContent = chains.size || 0;
+      if (chainListEl) {
+        chainListEl.textContent = chains.size
+          ? Array.from(chains).join(' · ')
+          : 'No payouts for this range.';
+      }
+
+      tableBody.innerHTML = '';
+
+      if (!data.length) {
+        tableBody.innerHTML =
+          '<tr><td colspan="5">No payouts for this range.</td></tr>';
+        return;
+      }
+
+      data.slice(0, 10).forEach(p => {
+        const tr = document.createElement('tr');
+
+        const date = p.tx_timestamp
+          ? new Date(p.tx_timestamp).toLocaleDateString()
+          : '—';
+
+        const name = p.contractors?.name || 'Unknown';
+
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${name}</td>
+          <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
+          <td>${(p.chain || '').toUpperCase()}</td>
+          <td>${p.tx_hash}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error('Dashboard error', err);
+      totalEl.textContent = '$0';
+      payoutCountEl.textContent = 'Error loading data';
+      tableBody.innerHTML =
+        '<tr><td colspan="5">Error loading payouts.</td></tr>';
     }
   }
 
-  // === INIT ===
-  document.addEventListener('DOMContentLoaded', () => {
-      async function handleWaitlistSubmit(e) {
+  // === WAITLIST ===
+  async function handleWaitlistSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const msgEl = document.getElementById('waitlist-message');
     const email = form.email.value.trim();
-        // Dashboard filters
-    const rangeSelect = document.getElementById('dash-range');
-    const chainSelect = document.getElementById('dash-chain');
-
-    if (rangeSelect) {
-      rangeSelect.addEventListener('change', () => {
-        filterRange = rangeSelect.value;
-        loadDashboard();
-        loadPayouts();
-      });
-    }
-
-    if (chainSelect) {
-      chainSelect.addEventListener('change', () => {
-        filterChain = chainSelect.value;
-        loadDashboard();
-        loadPayouts();
-      });
-    }
-
 
     if (!msgEl) return;
 
@@ -840,6 +931,74 @@
     }
   }
 
+  // === AUTH ===
+  async function handleAuthSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const email = form.email.value.trim();
+    const password = form.password.value;
+
+    if (!email || !password) {
+      setAuthMessage('Email and password are required.', 'error');
+      return;
+    }
+
+    setAuthMessage('Working...');
+
+    try {
+      if (authMode === 'signup') {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        setAuthMessage(
+          'Account created. Check your email, then sign in.',
+          'success'
+        );
+        setAuthMode('signin');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        setAuthMessage('');
+        await onAuthChanged();
+      }
+    } catch (err) {
+      console.error(err);
+      setAuthMessage(err.message || 'Auth error.', 'error');
+    }
+  }
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    await onAuthChanged();
+  }
+
+  async function onAuthChanged() {
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
+
+    const authWrapper = document.getElementById('auth-wrapper');
+    const appShell = document.querySelector('.app-shell');
+    const signoutBtn = document.getElementById('signout-btn');
+
+    if (session) {
+      if (authWrapper) authWrapper.style.display = 'none';
+      if (appShell) appShell.style.display = 'block';
+      if (signoutBtn) signoutBtn.style.display = 'inline-block';
+
+      loadDashboard();
+      loadContractors();
+      loadPayouts();
+    } else {
+      if (authWrapper) authWrapper.style.display = 'flex';
+      if (appShell) appShell.style.display = 'none';
+      if (signoutBtn) signoutBtn.style.display = 'none';
+    }
+  }
+
+  // === INIT ===
+  document.addEventListener('DOMContentLoaded', () => {
     // Footer year
     const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -858,6 +1017,31 @@
       payoutForm.addEventListener('submit', addPayout);
     }
 
+    const waitlistForm = document.getElementById('waitlist-form');
+    if (waitlistForm) {
+      waitlistForm.addEventListener('submit', handleWaitlistSubmit);
+    }
+
+    // Dashboard filters
+    const rangeSelect = document.getElementById('dash-range');
+    const chainSelect = document.getElementById('dash-chain');
+
+    if (rangeSelect) {
+      rangeSelect.addEventListener('change', () => {
+        filterRange = rangeSelect.value;
+        loadDashboard();
+        loadPayouts();
+      });
+    }
+
+    if (chainSelect) {
+      chainSelect.addEventListener('change', () => {
+        filterChain = chainSelect.value;
+        loadDashboard();
+        loadPayouts();
+      });
+    }
+
     // Auth
     const authForm = document.getElementById('auth-form');
     const toggle = document.getElementById('auth-toggle-mode');
@@ -871,15 +1055,11 @@
     }
     if (signoutBtn) signoutBtn.addEventListener('click', handleSignOut);
 
-    const waitlistForm = document.getElementById('waitlist-form');
-    if (waitlistForm) {
-      waitlistForm.addEventListener('submit', handleWaitlistSubmit);
-    }
-
     setAuthMode('signin');
     onAuthChanged();
   });
 </script>
+
 
 
 
