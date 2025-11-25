@@ -39,6 +39,21 @@
 
   <main>
    <section class="hero">
+     <form id="waitlist-form" class="waitlist-form">
+        <input
+          type="email"
+          name="email"
+          placeholder="you@dao.xyz"
+          required
+          class="waitlist-input"
+        />
+        <button type="submit" class="btn waitlist-btn">
+          <span>Join the waitlist</span>
+        </button>
+        <div id="waitlist-message" class="waitlist-message"></div>
+      </form>
+
+   
   <div class="hero-inner">
     <!-- Left: copy -->
     <div class="hero-copy">
@@ -873,6 +888,52 @@
 
   // === INIT ===
   document.addEventListener('DOMContentLoaded', () => {
+      async function handleWaitlistSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const msgEl = document.getElementById('waitlist-message');
+    const email = form.email.value.trim();
+
+    if (!msgEl) return;
+
+    if (!email || !email.includes('@')) {
+      msgEl.textContent = 'Please enter a valid email.';
+      msgEl.className = 'waitlist-message error';
+      return;
+    }
+
+    msgEl.textContent = 'Joining waitlist...';
+    msgEl.className = 'waitlist-message';
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify({ email, source: 'landing' }),
+      });
+
+      if (!res.ok) {
+        console.error('Waitlist error', await res.text());
+        msgEl.textContent = 'Error joining waitlist. Please try again.';
+        msgEl.className = 'waitlist-message error';
+        return;
+      }
+
+      form.reset();
+      msgEl.textContent = 'You’re in. We’ll reach out soon.';
+      msgEl.className = 'waitlist-message success';
+    } catch (err) {
+      console.error(err);
+      msgEl.textContent = 'Network error. Please try again.';
+      msgEl.className = 'waitlist-message error';
+    }
+  }
+
     // Footer year
     const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -903,6 +964,11 @@
       );
     }
     if (signoutBtn) signoutBtn.addEventListener('click', handleSignOut);
+
+    const waitlistForm = document.getElementById('waitlist-form');
+    if (waitlistForm) {
+      waitlistForm.addEventListener('submit', handleWaitlistSubmit);
+    }
 
     setAuthMode('signin');
     onAuthChanged();
