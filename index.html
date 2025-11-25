@@ -505,6 +505,14 @@
       select.appendChild(opt);
     });
   }
+ #---Money
+  function formatUSD(amount) {
+  if (!amount || isNaN(amount)) return '$0';
+  return `$${amount.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })}`;
+}
 
   async function addContractor(event) {
     event.preventDefault();
@@ -680,6 +688,117 @@
     }
   });
 </script>
+#---------Load Dashboard-----------
+<script> 
+async function loadDashboard() {
+  const totalEl = document.getElementById('dash-total-30d');
+  const payoutCountEl = document.getElementById('dash-payout-count');
+  const contractorsEl = document.getElementById('dash-contractors');
+  const chainsEl = document.getElementById('dash-chains');
+  const chainListEl = document.getElementById('dash-chain-list');
+  const tableBody = document.getElementById('dash-payouts-table');
+
+  if (!totalEl || !tableBody) return;
+
+  // last 30 days ISO
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+  const sinceISO = since.toISOString();
+
+  // Embed contractor names like we did on payouts
+  const url =
+    `${SUPABASE_URL}/rest/v1/payouts` +
+    `?select=*,contractors(name)` +
+    `&tx_timestamp=gte.${encodeURIComponent(sinceISO)}` +
+    `&order=tx_timestamp.desc&limit=200`;
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+
+    if (!res.ok) {
+      console.error('Dashboard fetch error', res.status, await res.text());
+      totalEl.textContent = '$0';
+      payoutCountEl.textContent = 'Error loading payouts';
+      return;
+    }
+
+    const data = await res.json();
+
+    // ---- KPIs ----
+    const totalAmount = data.reduce(
+      (sum, p) => sum + (Number(p.amount) || 0),
+      0
+    );
+
+    const payoutCount = data.length;
+
+    const contractorIds = new Set(
+      data
+        .map(p => p.contractor_id)
+        .filter(Boolean)
+    );
+
+    const chains = new Set(
+      data
+        .map(p => (p.chain || '').toUpperCase())
+        .filter(Boolean)
+    );
+
+    totalEl.textContent = formatUSD(totalAmount);
+    payoutCountEl.textContent = payoutCount === 1
+      ? '1 payout'
+      : `${payoutCount} payouts`;
+
+    contractorsEl.textContent = contractorIds.size;
+    chainsEl.textContent = chains.size || 0;
+    chainListEl.textContent = chains.size
+      ? Array.from(chains).join(' · ')
+      : 'No payouts yet';
+
+    // ---- Recent payouts table ----
+    tableBody.innerHTML = '';
+
+    if (!data.length) {
+      tableBody.innerHTML =
+        '<tr><td colspan="5">No payouts in the last 30 days.</td></tr>';
+      return;
+    }
+
+    data.slice(0, 10).forEach(p => {
+      const tr = document.createElement('tr');
+
+      const date = p.tx_timestamp
+        ? new Date(p.tx_timestamp).toLocaleDateString()
+        : '—';
+
+      const name = p.contractors?.name || 'Unknown';
+
+      tr.innerHTML = `
+        <td>${date}</td>
+        <td>${name}</td>
+        <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
+        <td>${(p.chain || '').toUpperCase()}</td>
+        <td>${p.tx_hash}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error('Dashboard error', err);
+    totalEl.textContent = '$0';
+    payoutCountEl.textContent = 'Error loading data';
+    if (tableBody) {
+      tableBody.innerHTML =
+        '<tr><td colspan="5">Error loading payouts.</td></tr>';
+    }
+  }
+}
+</script>
+
 
 <!-- Supabase JS client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -753,25 +872,29 @@
   }
 
   async function onAuthChanged() {
-    const { data } = await supabase.auth.getSession();
-    const session = data.session;
+  const { data } = await supabase.auth.getSession();
+  const session = data.session;
 
-    const authWrapper = document.getElementById('auth-wrapper');
-    const appShell = document.querySelector('.app-shell');
-    const signoutBtn = document.getElementById('signout-btn');
+  const authWrapper = document.getElementById('auth-wrapper');
+  const appShell = document.querySelector('.app-shell');
+  const signoutBtn = document.getElementById('signout-btn');
 
-    if (session) {
-      if (authWrapper) authWrapper.style.display = 'none';
-      if (appShell) appShell.style.display = 'block';
-      if (signoutBtn) signoutBtn.style.display = 'inline-block';
+  if (session) {
+    if (authWrapper) authWrapper.style.display = 'none';
+    if (appShell) appShell.style.display = 'block';
+    if (signoutBtn) signoutBtn.style.display = 'inline-block';
 
-      // later: loadContractors(); loadPayouts();
-    } else {
-      if (authWrapper) authWrapper.style.display = 'flex';
-      if (appShell) appShell.style.display = 'none';
-      if (signoutBtn) signoutBtn.style.display = 'none';
-    }
+    // Load data-backed views here
+    loadDashboard();
+    loadContractors();
+    loadPayouts();
+  } else {
+    if (authWrapper) authWrapper.style.display = 'flex';
+    if (appShell) appShell.style.display = 'none';
+    if (signoutBtn) signoutBtn.style.display = 'none';
   }
+}
+
 
   document.addEventListener('DOMContentLoaded', () => {
     const authForm = document.getElementById('auth-form');
@@ -788,6 +911,8 @@
     onAuthChanged();
   });
 </script>
+
+  
 
   
 </body>
