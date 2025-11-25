@@ -399,42 +399,86 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 
-  <script>
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const views = {
-    dashboard: document.getElementById('view-dashboard'),
-    contractors: document.getElementById('view-contractors'),
-    payouts: document.getElementById('view-payouts'),
-    reports: document.getElementById('view-reports'),
-  };
-
-  tabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      // Update active tab
-      tabButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      // Show correct view
-      const target = btn.dataset.target;
-      Object.entries(views).forEach(([key, el]) => {
-        if (key === target) {
-          el.classList.remove('hidden');
-        } else {
-          el.classList.add('hidden');
-        }
-      });
-    });
-  });
-</script>
+  <!-- Supabase client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
   // === Supabase config (DEV ONLY) ===
   const SUPABASE_URL = 'https://lvuvkgnkhrzpwlssupyh.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dXZrZ25raHJ6cHdsc3N1cHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDkyOTIsImV4cCI6MjA3ODkyNTI5Mn0.9C1-3Di7tXJCgb_7ZHj7mz6QL5fDMvnvmBziYqgGeDs';
+  const SUPABASE_ANON_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dXZrZ25raHJ6cHdsc3N1cHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDkyOTIsImV4cCI6MjA3ODkyNTI5Mn0.9C1-3Di7tXJCgb_7ZHj7mz6QL5fDMvnvmBziYqgGeDs';
 
+  // Supabase client (used for auth)
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // === GLOBAL STATE ===
   let contractorsCache = [];
+  let authMode = 'signin'; // 'signin' | 'signup'
 
-  // ---- Contractors ----
+  // === UTILITIES ===
+  function formatUSD(amount) {
+    if (!amount || isNaN(amount)) return '$0';
+    return `$${amount.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}`;
+  }
+
+  function setAuthMessage(text, type = '') {
+    const el = document.getElementById('auth-message');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = 'auth-message';
+    if (type) el.classList.add(type);
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    const toggle = document.getElementById('auth-toggle-mode');
+    const btn = document.querySelector('#auth-form .auth-btn');
+    if (!toggle || !btn) return;
+
+    if (mode === 'signin') {
+      btn.textContent = 'Sign in';
+      toggle.textContent = 'New here? Create an account';
+    } else {
+      btn.textContent = 'Create account';
+      toggle.textContent = 'Already have an account? Sign in';
+    }
+    setAuthMessage('');
+  }
+
+  // === TAB NAVIGATION ===
+  function initTabs() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const views = {
+      dashboard: document.getElementById('view-dashboard'),
+      contractors: document.getElementById('view-contractors'),
+      payouts: document.getElementById('view-payouts'),
+      reports: document.getElementById('view-reports'),
+    };
+
+    if (!tabButtons.length) return;
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const target = btn.dataset.target;
+        Object.entries(views).forEach(([key, el]) => {
+          if (!el) return;
+          if (key === target) {
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
+          }
+        });
+      });
+    });
+  }
+
+  // === CONTRACTORS ===
   async function loadContractors() {
     const tbody = document.getElementById('contractors-body');
     if (tbody) {
@@ -445,8 +489,8 @@
       const res = await fetch(`${SUPABASE_URL}/rest/v1/contractors?select=*`, {
         headers: {
           apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-        }
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
       });
 
       if (!res.ok) {
@@ -457,9 +501,8 @@
       }
 
       const data = await res.json();
-      contractorsCache = data; // cache for payouts
+      contractorsCache = data;
 
-      // Fill contractors table
       if (tbody) {
         if (!data.length) {
           tbody.innerHTML = '<tr><td colspan="5">No contractors yet.</td></tr>';
@@ -495,24 +538,15 @@
     const select = document.getElementById('payout-contractor');
     if (!select) return;
 
-    // keep first "Select contractor" option
     select.innerHTML = '<option value="">Select contractor</option>';
 
     contractorsCache.forEach(c => {
       const opt = document.createElement('option');
-      opt.value = c.id; // uuid
+      opt.value = c.id;
       opt.textContent = c.name || c.wallet_address;
       select.appendChild(opt);
     });
   }
- #---Money
-  function formatUSD(amount) {
-  if (!amount || isNaN(amount)) return '$0';
-  return `$${amount.toLocaleString('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  })}`;
-}
 
   async function addContractor(event) {
     event.preventDefault();
@@ -537,9 +571,9 @@
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
-          Prefer: 'return=representation'
+          Prefer: 'return=representation',
         },
-        body: JSON.stringify({ name, wallet_address: wallet, role, country })
+        body: JSON.stringify({ name, wallet_address: wallet, role, country }),
       });
 
       if (!res.ok) {
@@ -549,14 +583,14 @@
       }
 
       form.reset();
-      await loadContractors(); // refresh + repopulate select
+      await loadContractors();
     } catch (err) {
       console.error(err);
       alert('Network error adding contractor.');
     }
   }
 
-  // ---- Payouts ----
+  // === PAYOUTS ===
   async function loadPayouts() {
     const tbody = document.getElementById('payouts-body');
     if (!tbody) return;
@@ -564,13 +598,16 @@
     tbody.innerHTML = '<tr><td colspan="5">Loading payouts...</td></tr>';
 
     try {
-      // Use PostgREST embedding to get contractor name
-      const url = `${SUPABASE_URL}/rest/v1/payouts?select=*,contractors(name)&order=tx_timestamp.desc&limit=15`;
+      const url =
+        `${SUPABASE_URL}/rest/v1/payouts` +
+        `?select=*,contractors(name)` +
+        `&order=tx_timestamp.desc&limit=50`;
+
       const res = await fetch(url, {
         headers: {
           apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-        }
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
       });
 
       if (!res.ok) {
@@ -599,7 +636,7 @@
           <td>${date}</td>
           <td>${name}</td>
           <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
-          <td>${p.chain}</td>
+          <td>${(p.chain || '').toUpperCase()}</td>
           <td>${p.tx_hash}</td>
         `;
         tbody.appendChild(tr);
@@ -645,7 +682,7 @@
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
-          Prefer: 'return=representation'
+          Prefer: 'return=representation',
         },
         body: JSON.stringify({
           contractor_id,
@@ -654,8 +691,8 @@
           chain,
           tx_hash,
           tx_timestamp,
-          note
-        })
+          note,
+        }),
       });
 
       if (!res.ok) {
@@ -666,175 +703,114 @@
 
       form.reset();
       await loadPayouts();
+      await loadDashboard();
     } catch (err) {
       console.error(err);
       alert('Network error saving payout.');
     }
   }
 
-  // ---- Init ----
-  document.addEventListener('DOMContentLoaded', () => {
-    loadContractors();
-    loadPayouts();
+  // === DASHBOARD ===
+  async function loadDashboard() {
+    const totalEl = document.getElementById('dash-total-30d');
+    const payoutCountEl = document.getElementById('dash-payout-count');
+    const contractorsEl = document.getElementById('dash-contractors');
+    const chainsEl = document.getElementById('dash-chains');
+    const chainListEl = document.getElementById('dash-chain-list');
+    const tableBody = document.getElementById('dash-payouts-table');
 
-    const addContractorForm = document.getElementById('add-contractor-form');
-    if (addContractorForm) {
-      addContractorForm.addEventListener('submit', addContractor);
-    }
+    if (!totalEl || !tableBody) return;
 
-    const payoutForm = document.getElementById('payout-form');
-    if (payoutForm) {
-      payoutForm.addEventListener('submit', addPayout);
-    }
-  });
-</script>
-#---------Load Dashboard-----------
-<script> 
-async function loadDashboard() {
-  const totalEl = document.getElementById('dash-total-30d');
-  const payoutCountEl = document.getElementById('dash-payout-count');
-  const contractorsEl = document.getElementById('dash-contractors');
-  const chainsEl = document.getElementById('dash-chains');
-  const chainListEl = document.getElementById('dash-chain-list');
-  const tableBody = document.getElementById('dash-payouts-table');
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+    const sinceISO = since.toISOString();
 
-  if (!totalEl || !tableBody) return;
+    const url =
+      `${SUPABASE_URL}/rest/v1/payouts` +
+      `?select=*,contractors(name)` +
+      `&tx_timestamp=gte.${encodeURIComponent(sinceISO)}` +
+      `&order=tx_timestamp.desc&limit=200`;
 
-  // last 30 days ISO
-  const since = new Date();
-  since.setDate(since.getDate() - 30);
-  const sinceISO = since.toISOString();
+    try {
+      const res = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+      });
 
-  // Embed contractor names like we did on payouts
-  const url =
-    `${SUPABASE_URL}/rest/v1/payouts` +
-    `?select=*,contractors(name)` +
-    `&tx_timestamp=gte.${encodeURIComponent(sinceISO)}` +
-    `&order=tx_timestamp.desc&limit=200`;
+      if (!res.ok) {
+        console.error('Dashboard fetch error', res.status, await res.text());
+        totalEl.textContent = '$0';
+        payoutCountEl.textContent = 'Error loading payouts';
+        return;
+      }
 
-  try {
-    const res = await fetch(url, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-    });
+      const data = await res.json();
 
-    if (!res.ok) {
-      console.error('Dashboard fetch error', res.status, await res.text());
+      const totalAmount = data.reduce(
+        (sum, p) => sum + (Number(p.amount) || 0),
+        0
+      );
+
+      const payoutCount = data.length;
+
+      const contractorIds = new Set(
+        data.map(p => p.contractor_id).filter(Boolean)
+      );
+
+      const chains = new Set(
+        data.map(p => (p.chain || '').toUpperCase()).filter(Boolean)
+      );
+
+      totalEl.textContent = formatUSD(totalAmount);
+      payoutCountEl.textContent =
+        payoutCount === 1 ? '1 payout' : `${payoutCount} payouts`;
+
+      if (contractorsEl) contractorsEl.textContent = contractorIds.size;
+      if (chainsEl) chainsEl.textContent = chains.size || 0;
+      if (chainListEl) {
+        chainListEl.textContent = chains.size
+          ? Array.from(chains).join(' · ')
+          : 'No payouts yet';
+      }
+
+      tableBody.innerHTML = '';
+
+      if (!data.length) {
+        tableBody.innerHTML =
+          '<tr><td colspan="5">No payouts in the last 30 days.</td></tr>';
+        return;
+      }
+
+      data.slice(0, 10).forEach(p => {
+        const tr = document.createElement('tr');
+
+        const date = p.tx_timestamp
+          ? new Date(p.tx_timestamp).toLocaleDateString()
+          : '—';
+
+        const name = p.contractors?.name || 'Unknown';
+
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${name}</td>
+          <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
+          <td>${(p.chain || '').toUpperCase()}</td>
+          <td>${p.tx_hash}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error('Dashboard error', err);
       totalEl.textContent = '$0';
-      payoutCountEl.textContent = 'Error loading payouts';
-      return;
-    }
-
-    const data = await res.json();
-
-    // ---- KPIs ----
-    const totalAmount = data.reduce(
-      (sum, p) => sum + (Number(p.amount) || 0),
-      0
-    );
-
-    const payoutCount = data.length;
-
-    const contractorIds = new Set(
-      data
-        .map(p => p.contractor_id)
-        .filter(Boolean)
-    );
-
-    const chains = new Set(
-      data
-        .map(p => (p.chain || '').toUpperCase())
-        .filter(Boolean)
-    );
-
-    totalEl.textContent = formatUSD(totalAmount);
-    payoutCountEl.textContent = payoutCount === 1
-      ? '1 payout'
-      : `${payoutCount} payouts`;
-
-    contractorsEl.textContent = contractorIds.size;
-    chainsEl.textContent = chains.size || 0;
-    chainListEl.textContent = chains.size
-      ? Array.from(chains).join(' · ')
-      : 'No payouts yet';
-
-    // ---- Recent payouts table ----
-    tableBody.innerHTML = '';
-
-    if (!data.length) {
-      tableBody.innerHTML =
-        '<tr><td colspan="5">No payouts in the last 30 days.</td></tr>';
-      return;
-    }
-
-    data.slice(0, 10).forEach(p => {
-      const tr = document.createElement('tr');
-
-      const date = p.tx_timestamp
-        ? new Date(p.tx_timestamp).toLocaleDateString()
-        : '—';
-
-      const name = p.contractors?.name || 'Unknown';
-
-      tr.innerHTML = `
-        <td>${date}</td>
-        <td>${name}</td>
-        <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
-        <td>${(p.chain || '').toUpperCase()}</td>
-        <td>${p.tx_hash}</td>
-      `;
-      tableBody.appendChild(tr);
-    });
-  } catch (err) {
-    console.error('Dashboard error', err);
-    totalEl.textContent = '$0';
-    payoutCountEl.textContent = 'Error loading data';
-    if (tableBody) {
+      payoutCountEl.textContent = 'Error loading data';
       tableBody.innerHTML =
         '<tr><td colspan="5">Error loading payouts.</td></tr>';
     }
   }
-}
-</script>
 
-
-<!-- Supabase JS client -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-</script>
-
-<script>
-  // "signin" or "signup"
-  let authMode = 'signin';
-
-  function setAuthMessage(text, type = '') {
-    const el = document.getElementById('auth-message');
-    if (!el) return;
-    el.textContent = text || '';
-    el.className = 'auth-message';
-    if (type) el.classList.add(type);
-  }
-
-  function setAuthMode(mode) {
-    authMode = mode;
-    const toggle = document.getElementById('auth-toggle-mode');
-    const btn = document.querySelector('#auth-form .auth-btn');
-    if (!toggle || !btn) return;
-
-    if (mode === 'signin') {
-      btn.textContent = 'Sign in';
-      toggle.textContent = 'New here? Create an account';
-    } else {
-      btn.textContent = 'Create account';
-      toggle.textContent = 'Already have an account? Sign in';
-    }
-    setAuthMessage('');
-  }
-
+  // === AUTH ===
   async function handleAuthSubmit(e) {
     e.preventDefault();
     const form = e.target;
@@ -852,7 +828,7 @@ async function loadDashboard() {
       if (authMode === 'signup') {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        setAuthMessage('Account created. You can now sign in.', 'success');
+        setAuthMessage('Account created. Check your email then sign in.', 'success');
         setAuthMode('signin');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -872,45 +848,68 @@ async function loadDashboard() {
   }
 
   async function onAuthChanged() {
-  const { data } = await supabase.auth.getSession();
-  const session = data.session;
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
 
-  const authWrapper = document.getElementById('auth-wrapper');
-  const appShell = document.querySelector('.app-shell');
-  const signoutBtn = document.getElementById('signout-btn');
+    const authWrapper = document.getElementById('auth-wrapper');
+    const appShell = document.querySelector('.app-shell');
+    const signoutBtn = document.getElementById('signout-btn');
 
-  if (session) {
-    if (authWrapper) authWrapper.style.display = 'none';
-    if (appShell) appShell.style.display = 'block';
-    if (signoutBtn) signoutBtn.style.display = 'inline-block';
+    if (session) {
+      if (authWrapper) authWrapper.style.display = 'none';
+      if (appShell) appShell.style.display = 'block';
+      if (signoutBtn) signoutBtn.style.display = 'inline-block';
 
-    // Load data-backed views here
-    loadDashboard();
-    loadContractors();
-    loadPayouts();
-  } else {
-    if (authWrapper) authWrapper.style.display = 'flex';
-    if (appShell) appShell.style.display = 'none';
-    if (signoutBtn) signoutBtn.style.display = 'none';
+      // Load views
+      loadDashboard();
+      loadContractors();
+      loadPayouts();
+    } else {
+      if (authWrapper) authWrapper.style.display = 'flex';
+      if (appShell) appShell.style.display = 'none';
+      if (signoutBtn) signoutBtn.style.display = 'none';
+    }
   }
-}
 
-
+  // === INIT ===
   document.addEventListener('DOMContentLoaded', () => {
+    // Footer year
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+    // Tabs
+    initTabs();
+
+    // Forms
+    const addContractorForm = document.getElementById('add-contractor-form');
+    if (addContractorForm) {
+      addContractorForm.addEventListener('submit', addContractor);
+    }
+
+    const payoutForm = document.getElementById('payout-form');
+    if (payoutForm) {
+      payoutForm.addEventListener('submit', addPayout);
+    }
+
+    // Auth
     const authForm = document.getElementById('auth-form');
     const toggle = document.getElementById('auth-toggle-mode');
     const signoutBtn = document.getElementById('signout-btn');
 
     if (authForm) authForm.addEventListener('submit', handleAuthSubmit);
-    if (toggle) toggle.addEventListener('click', () =>
-      setAuthMode(authMode === 'signin' ? 'signup' : 'signin')
-    );
+    if (toggle) {
+      toggle.addEventListener('click', () =>
+        setAuthMode(authMode === 'signin' ? 'signup' : 'signin')
+      );
+    }
     if (signoutBtn) signoutBtn.addEventListener('click', handleSignOut);
 
     setAuthMode('signin');
     onAuthChanged();
   });
 </script>
+
+
 
   
 
