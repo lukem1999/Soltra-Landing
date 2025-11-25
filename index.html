@@ -146,64 +146,48 @@
       </header>
 
       <div class="app-main-inner">
-        <!-- ================= DASHBOARD VIEW ================= -->
-        <div class="app-view" id="view-dashboard">
-          <div class="kpi-row">
-            <div class="kpi-card">
-              <span class="kpi-label">Total paid this month</span>
-              <span class="kpi-value">$3,750</span>
-              <span class="kpi-sub">9 payouts • USDC on Base</span>
-            </div>
-            <div class="kpi-card">
-              <span class="kpi-label">Active contractors</span>
-              <span class="kpi-value">9</span>
-              <span class="kpi-sub">Across 4 countries</span>
-            </div>
-            <div class="kpi-card">
-              <span class="kpi-label">Chains used</span>
-              <span class="kpi-value">2</span>
-              <span class="kpi-sub">Base, Polygon</span>
-            </div>
-          </div>
+        <!-- DASHBOARD VIEW -->
+<div class="app-view" id="view-dashboard">
+  <!-- KPI cards -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <span class="kpi-label">Total paid (last 30 days)</span>
+      <span class="kpi-value" id="dash-total-30d">$0</span>
+      <span class="kpi-sub" id="dash-payout-count">0 payouts</span>
+    </div>
 
-          <div class="dashboard-row">
-            <div class="card">
-              <h3 class="card-title">Recent payouts</h3>
-              <table class="app-table">
-                <thead>
-                  <tr>
-                    <th>Contractor</th>
-                    <th>Amount</th>
-                    <th>Chain</th>
-                    <th>Hash</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody id="dashboard-payouts-body">
-                  <tr>
-                    <td>Anna L</td>
-                    <td>1,200 USDC</td>
-                    <td>Base</td>
-                    <td>0x9F1C…72a3</td>
-                    <td>Sep 12</td>
-                  </tr>
-                  <tr>
-                    <td>Marcus V</td>
-                    <td>850 USDC</td>
-                    <td>Base</td>
-                    <td>0xA8B7…19f0</td>
-                    <td>Sep 10</td>
-                  </tr>
-                  <tr>
-                    <td>Sora K</td>
-                    <td>1,700 USDC</td>
-                    <td>Base</td>
-                    <td>0xD233…44b1</td>
-                    <td>Sep 08</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Active contractors</span>
+      <span class="kpi-value" id="dash-contractors">0</span>
+      <span class="kpi-sub">With at least one payout</span>
+    </div>
+
+    <div class="kpi-card">
+      <span class="kpi-label">Chains used</span>
+      <span class="kpi-value" id="dash-chains">0</span>
+      <span class="kpi-sub" id="dash-chain-list">–</span>
+    </div>
+  </div>
+
+  <!-- Recent payouts table -->
+  <div class="card" style="margin-top: 1.1rem;">
+    <h3 class="card-title">Recent payouts</h3>
+    <table class="app-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Contractor</th>
+          <th>Amount</th>
+          <th>Chain</th>
+          <th>Hash</th>
+        </tr>
+      </thead>
+      <tbody id="dash-payouts-table">
+        <!-- filled from JS -->
+      </tbody>
+    </table>
+  </div>
+</div>
 
             <div class="card card-side">
               <h3 class="card-title">This month snapshot</h3>
