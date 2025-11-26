@@ -1212,6 +1212,7 @@ footer {
   max-width: 1120px;
   margin: 0 auto;
   padding-top: 2.5rem;
+  padding-bottom: 4rem;
 }
 
 /* Ensure the two-column layout fills that width */
@@ -1235,6 +1236,23 @@ footer {
   padding-bottom: 4rem;
 }
 
+/* Align Overview (Dashboard) with Contractors & Payouts */
+
+/* If your wrapper is #view-dashboard OR #view-overview,
+   this will catch both. One of them will match. */
+#view-dashboard .dashboard-shell,
+#view-overview .dashboard-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-top: 1.25rem;   /* tighter gap under "Soltra Dashboard" bar */
+  padding-bottom: 4rem;
+}
+
+/* Bring the "Dashboard" title a bit closer to the top bar */
+#view-dashboard .dash-header,
+#view-overview .dash-header {
+  margin-top: 0.5rem;
+}
 
 
 
