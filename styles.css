@@ -61,154 +61,196 @@ a {
   font-size: 1.6rem;
 }
 
-/* ===== Hero ===== */
+/* ---------- HERO LAYOUT ---------- */
 
-.hero {
-  padding: 4.25rem 1rem 4.75rem;
-  max-width: 1100px;
+.shell {
+  max-width: 1120px;
   margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
-.hero-inner {
+.hero-section {
+  padding: 4.5rem 0 4rem;
+}
+
+.hero-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 3rem;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 3.5rem;
   align-items: center;
 }
 
-.hero-copy h1 {
-  font-size: clamp(2.4rem, 5vw, 3.4rem);
-  line-height: 1.15;
-  margin: 0 0 1rem;
+/* ---------- HERO LEFT: COPY + WAITLIST ---------- */
+
+.hero-copy {
+  max-width: 620px;
 }
 
 .hero-eyebrow {
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   color: var(--muted);
-  margin: 0 0 0.5rem;
+  margin-top: 1.2rem;
+  margin-bottom: 0.75rem;
 }
 
-.highlight {
+.hero-title {
+  font-size: clamp(2.3rem, 3vw, 3rem);
+  line-height: 1.15;
+  font-weight: 700;
+  margin: 0 0 1rem;
+}
+
+.hero-title .highlight {
   color: var(--gold);
 }
 
 .hero-sub {
   color: var(--muted);
-  font-size: 0.97rem;
+  font-size: 0.95rem;
   max-width: 30rem;
-  margin: 0 0 1.6rem;
+  margin: 0 0 0.9rem;
 }
 
-.hero-actions {
+/* Waitlist form inside hero */
+
+.waitlist-form {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
-}
-
-.hero-btn {
-  padding-inline: 1.9rem;
-}
-
-.hero-secondary {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-/* Hero stats card */
-
-.hero-card {
-  background: radial-gradient(circle at top left, rgba(246,196,83,0.12), transparent 60%),
-              #050814;
-  border-radius: 18px;
-  border: 1px solid #1b2438;
-  box-shadow: 0 22px 55px rgba(0,0,0,0.8);
-  padding: 1.1rem 1.1rem 1rem;
-  font-size: 0.8rem;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-
-.hero-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 26px 70px rgba(0,0,0,0.95);
-  border-color: rgba(246,196,83,0.7);
-}
-
-.hero-card-header {
-  display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
   align-items: center;
-  margin-bottom: 0.7rem;
-  font-size: 0.78rem;
+  margin-bottom: 0.6rem;
+}
+
+.waitlist-input {
+  min-width: 220px;
+  padding: 0.7rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #24304a;
+  background: #050b16;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.waitlist-input::placeholder {
   color: var(--muted);
 }
 
-.hero-pill {
+.waitlist-btn {
+  padding: 0.7rem 1.6rem;
   border-radius: 999px;
-  padding: 0.2rem 0.6rem;
-  border: 1px solid #283351;
-  background: #0b1120;
 }
 
-.hero-card-body {
-  border-radius: 10px;
-  border: 1px solid #19223a;
-  background: #050814;
-  padding: 0.45rem 0.6rem;
-  margin-bottom: 0.7rem;
+.waitlist-message {
+  width: 100%;
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+  color: var(--muted);
 }
 
-.hero-row {
+.waitlist-message.success {
+  color: #5de0b1;
+}
+
+.waitlist-message.error {
+  color: #ff8b8b;
+}
+
+/* ---------- HERO RIGHT: PREVIEW CARD ---------- */
+
+.hero-preview {
+  display: flex;
+  justify-content: center;
+}
+
+.hero-preview-inner {
+  background: radial-gradient(circle at top left,
+      #1d2942 0%,
+      #111827 55%,
+      #050b16 100%);
+  border-radius: 18px;
+  padding: 1.2rem 1.4rem;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  font-size: 0.8rem;
+}
+
+.hero-preview-inner h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  margin: 0 0 0.6rem;
+}
+
+/* payout rows */
+
+.payout-row {
   display: flex;
   justify-content: space-between;
-  padding: 0.25rem 0;
-  border-bottom: 1px solid #141b2c;
+  font-size: 0.8rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.hero-row:last-child {
+.payout-row:last-of-type {
   border-bottom: none;
 }
 
-.hero-address {
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  color: var(--muted);
+/* summary rows at bottom */
+
+.payout-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 0.9rem;
+  font-size: 0.8rem;
 }
 
-.hero-amount {
+.payout-summary-main {
   font-weight: 600;
 }
 
-.hero-card-footer {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.6rem;
-}
-
-.hero-footer-label {
-  font-size: 0.7rem;
+.payout-summary-label {
   color: var(--muted);
+  font-size: 0.75rem;
 }
 
-.hero-footer-value {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-/* Responsive hero */
+/* ---------- RESPONSIVE ---------- */
 
 @media (max-width: 900px) {
-  .hero-inner {
-    grid-template-columns: 1fr;
-    gap: 2.4rem;
+  .hero-section {
+    padding-top: 3rem;
   }
 
-  .hero-card {
-    max-width: 360px;
-    margin: 0 auto;
+  .hero-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+
+  .hero-preview {
+    justify-content: flex-start;
   }
 }
+
+@media (max-width: 600px) {
+  .waitlist-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .waitlist-input {
+    width: 100%;
+  }
+
+  .waitlist-btn {
+    width: auto;
+  }
+}
+
 
 /* CTA button micro-interactions */
 
