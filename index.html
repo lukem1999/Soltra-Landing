@@ -281,21 +281,93 @@
         </div>
 
         <!-- ================= CONTRACTORS VIEW ================= -->
-        <div class="app-view hidden" id="view-contractors">
-          <div class="list-header">
-            <h3>Contractors</h3>
+        <div id="view-contractors" class="app-view hidden">
+  <div class="shell dashboard-shell">
+
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Contractors</h2>
+        <p class="section-subtitle">
+          Add and manage wallets for contributors, freelancers, and core team.
+        </p>
+      </div>
+    </div>
+
+    <div class="two-column-layout">
+      <!-- LEFT: add contractor form -->
+      <div class="form-card">
+        <h3 class="form-title">Add contractor</h3>
+        <p class="form-subtitle">
+          Store basic details and a payout address. You can edit or remove them later.
+        </p>
+
+        <form id="add-contractor-form" class="form-grid">
+          <div class="field">
+            <label class="field-label">Name<span>*</span></label>
+            <input
+              type="text"
+              name="name"
+              class="input-control"
+              placeholder="Jane Doe"
+              required
+            />
           </div>
 
-          <!-- Add contractor form -->
-          <form class="add-contractor-form" id="add-contractor-form">
-            <input type="text" name="name" placeholder="Name" required>
-            <input type="text" name="wallet_address" placeholder="Wallet address (0x...)" required>
-            <input type="text" name="role" placeholder="Role (e.g. DevOps)">
-            <input type="text" name="country" placeholder="Country (e.g. US)">
-            <button type="submit" class="mini-btn">+ Add contractor</button>
-          </form>
+          <div class="field">
+            <label class="field-label">Role</label>
+            <input
+              type="text"
+              name="role"
+              class="input-control"
+              placeholder="Solidity dev, Designer, Ops…"
+            />
+          </div>
 
-          <table class="app-table">
+          <div class="field full-row">
+            <label class="field-label">Wallet address<span>*</span></label>
+            <input
+              type="text"
+              name="wallet_address"
+              class="input-control mono"
+              placeholder="0x..."
+              required
+            />
+            <p class="field-help">
+              EVM-compatible address where payouts will be sent.
+            </p>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Country</label>
+            <input
+              type="text"
+              name="country"
+              class="input-control"
+              placeholder="Estonia, US, Nigeria…"
+            />
+          </div>
+
+          <div class="field full-row">
+            <button type="submit" class="btn primary-btn">
+              Save contractor
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- RIGHT: contractors table -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <div>
+            <h3 class="form-title">Saved contractors</h3>
+            <p class="form-subtitle">
+              These wallets will show up when logging payouts.
+            </p>
+          </div>
+        </div>
+
+        <div class="dash-table-wrapper">
+          <table class="dash-table">
             <thead>
               <tr>
                 <th>Name</th>
@@ -306,71 +378,154 @@
               </tr>
             </thead>
             <tbody id="contractors-body">
-              <!-- Filled dynamically from Supabase -->
+              <tr>
+                <td colspan="5">No contractors yet.</td>
+              </tr>
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 
         <!-- ================= PAYOUTS VIEW ================= -->
-        <div class="app-view hidden" id="view-payouts">
-          <h3>Log new payout</h3>
+        <div id="view-payouts" class="app-view hidden">
+  <div class="shell dashboard-shell">
 
-          <form class="payout-form" id="payout-form">
-            <label>
-              Contractor
-              <select name="contractor_id" id="payout-contractor" required>
-                <option value="">Select contractor</option>
-                <!-- options filled from contractors table -->
-              </select>
-            </label>
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Payouts</h2>
+        <p class="section-subtitle">
+          Log USDC payouts you’ve sent on-chain and keep a clean audit trail.
+        </p>
+      </div>
+    </div>
 
-            <label>
-              Amount (USDC)
-              <input type="number" name="amount" step="0.01" placeholder="1200" required>
-            </label>
+    <div class="two-column-layout">
+      <!-- LEFT: add payout form -->
+      <div class="form-card">
+        <h3 class="form-title">Log a payout</h3>
+        <p class="form-subtitle">
+          Record an on-chain transfer you’ve already sent from your treasury
+          wallet or multisig.
+        </p>
 
-            <label>
-              Chain
-              <select name="chain" required>
-                <option value="base">Base</option>
-                <option value="polygon">Polygon</option>
-              </select>
-            </label>
+        <form id="payout-form" class="form-grid">
+          <div class="field">
+            <label class="field-label">Contractor<span>*</span></label>
+            <select
+              id="payout-contractor"
+              name="contractor_id"
+              class="input-control"
+              required
+            >
+              <option value="">Select contractor</option>
+              <!-- populated by JS -->
+            </select>
+          </div>
 
-            <label>
-              Transaction hash
-              <input type="text" name="tx_hash" placeholder="0x..." required>
-            </label>
+          <div class="field">
+            <label class="field-label">Amount (USDC)<span>*</span></label>
+            <input
+              type="number"
+              name="amount"
+              class="input-control"
+              placeholder="1200"
+              step="0.01"
+              min="0"
+              required
+            />
+          </div>
 
-            <label>
-              Date
-              <input type="date" name="tx_date">
-            </label>
+          <div class="field">
+            <label class="field-label">Chain<span>*</span></label>
+            <select name="chain" class="input-control" required>
+              <option value="">Select chain</option>
+              <option value="BASE">Base</option>
+              <option value="POLYGON">Polygon</option>
+              <option value="ETHEREUM">Ethereum</option>
+            </select>
+          </div>
 
-            <label>
-              Notes (optional)
-              <textarea name="note" rows="2" placeholder="Weekly contributor payout"></textarea>
-            </label>
+          <div class="field">
+            <label class="field-label">Date</label>
+            <input
+              type="date"
+              name="tx_date"
+              class="input-control"
+            />
+          </div>
 
-            <button type="submit" class="btn full-width">Save payout</button>
-          </form>
+          <div class="field full-row">
+            <label class="field-label">Tx hash<span>*</span></label>
+            <input
+              type="text"
+              name="tx_hash"
+              class="input-control mono"
+              placeholder="0x..."
+              required
+            />
+            <p class="field-help">
+              Paste the transaction hash from your block explorer.
+            </p>
+          </div>
 
-          <h3 class="table-title">Recent payouts</h3>
-          <table class="app-table">
+          <div class="field full-row">
+            <label class="field-label">Notes</label>
+            <textarea
+              name="note"
+              class="input-control textarea-control"
+              rows="2"
+              placeholder="September retainer, milestone 2, bonus…"
+            ></textarea>
+          </div>
+
+          <div class="field full-row">
+            <button type="submit" class="btn primary-btn">
+              Save payout
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- RIGHT: payout logs table -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <div>
+            <h3 class="form-title">Payout log</h3>
+            <p class="form-subtitle">
+              Recent payouts based on your current filters (range &amp; chain).
+            </p>
+          </div>
+        </div>
+
+        <div class="dash-table-wrapper">
+          <table class="dash-table">
             <thead>
               <tr>
                 <th>Date</th>
                 <th>Contractor</th>
                 <th>Amount</th>
                 <th>Chain</th>
-                <th>Hash</th>
+                <th>Tx hash</th>
               </tr>
             </thead>
             <tbody id="payouts-body">
-              <!-- filled dynamically -->
+              <tr>
+                <td colspan="5">No payouts yet.</td>
+              </tr>
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 
         <!-- ================= REPORTS VIEW ================= -->
         <div class="app-view hidden" id="view-reports">
