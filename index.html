@@ -165,70 +165,96 @@
       </header>
 
       <div class="app-main-inner">
-        <!-- DASHBOARD VIEW -->
-<div class="app-view" id="view-dashboard">
-  <div class="dash-filters">
-  <div class="dash-filter-group">
-    <label for="dash-range">Range</label>
-    <select id="dash-range">
-      <option value="7d">Last 7 days</option>
-      <option value="30d" selected>Last 30 days</option>
-      <option value="90d">Last 90 days</option>
-      <option value="all">All time</option>
-    </select>
-  </div>
+        <div id="view-dashboard" class="app-view">
+  <div class="shell dashboard-shell">
 
-  <div class="dash-filter-group">
-    <label for="dash-chain">Chain</label>
-    <select id="dash-chain">
-      <option value="all" selected>All chains</option>
-      <option value="BASE">Base</option>
-      <option value="POLYGON">Polygon</option>
-      <option value="ETHEREUM">Ethereum</option>
-    </select>
+    <!-- Top bar: title + filters -->
+    <div class="dash-header">
+      <div>
+        <h2 class="dash-title">Dashboard</h2>
+        <p class="dash-subtitle">
+          Overview of your USDC payouts and contractors across chains.
+        </p>
+      </div>
+
+      <div class="dash-filters">
+        <div class="dash-filter-group">
+          <label for="dash-range">Range</label>
+          <select id="dash-range">
+            <option value="7d">Last 7 days</option>
+            <option value="30d" selected>Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+            <option value="all">All time</option>
+          </select>
+        </div>
+
+        <div class="dash-filter-group">
+          <label for="dash-chain">Chain</label>
+          <select id="dash-chain">
+            <option value="all" selected>All chains</option>
+            <option value="BASE">Base</option>
+            <option value="POLYGON">Polygon</option>
+            <option value="ETHEREUM">Ethereum</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="dash-kpi-row">
+      <div class="dash-card">
+        <div class="dash-card-label">Total payouts</div>
+        <div id="dash-total-30d" class="dash-card-value">$0</div>
+        <div id="dash-payout-count" class="dash-card-sub">0 payouts</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-card-label">Active contractors</div>
+        <div id="dash-contractors" class="dash-card-value">0</div>
+        <div class="dash-card-sub">With payouts in this range</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-card-label">Chains used</div>
+        <div id="dash-chains" class="dash-card-value">0</div>
+        <div id="dash-chain-list" class="dash-card-sub">No activity yet.</div>
+      </div>
+    </div>
+
+    <!-- Recent payouts table -->
+    <div class="dash-card dash-table-card">
+      <div class="dash-card-header">
+        <div>
+          <div class="dash-card-label">Recent payouts</div>
+          <div class="dash-card-sub">
+            Latest on-chain payouts matching your filters.
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-table-wrapper">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Contractor</th>
+              <th>Amount</th>
+              <th>Chain</th>
+              <th>Tx hash</th>
+            </tr>
+          </thead>
+          <tbody id="dash-payouts-table">
+            <tr>
+              <td colspan="5">Loading payouts…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
-  <!-- KPI cards -->
-  <div class="kpi-row">
-    <div class="kpi-card">
-      <span class="kpi-label">Total paid (last 30 days)</span>
-      <span class="kpi-value" id="dash-total-30d">$0</span>
-      <span class="kpi-sub" id="dash-payout-count">0 payouts</span>
-    </div>
-
-    <div class="kpi-card">
-      <span class="kpi-label">Active contractors</span>
-      <span class="kpi-value" id="dash-contractors">0</span>
-      <span class="kpi-sub">With at least one payout</span>
-    </div>
-
-    <div class="kpi-card">
-      <span class="kpi-label">Chains used</span>
-      <span class="kpi-value" id="dash-chains">0</span>
-      <span class="kpi-sub" id="dash-chain-list">–</span>
-    </div>
-  </div>
-
-  <!-- Recent payouts table -->
-  <div class="card" style="margin-top: 1.1rem;">
-    <h3 class="card-title">Recent payouts</h3>
-    <table class="app-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Contractor</th>
-          <th>Amount</th>
-          <th>Chain</th>
-          <th>Hash</th>
-        </tr>
-      </thead>
-      <tbody id="dash-payouts-table">
-        <!-- filled from JS -->
-      </tbody>
-    </table>
-  </div>
-</div>
 
             <div class="card card-side">
               <h3 class="card-title">This month snapshot</h3>
