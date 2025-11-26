@@ -1206,6 +1206,28 @@ footer {
   }
 }
 
+/* Make contractors & payouts views line up with dashboard */
+#view-contractors .dashboard-shell,
+#view-payouts .dashboard-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-top: 2.5rem;
+}
+
+/* Ensure the two-column layout fills that width */
+#view-contractors .two-column-layout,
+#view-payouts .two-column-layout {
+  width: 100%;
+}
+
+/* Optional: give a little extra space below the top dashboard snapshot
+   so the next sections don't feel jammed up against it */
+#view-contractors .section-header,
+#view-payouts .section-header {
+  margin-top: 0.5rem;
+}
+
+
 
 
 
