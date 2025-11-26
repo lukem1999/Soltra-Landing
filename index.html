@@ -38,85 +38,89 @@
 
 
   <main>
-   <section class="hero">
-     <form id="waitlist-form" class="waitlist-form">
+   <!-- HERO / LANDING SECTION -->
+<section class="hero-section">
+  <div class="shell hero-row">
+
+    <!-- LEFT: copy + waitlist -->
+    <div class="hero-copy">
+      <!-- Waitlist form -->
+      <form id="waitlist-form" class="waitlist-form">
         <input
           type="email"
           name="email"
+          class="waitlist-input"
           placeholder="you@dao.xyz"
           required
-          class="waitlist-input"
         />
         <button type="submit" class="btn waitlist-btn">
-          <span>Join the waitlist</span>
+          Join the waitlist
         </button>
         <div id="waitlist-message" class="waitlist-message"></div>
       </form>
 
-   
-  <div class="hero-inner">
-    <!-- Left: copy -->
-    <div class="hero-copy">
-      <p class="hero-eyebrow">Stablecoin payouts for global teams</p>
+      <!-- Eyebrow label -->
+      <div class="hero-eyebrow">Stablecoin payouts for global teams</div>
 
-      <h1>
-        Global stablecoin payouts.<br>
-        <span class="highlight">Clean records.</span> No spreadsheets.
+      <!-- Main headline -->
+      <h1 class="hero-title">
+        Global stablecoin payouts.<br />
+        <span class="highlight">Clean records.</span> No<br />
+        spreadsheets.
       </h1>
 
+      <!-- Subcopy -->
       <p class="hero-sub">
-        Pay contractors in USDC and keep organized, auditable records built for Web3 teams and DAOs.
+        Pay contractors in USDC and keep organized, auditable records built
+        for Web3 teams and DAOs.
       </p>
 
-      <div class="hero-actions">
-  <a href="#waitlist" class="btn hero-btn">
-    <span>Join the waitlist</span>
-  </a>
-  <span class="hero-secondary">
-    No KYC required to join. Early access for DAOs and Web3 teams.
-  </span>
-</div>
+      <p class="hero-sub" style="font-size: 0.8rem; margin-top: 0.3rem;">
+        <span style="color: var(--gold); font-weight: 600;">Early access.</span>
+        No KYC required to join. Built for DAOs, Web3 teams, and crypto-native orgs.
+      </p>
     </div>
 
-    <!-- Right: stats card -->
-    <div class="hero-card">
-      <div class="hero-card-header">
-        <span>Payouts – September</span>
-        <span class="hero-pill">USDC · Base</span>
-      </div>
+    <!-- RIGHT: payouts preview card -->
+    <div class="hero-preview">
+      <div class="hero-preview-inner">
+        <h3>Payouts — September &nbsp;·&nbsp; USDC · Base</h3>
 
-      <div class="hero-card-body">
-        <div class="hero-row">
-          <span class="hero-address">0xA3…7F91</span>
-          <span class="hero-amount">1,200&nbsp;USDC</span>
+        <div class="payout-row">
+          <span>0xA3…7F91</span>
+          <span>1,200 USDC</span>
         </div>
-        <div class="hero-row">
-          <span class="hero-address">0x93…C218</span>
-          <span class="hero-amount">850&nbsp;USDC</span>
+        <div class="payout-row">
+          <span>0x93…C218</span>
+          <span>850 USDC</span>
         </div>
-        <div class="hero-row">
-          <span class="hero-address">0x12…AB41</span>
-          <span class="hero-amount">1,700&nbsp;USDC</span>
+        <div class="payout-row">
+          <span>0x12…A841</span>
+          <span>1,700 USDC</span>
         </div>
-      </div>
 
-      <div class="hero-card-footer">
-        <div>
-          <div class="hero-footer-label">Total this month</div>
-          <div class="hero-footer-value">$3,750</div>
+        <div class="payout-summary">
+          <div>
+            <div class="payout-summary-main">$3,750</div>
+            <div class="payout-summary-label">Total this month</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="payout-summary-main">9</div>
+            <div class="payout-summary-label">Contractors</div>
+          </div>
         </div>
-        <div>
-          <div class="hero-footer-label">Contractors</div>
-          <div class="hero-footer-value">9</div>
-        </div>
-        <div>
-          <div class="hero-footer-label">Export</div>
-          <div class="hero-footer-value">CSV ready</div>
+
+        <div class="payout-summary" style="margin-top: 0.4rem;">
+          <div class="payout-summary-label">
+            CSV export ready · Clean audit trail
+          </div>
         </div>
       </div>
     </div>
+
   </div>
 </section>
+
 
     <section class="app-shell">
   <div class="app-layout">
