@@ -425,6 +425,153 @@ a {
   }
 }
 
+/* ---------- SHARED SECTION STYLES ---------- */
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  margin-bottom: 1.8rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  margin: 0 0 0.3rem;
+}
+
+.section-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* Two-column layout for forms + tables */
+
+.two-column-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.2fr);
+  gap: 1.7rem;
+}
+
+/* ---------- FORM CARDS ---------- */
+
+.form-card,
+.table-card {
+  background: radial-gradient(circle at top left,
+      #17233a 0%,
+      #0e1728 55%,
+      #050b16 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 1.25rem 1.3rem 1.3rem;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+}
+
+.form-title {
+  font-size: 0.95rem;
+  margin: 0 0 0.25rem;
+}
+
+.form-subtitle {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+/* Form grid */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field.full-row {
+  grid-column: 1 / -1;
+}
+
+/* Labels & inputs */
+
+.field-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.field-label span {
+  color: var(--gold);
+  margin-left: 0.15rem;
+}
+
+.input-control {
+  background: #050b16;
+  border-radius: 10px;
+  border: 1px solid #24304a;
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.input-control::placeholder {
+  color: var(--muted);
+}
+
+.input-control.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8rem;
+}
+
+.textarea-control {
+  resize: vertical;
+  min-height: 70px;
+}
+
+/* Helper text */
+
+.field-help {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* Primary form button override */
+
+.primary-btn {
+  margin-top: 0.3rem;
+  padding: 0.65rem 1.5rem;
+  border-radius: 999px;
+}
+
+/* Table card header */
+
+.table-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .two-column-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
 
 /* CTA button micro-interactions */
 
