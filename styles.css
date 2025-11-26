@@ -15,9 +15,18 @@
 body {
   margin: 0;
   padding: 0;
-  background:
-    radial-gradient(circle at top center, rgba(15, 23, 36, 0.6), transparent 55%),
-    #0f1724;
+  background: radial-gradient(
+      circle at 30% 20%,
+      rgba(246, 196, 83, 0.07),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(80, 120, 255, 0.06),
+      transparent 45%
+    ),
+    linear-gradient(180deg, #0f1724, #0c1520);
+  background-attachment: fixed;
   color: var(--text);
   font-family: "Inter", system-ui, sans-serif;
 }
