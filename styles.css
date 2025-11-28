@@ -479,6 +479,23 @@ a {
   color: var(--muted);
 }
 
+.dashboard-chart-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 32px;
+  backdrop-filter: blur(6px);
+}
+
+.dashboard-chart-card h3 {
+  color: #f1f5f9;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+
 /* Make canvas fit nicely */
 .chart-card canvas {
   width: 100% !important;
