@@ -445,6 +445,54 @@ a {
   color: var(--muted);
 }
 
+/* ---------- DASHBOARD CHARTS ---------- */
+
+.dash-charts {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  margin-top: 1.8rem;
+  margin-bottom: 2.4rem;
+}
+
+.chart-card {
+  background: radial-gradient(
+      circle at top left,
+      rgba(246, 196, 83, 0.12),
+      rgba(8, 16, 32, 0.95) 55%,
+      #050b16 100%
+    );
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1.1rem 1.2rem 1.3rem;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.65);
+}
+
+.chart-card-header h3 {
+  margin: 0 0 0.15rem;
+  font-size: 0.95rem;
+}
+
+.chart-card-header p {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* Make canvas fit nicely */
+.chart-card canvas {
+  width: 100% !important;
+  height: 260px !important;
+}
+
+/* Responsive: stack charts on narrow screens */
+@media (max-width: 900px) {
+  .dash-charts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
 /* ---------- RESPONSIVE ---------- */
 
 @media (max-width: 900px) {
