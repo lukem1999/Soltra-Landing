@@ -84,6 +84,32 @@ a {
   font-size: 1.6rem;
 }
 
+.site-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 40px;
+  background: #0D1224; /* your navy top bar */
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-logo-img {
+  height: 32px;
+  width: auto;
+}
+
+.nav-logo-text {
+  font-family: "Inter", sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #F9FAFB;
+}
+
+
 /* ---------- HERO LAYOUT ---------- */
 
 .shell {
