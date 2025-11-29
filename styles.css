@@ -1362,6 +1362,39 @@ footer {
   margin-top: 0.5rem;
 }
 
+/* ---- INPUT FIELDS ---- */
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: #0b1220;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  outline: none;
+  transition: 0.15s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: rgba(246,196,83,0.5); /* soft gold */
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(246,196,83,0.35);
+}
+
 
 
 
