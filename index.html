@@ -728,6 +728,14 @@
     });
   }
 
+  function shortenWallet(addr) {
+  if (!addr || typeof addr !== 'string') return '';
+  if (addr.length <= 12) return addr;
+  return addr.slice(0, 6) + '...' + addr.slice(-4);
+}
+
+  
+
   // === CONTRACTORS ===
   async function loadContractors() {
     const tbody = document.getElementById('contractors-body');
@@ -766,11 +774,21 @@
               : '—';
             tr.innerHTML = `
               <td>${c.name || ''}</td>
-              <td>${c.wallet_address || ''}</td>
-              <td>${c.role || ''}</td>
-              <td>${c.country || ''}</td>
-              <td>${lastPaid}</td>
-            `;
+              <td>
+                <div class="wallet-cell">
+                  <div class="wallet-avatar">
+                    ${(c.name || c.wallet_address || '?')[0].toUpperCase()}
+                </div>
+                <span class="wallet-text">
+                  ${shortenWallet(c.wallet_address || '')}
+                </span>
+              </div>
+            </td>
+            <td>${c.role || ''}</td>
+            <td>${c.country || ''}</td>
+            <td>${lastPaid}</td>
+`          ;
+
             tbody.appendChild(tr);
           });
         }
@@ -842,6 +860,38 @@
     }
   }
 
+  // === CHAIN ICON RENDERING ===
+function renderChainPill(chain) {
+  if (!chain) return '';
+
+  const c = chain.toLowerCase();
+  let logo = '';
+  let label = '';
+
+  if (c.includes('base')) {
+    logo = 'https://assets.coingecko.com/coins/images/31069/small/base-logo.png';
+    label = 'Base';
+  } else if (c.includes('eth')) {
+    logo = 'https://cryptocurrencyicons.s3.amazonaws.com/blockchains/ethereum.png';
+    label = 'Ethereum';
+  } else if (c.includes('poly') || c.includes('matic')) {
+    logo = 'https://cryptocurrencyicons.s3.amazonaws.com/blockchains/polygon.png';
+    label = 'Polygon';
+  } else {
+    // fallback generic chain icon
+    logo = 'https://cryptocurrencyicons.s3.amazonaws.com/blockchains/generic.png';
+    label = chain;
+  }
+
+  return `
+    <span class="chain-pill">
+      <img src="${logo}" alt="${label} logo">
+      <span>${label}</span>
+    </span>
+  `;
+}
+
+
   // === PAYOUTS ===
   async function loadPayouts() {
     const tbody = document.getElementById('payouts-body');
@@ -910,7 +960,7 @@
           <td>${date}</td>
           <td>${name}</td>
           <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
-          <td>${(p.chain || '').toUpperCase()}</td>
+          <td>${renderChainPill(p.chain)}</td>
           <td>${p.tx_hash}</td>
         `;
         tbody.appendChild(tr);
