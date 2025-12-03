@@ -1,1 +1,1336 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Soltra App — Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Auth wrapper -->
+  <div id="auth-wrapper">
+    <div class="auth-card">
+      <h2>Sign in to Soltra</h2>
+      <p class="auth-subtitle">Use your email to manage your contractor payouts.</p>
+
+      <form id="auth-form">
+        <input type="email" name="email" placeholder="you@company.com" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="btn auth-btn"><span>Sign in</span></button>
+      </form>
+
+      <button id="auth-toggle-mode" class="auth-toggle">
+        New here? Create an account
+      </button>
+
+      <p id="auth-message" class="auth-message"></p>
+      <button id="signout-btn" class="mini-btn" style="display:none;">Sign out</button>
+    </div>
+  </div>
+
+  <!-- Simple app header (logo + back to site) -->
+  <header class="site-header">
+    <div class="nav-logo">
+      <img src="soltra-s.png" alt="Soltra logo" class="nav-logo-img" />
+      <span class="nav-logo-text">Soltra</span>
+    </div>
+
+    <nav class="site-nav">
+      <a href="index.html">Back to site</a>
+    </nav>
+
+    <div class="site-nav-cta"></div>
+  </header>
+
+  <!-- APP SHELL -->
+  <section class="app-shell">
+    <div class="app-layout">
+      <!-- Sidebar -->
+      <aside class="app-sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-mark">S</div>
+          <span>Soltra</span>
+        </div>
+
+        <nav class="app-tabs">
+          <button class="tab-button active" data-target="dashboard">Overview</button>
+          <button class="tab-button" data-target="contractors">Contractors</button>
+          <button class="tab-button" data-target="payouts">Payouts</button>
+          <button class="tab-button" data-target="reports">Reports</button>
+        </nav>
+
+        <div class="sidebar-foot">
+          <span class="sidebar-label">Environment</span>
+          <span class="sidebar-pill">Sandbox</span>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <div class="app-main">
+        <header class="app-header">
+          <div>
+            <h2>Soltra Dashboard</h2>
+            <p>Track stablecoin payouts, contractors, and reporting in one place.</p>
+          </div>
+          <div class="app-header-controls">
+            <select class="app-select">
+              <option>This month</option>
+              <option>Last month</option>
+              <option>Last 90 days</option>
+            </select>
+            <div class="user-pill">
+              <span class="user-avatar">L</span>
+              <span class="user-name">You</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="app-main-inner">
+          <!-- DASHBOARD VIEW -->
+          <div id="view-dashboard" class="app-view">
+            <div class="shell dashboard-shell">
+              <!-- Top bar: title + filters -->
+              <div class="dash-header">
+                <div>
+                  <h2 class="dash-title">Dashboard</h2>
+                  <p class="dash-subtitle">
+                    Overview of your USDC payouts and contractors across chains.
+                  </p>
+                </div>
+
+                <div class="dash-filters">
+                  <div class="dash-filter-group">
+                    <label for="dash-range">Range</label>
+                    <select id="dash-range">
+                      <option value="7d">Last 7 days</option>
+                      <option value="30d" selected>Last 30 days</option>
+                      <option value="90d">Last 90 days</option>
+                      <option value="all">All time</option>
+                    </select>
+                  </div>
+
+                  <div class="dash-filter-group">
+                    <label for="dash-chain">Chain</label>
+                    <select id="dash-chain">
+                      <option value="all" selected>All chains</option>
+                      <option value="BASE">Base</option>
+                      <option value="POLYGON">Polygon</option>
+                      <option value="ETHEREUM">Ethereum</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- KPI cards -->
+              <div class="dash-kpi-row">
+                <div class="dash-card">
+                  <div class="dash-card-label">Total payouts</div>
+                  <div id="dash-total-30d" class="dash-card-value">$0</div>
+                  <div id="dash-payout-count" class="dash-card-sub">0 payouts</div>
+                </div>
+
+                <div class="dash-card">
+                  <div class="dash-card-label">Active contractors</div>
+                  <div id="dash-contractors" class="dash-card-value">0</div>
+                  <div class="dash-card-sub">With payouts in this range</div>
+                </div>
+
+                <div class="dash-card">
+                  <div class="dash-card-label">Chains used</div>
+                  <div id="dash-chains" class="dash-card-value">0</div>
+                  <div id="dash-chain-list" class="dash-card-sub">No activity yet.</div>
+                </div>
+              </div>
+
+              <!-- Recent payouts table -->
+              <div class="dash-card dash-table-card">
+                <div class="dash-card-header">
+                  <div>
+                    <div class="dash-card-label">Recent payouts</div>
+                    <div class="dash-card-sub">
+                      Latest on-chain payouts matching your filters.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dash-table-wrapper">
+                  <table class="dash-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Contractor</th>
+                        <th>Amount</th>
+                        <th>Chain</th>
+                        <th>Tx hash</th>
+                      </tr>
+                    </thead>
+                    <tbody id="dash-payouts-table">
+                      <tr>
+                        <td colspan="5">Loading payouts…</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Charts -->
+              <section class="dash-charts">
+                <div class="chart-card">
+                  <div class="chart-card-header">
+                    <h3>Monthly payout volume</h3>
+                    <p>USDC paid out over the last few months.</p>
+                  </div>
+                  <canvas id="payoutVolumeChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                  <div class="chart-card-header">
+                    <h3>Chains used</h3>
+                    <p>Share of payouts by chain.</p>
+                  </div>
+                  <canvas id="chainSplitChart"></canvas>
+                </div>
+              </section>
+
+              <div class="card card-side">
+                <h3 class="card-title">This month snapshot</h3>
+                <ul class="summary-list">
+                  <li>
+                    <span>Total contractors paid</span>
+                    <strong>6</strong>
+                  </li>
+                  <li>
+                    <span>Average payout size</span>
+                    <strong>$625</strong>
+                  </li>
+                  <li>
+                    <span>CSV exports</span>
+                    <strong>2</strong>
+                  </li>
+                  <li>
+                    <span>Failed payouts</span>
+                    <strong>0</strong>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONTRACTORS VIEW -->
+          <div id="view-contractors" class="app-view hidden">
+            <div class="shell dashboard-shell">
+              <div class="section-header">
+                <div>
+                  <h2 class="section-title">Contractors</h2>
+                  <p class="section-subtitle">
+                    Add and manage wallets for contributors, freelancers, and core team.
+                  </p>
+                </div>
+              </div>
+
+              <div class="two-column-layout">
+                <!-- LEFT: add contractor form -->
+                <div class="form-card">
+                  <h3 class="form-title">Add contractor</h3>
+                  <p class="form-subtitle">
+                    Store basic details and a payout address. You can edit or remove them later.
+                  </p>
+
+                  <form id="add-contractor-form" class="form-grid">
+                    <div class="field">
+                      <label class="field-label">Name<span>*</span></label>
+                      <input
+                        type="text"
+                        name="name"
+                        class="input-control"
+                        placeholder="Jane Doe"
+                        required
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label class="field-label">Role</label>
+                      <input
+                        type="text"
+                        name="role"
+                        class="input-control"
+                        placeholder="Solidity dev, Designer, Ops…"
+                      />
+                    </div>
+
+                    <div class="field full-row">
+                      <label class="field-label">Wallet address<span>*</span></label>
+                      <input
+                        type="text"
+                        name="wallet_address"
+                        class="input-control mono"
+                        placeholder="0x..."
+                        required
+                      />
+                      <p class="field-help">
+                        EVM-compatible address where payouts will be sent.
+                      </p>
+                    </div>
+
+                    <div class="field">
+                      <label class="field-label">Country</label>
+                      <input
+                        type="text"
+                        name="country"
+                        class="input-control"
+                        placeholder="Estonia, US, Nigeria…"
+                      />
+                    </div>
+
+                    <div class="field full-row">
+                      <button type="submit" class="btn primary-btn">
+                        Save contractor
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- RIGHT: contractors table -->
+                <div class="table-card">
+                  <div class="table-card-header">
+                    <div>
+                      <h3 class="form-title">Saved contractors</h3>
+                      <p class="form-subtitle">
+                        These wallets will show up when logging payouts.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="dash-table-wrapper">
+                    <table class="dash-table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Wallet</th>
+                          <th>Role</th>
+                          <th>Country</th>
+                          <th>Last paid</th>
+                        </tr>
+                      </thead>
+                      <tbody id="contractors-body">
+                        <tr>
+                          <td colspan="5">No contractors yet.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- PAYOUTS VIEW -->
+          <div id="view-payouts" class="app-view hidden">
+            <div class="shell dashboard-shell">
+              <div class="section-header">
+                <div>
+                  <h2 class="section-title">Payouts</h2>
+                  <p class="section-subtitle">
+                    Log USDC payouts you’ve sent on-chain and keep a clean audit trail.
+                  </p>
+                </div>
+              </div>
+
+              <div class="two-column-layout">
+                <!-- LEFT: add payout form -->
+                <div class="form-card">
+                  <h3 class="form-title">Log a payout</h3>
+                  <p class="form-subtitle">
+                    Record an on-chain transfer you’ve already sent from your treasury
+                    wallet or multisig.
+                  </p>
+
+                  <form id="payout-form" class="form-grid">
+                    <div class="field">
+                      <label class="field-label">Contractor<span>*</span></label>
+                      <select
+                        id="payout-contractor"
+                        name="contractor_id"
+                        class="input-control"
+                        required
+                      >
+                        <option value="">Select contractor</option>
+                      </select>
+                    </div>
+
+                    <div class="field">
+                      <label class="field-label">Amount (USDC)<span>*</span></label>
+                      <input
+                        type="number"
+                        name="amount"
+                        class="input-control"
+                        placeholder="1200"
+                        step="0.01"
+                        min="0"
+                        required
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label class="field-label">Chain<span>*</span></label>
+                      <select name="chain" class="input-control" required>
+                        <option value="">Select chain</option>
+                        <option value="BASE">Base</option>
+                        <option value="POLYGON">Polygon</option>
+                        <option value="ETHEREUM">Ethereum</option>
+                      </select>
+                    </div>
+
+                    <div class="field">
+                      <label class="field-label">Date</label>
+                      <input
+                        type="date"
+                        name="tx_date"
+                        class="input-control"
+                      />
+                    </div>
+
+                    <div class="field full-row">
+                      <label class="field-label">Tx hash<span>*</span></label>
+                      <input
+                        type="text"
+                        name="tx_hash"
+                        class="input-control mono"
+                        placeholder="0x..."
+                        required
+                      />
+                      <p class="field-help">
+                        Paste the transaction hash from your block explorer.
+                      </p>
+                    </div>
+
+                    <div class="field full-row">
+                      <label class="field-label">Notes</label>
+                      <textarea
+                        name="note"
+                        class="input-control textarea-control"
+                        rows="2"
+                        placeholder="September retainer, milestone 2, bonus…"
+                      ></textarea>
+                    </div>
+
+                    <div class="field full-row">
+                      <button type="submit" class="btn primary-btn">
+                        Save payout
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- RIGHT: payout logs table -->
+                <div class="table-card">
+                  <div class="table-card-header">
+                    <div>
+                      <h3 class="form-title">Payout log</h3>
+                      <p class="form-subtitle">
+                        Recent payouts based on your current filters (range &amp; chain).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="dash-table-wrapper">
+                    <table class="dash-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Contractor</th>
+                          <th>Amount</th>
+                          <th>Chain</th>
+                          <th>Tx hash</th>
+                        </tr>
+                      </thead>
+                      <tbody id="payouts-body">
+                        <tr>
+                          <td colspan="5">No payouts yet.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- REPORTS VIEW -->
+          <div class="app-view hidden" id="view-reports">
+            <div class="list-header">
+              <h3>Reports</h3>
+              <button class="mini-btn">Export CSV</button>
+            </div>
+
+            <div class="filters-row">
+              <select>
+                <option>September 2025</option>
+                <option>August 2025</option>
+              </select>
+              <select>
+                <option>All contractors</option>
+                <option>Anna L</option>
+                <option>Marcus V</option>
+              </select>
+              <select>
+                <option>All chains</option>
+                <option>Base</option>
+                <option>Polygon</option>
+              </select>
+            </div>
+
+            <table class="app-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Contractor</th>
+                  <th>Amount</th>
+                  <th>USD value</th>
+                  <th>Hash</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Sep 12</td>
+                  <td>Anna L</td>
+                  <td>1,200 USDC</td>
+                  <td>$1,200</td>
+                  <td>0x9F1C…72a3</td>
+                </tr>
+                <tr>
+                  <td>Sep 10</td>
+                  <td>Marcus V</td>
+                  <td>850 USDC</td>
+                  <td>$850</td>
+                  <td>0xA8B7…19f0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Dashboard chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    // === Supabase config (DEV ONLY) ===
+    const SUPABASE_URL = 'https://lvuvkgnkhrzpwlssupyh.supabase.co';
+    const SUPABASE_ANON_KEY =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dXZrZ25raHJ6cHdsc3N1cHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDkyOTIsImV4cCI6MjA3ODkyNTI5Mn0.9C1-3Di7tXJCgb_7ZHj7mz6QL5fDMvnvmBziYqgGeDs';
+
+    // Supabase client (for auth + REST)
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // === GLOBAL STATE ===
+    let contractorsCache = [];
+    let authMode = 'signin';       // 'signin' | 'signup'
+    let filterRange = '30d';       // '7d' | '30d' | '90d' | 'all'
+    let filterChain = 'all';       // 'all' | 'BASE' | 'POLYGON' | 'ETHEREUM'
+
+    // === UTILITIES ===
+    function formatUSD(amount) {
+      if (!amount || isNaN(amount)) return '$0';
+      return `$${amount.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })}`;
+    }
+
+    function setAuthMessage(text, type = '') {
+      const el = document.getElementById('auth-message');
+      if (!el) return;
+      el.textContent = text || '';
+      el.className = 'auth-message';
+      if (type) el.classList.add(type);
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      const toggle = document.getElementById('auth-toggle-mode');
+      const btn = document.querySelector('#auth-form .auth-btn');
+      if (!toggle || !btn) return;
+
+      if (mode === 'signin') {
+        btn.textContent = 'Sign in';
+        toggle.textContent = 'New here? Create an account';
+      } else {
+        btn.textContent = 'Create account';
+        toggle.textContent = 'Already have an account? Sign in';
+      }
+      setAuthMessage('');
+    }
+
+    // === TAB NAVIGATION ===
+    function initTabs() {
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const views = {
+        dashboard: document.getElementById('view-dashboard'),
+        contractors: document.getElementById('view-contractors'),
+        payouts: document.getElementById('view-payouts'),
+        reports: document.getElementById('view-reports'),
+      };
+
+      if (!tabButtons.length) return;
+
+      tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabButtons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          const target = btn.dataset.target;
+          Object.entries(views).forEach(([key, el]) => {
+            if (!el) return;
+            if (key === target) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+          });
+        });
+      });
+
+      // Open tab from hash (e.g. app.html#payouts)
+      const hash = window.location.hash.replace('#', '');
+      if (hash && views[hash]) {
+        const btn = document.querySelector(`.tab-button[data-target="${hash}"]`);
+        if (btn) btn.click();
+      }
+    }
+
+    function shortenWallet(addr) {
+      if (!addr || typeof addr !== 'string') return '';
+      if (addr.length <= 12) return addr;
+      return addr.slice(0, 6) + '...' + addr.slice(-4);
+    }
+
+    // === CONTRACTORS ===
+    async function loadContractors() {
+      const tbody = document.getElementById('contractors-body');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="5">Loading contractors...</td></tr>';
+      }
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/contractors?select=*`, {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+        });
+
+        if (!res.ok) {
+          if (tbody) {
+            tbody.innerHTML =
+              `<tr><td colspan="5">Error loading data (${res.status})</td></tr>`;
+          }
+          return;
+        }
+
+        const data = await res.json();
+        contractorsCache = data;
+
+        if (tbody) {
+          if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="5">No contractors yet.</td></tr>';
+          } else {
+            tbody.innerHTML = '';
+            data.forEach(c => {
+              const tr = document.createElement('tr');
+              const lastPaid = c.last_paid_at
+                ? new Date(c.last_paid_at).toLocaleDateString()
+                : '—';
+              tr.innerHTML = `
+                <td>${c.name || ''}</td>
+                <td>
+                  <div class="wallet-cell">
+                    <div class="wallet-avatar">
+                      ${(c.name || c.wallet_address || '?')[0].toUpperCase()}
+                    </div>
+                    <span class="wallet-text">
+                      ${shortenWallet(c.wallet_address || '')}
+                    </span>
+                  </div>
+                </td>
+                <td>${c.role || ''}</td>
+                <td>${c.country || ''}</td>
+                <td>${lastPaid}</td>
+              `;
+              tbody.appendChild(tr);
+            });
+          }
+        }
+
+        populateContractorSelect();
+      } catch (err) {
+        console.error(err);
+        if (tbody) {
+          tbody.innerHTML =
+            '<tr><td colspan="5">Error loading contractors.</td></tr>';
+        }
+      }
+    }
+
+    function populateContractorSelect() {
+      const select = document.getElementById('payout-contractor');
+      if (!select) return;
+
+      select.innerHTML = '<option value="">Select contractor</option>';
+
+      contractorsCache.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name || c.wallet_address;
+        select.appendChild(opt);
+      });
+    }
+
+    async function addContractor(event) {
+      event.preventDefault();
+
+      const form = event.target;
+      const formData = new FormData(form);
+
+      const name = formData.get('name')?.trim();
+      const wallet = formData.get('wallet_address')?.trim();
+      const role = formData.get('role')?.trim();
+      const country = formData.get('country')?.trim();
+
+      if (!name || !wallet) {
+        alert('Name and wallet address are required.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/contractors`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=representation',
+          },
+          body: JSON.stringify({ name, wallet_address: wallet, role, country }),
+        });
+
+        if (!res.ok) {
+          console.error('Error inserting contractor', await res.text());
+          alert('Error adding contractor.');
+          return;
+        }
+
+        form.reset();
+        await loadContractors();
+      } catch (err) {
+        console.error(err);
+        alert('Network error adding contractor.');
+      }
+    }
+
+    // === CHAIN ICON RENDERING ===
+    function renderChainPill(chain) {
+      if (!chain) return '';
+
+      const c = chain.toLowerCase();
+      let logo = '';
+      let label = '';
+
+      if (c.includes('base')) {
+        logo = 'https://assets.coingecko.com/coins/images/31069/small/base-logo.png';
+        label = 'Base';
+      } else if (c.includes('eth')) {
+        logo = 'https://cryptocurrencyicons.s3.amazonaws.com/blockchains/ethereum.png';
+        label = 'Ethereum';
+      } else if (c.includes('poly') || c.includes('matic')) {
+        logo = 'https://cryptocurrencyicons.s3.amazonaws.com/blockchains/polygon.png';
+        label = 'Polygon';
+      } else {
+        logo = 'https://cryptocurrencyicons.s3.amazonaws.com/blockchains/generic.png';
+        label = chain;
+      }
+
+      return `
+        <span class="chain-pill">
+          <img src="${logo}" alt="${label} logo">
+          <span>${label}</span>
+        </span>
+      `;
+    }
+
+    // === PAYOUTS ===
+    async function loadPayouts() {
+      const tbody = document.getElementById('payouts-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = '<tr><td colspan="5">Loading payouts...</td></tr>';
+
+      // date filter
+      let sinceISO = null;
+      if (filterRange !== 'all') {
+        const since = new Date();
+        if (filterRange === '7d') since.setDate(since.getDate() - 7);
+        else if (filterRange === '30d') since.setDate(since.getDate() - 30);
+        else if (filterRange === '90d') since.setDate(since.getDate() - 90);
+        sinceISO = since.toISOString();
+      }
+
+      const params = [
+        'select=*,contractors(name)',
+        'order=tx_timestamp.desc',
+        'limit=50',
+      ];
+
+      if (sinceISO) {
+        params.push(`tx_timestamp=gte.${encodeURIComponent(sinceISO)}`);
+      }
+      if (filterChain !== 'all') {
+        params.push(`chain=eq.${encodeURIComponent(filterChain)}`);
+      }
+
+      const url = `${SUPABASE_URL}/rest/v1/payouts?` + params.join('&');
+
+      try {
+        const res = await fetch(url, {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+        });
+
+        if (!res.ok) {
+          tbody.innerHTML =
+            `<tr><td colspan="5">Error loading payouts (${res.status})</td></tr>`;
+          return;
+        }
+
+        const data = await res.json();
+
+        if (!data.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="5">No payouts for this range.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        data.forEach(p => {
+          const tr = document.createElement('tr');
+
+          const date = p.tx_timestamp
+            ? new Date(p.tx_timestamp).toLocaleDateString()
+            : '—';
+
+          const name = p.contractors?.name || 'Unknown';
+
+          tr.innerHTML = `
+            <td>${date}</td>
+            <td>${name}</td>
+            <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
+            <td>${renderChainPill(p.chain)}</td>
+            <td>${p.tx_hash}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML =
+          '<tr><td colspan="5">Error loading payouts.</td></tr>';
+      }
+    }
+
+    async function addPayout(event) {
+      event.preventDefault();
+
+      const form = event.target;
+      const formData = new FormData(form);
+
+      const contractor_id = formData.get('contractor_id');
+      const amountStr = formData.get('amount');
+      const chain = formData.get('chain');
+      const tx_hash = formData.get('tx_hash')?.trim();
+      const tx_date = formData.get('tx_date');
+      const note = formData.get('note')?.trim();
+
+      if (!contractor_id || !amountStr || !chain || !tx_hash) {
+        alert('Contractor, amount, chain, and tx hash are required.');
+        return;
+      }
+
+      const amount = Number(amountStr);
+      if (!amount || amount <= 0) {
+        alert('Amount must be a positive number.');
+        return;
+      }
+
+      const tx_timestamp = tx_date
+        ? new Date(tx_date).toISOString()
+        : new Date().toISOString();
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/payouts`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=representation',
+          },
+          body: JSON.stringify({
+            contractor_id,
+            amount,
+            asset_symbol: 'USDC',
+            chain,
+            tx_hash,
+            tx_timestamp,
+            note,
+          }),
+        });
+
+        if (!res.ok) {
+          console.error('Error inserting payout', await res.text());
+          alert('Error saving payout.');
+          return;
+        }
+
+        form.reset();
+        await loadPayouts();
+        await loadDashboard();
+      } catch (err) {
+        console.error(err);
+        alert('Network error saving payout.');
+      }
+    }
+
+    // === DASHBOARD ===
+    async function loadDashboard() {
+      const totalEl = document.getElementById('dash-total-30d');
+      const payoutCountEl = document.getElementById('dash-payout-count');
+      const contractorsEl = document.getElementById('dash-contractors');
+      const chainsEl = document.getElementById('dash-chains');
+      const chainListEl = document.getElementById('dash-chain-list');
+      const tableBody = document.getElementById('dash-payouts-table');
+
+      if (!totalEl || !tableBody) return;
+
+      // date filter
+      let sinceISO = null;
+      if (filterRange !== 'all') {
+        const since = new Date();
+        if (filterRange === '7d') since.setDate(since.getDate() - 7);
+        else if (filterRange === '30d') since.setDate(since.getDate() - 30);
+        else if (filterRange === '90d') since.setDate(since.getDate() - 90);
+        sinceISO = since.toISOString();
+      }
+
+      const params = [
+        'select=*,contractors(name)',
+        'order=tx_timestamp.desc',
+        'limit=200',
+      ];
+
+      if (sinceISO) {
+        params.push(`tx_timestamp=gte.${encodeURIComponent(sinceISO)}`);
+      }
+      if (filterChain !== 'all') {
+        params.push(`chain=eq.${encodeURIComponent(filterChain)}`);
+      }
+
+      const url = `${SUPABASE_URL}/rest/v1/payouts?` + params.join('&');
+
+      try {
+        const res = await fetch(url, {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+        });
+
+        if (!res.ok) {
+          console.error('Dashboard fetch error', res.status, await res.text());
+          totalEl.textContent = '$0';
+          payoutCountEl.textContent = 'Error loading payouts';
+          return;
+        }
+
+        const data = await res.json();
+
+        const totalAmount = data.reduce(
+          (sum, p) => sum + (Number(p.amount) || 0),
+          0
+        );
+        const payoutCount = data.length;
+
+        const contractorIds = new Set(
+          data.map(p => p.contractor_id).filter(Boolean)
+        );
+        const chains = new Set(
+          data.map(p => (p.chain || '').toUpperCase()).filter(Boolean)
+        );
+
+        totalEl.textContent = formatUSD(totalAmount);
+        payoutCountEl.textContent =
+          payoutCount === 1 ? '1 payout' : `${payoutCount} payouts`;
+
+        if (contractorsEl) contractorsEl.textContent = contractorIds.size;
+        if (chainsEl) chainsEl.textContent = chains.size || 0;
+        if (chainListEl) {
+          chainListEl.textContent = chains.size
+            ? Array.from(chains).join(' · ')
+            : 'No payouts for this range.';
+        }
+
+        tableBody.innerHTML = '';
+
+        if (!data.length) {
+          tableBody.innerHTML =
+            '<tr><td colspan="5">No payouts for this range.</td></tr>';
+          return;
+        }
+
+        data.slice(0, 10).forEach(p => {
+          const tr = document.createElement('tr');
+
+          const date = p.tx_timestamp
+            ? new Date(p.tx_timestamp).toLocaleDateString()
+            : '—';
+
+          const name = p.contractors?.name || 'Unknown';
+
+          tr.innerHTML = `
+            <td>${date}</td>
+            <td>${name}</td>
+            <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
+            <td>${(p.chain || '').toUpperCase()}</td>
+            <td>${p.tx_hash}</td>
+          `;
+          tableBody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Dashboard error', err);
+        totalEl.textContent = '$0';
+        payoutCountEl.textContent = 'Error loading data';
+        tableBody.innerHTML =
+          '<tr><td colspan="5">Error loading payouts.</td></tr>';
+      }
+    }
+
+    // ----- Dashboard charts -----
+    let payoutVolumeChart = null;
+    let chainSplitChart = null;
+
+    async function loadDashboardCharts() {
+      const canvas1 = document.getElementById('payoutVolumeChart');
+      const canvas2 = document.getElementById('chainSplitChart');
+      if (!canvas1 || !canvas2) return;
+
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/payouts?select=amount,chain,tx_timestamp&order=tx_timestamp.asc`,
+          {
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          console.error('Error loading payouts for charts', await res.text());
+          buildChartsWithMockData();
+          return;
+        }
+
+        const payouts = await res.json();
+        if (!payouts.length) {
+          buildChartsWithMockData();
+          return;
+        }
+
+        const { monthlyLabels, monthlyTotals, chainLabels, chainTotals } =
+          aggregatePayoutData(payouts);
+
+        renderPayoutVolumeChart(canvas1, monthlyLabels, monthlyTotals);
+        renderChainSplitChart(canvas2, chainLabels, chainTotals);
+      } catch (err) {
+        console.error(err);
+        buildChartsWithMockData();
+      }
+    }
+
+    function aggregatePayoutData(payouts) {
+      const monthlyMap = new Map();
+      const chainMap = new Map();
+
+      payouts.forEach((p) => {
+        const amount = Number(p.amount) || 0;
+        const chain = (p.chain || 'OTHER').toUpperCase();
+
+        const date = p.tx_timestamp ? new Date(p.tx_timestamp) : new Date();
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+          2,
+          '0'
+        )}`; // YYYY-MM
+
+        monthlyMap.set(key, (monthlyMap.get(key) || 0) + amount);
+        chainMap.set(chain, (chainMap.get(chain) || 0) + amount);
+      });
+
+      const monthlyLabels = Array.from(monthlyMap.keys()).sort();
+      const trimmedLabels = monthlyLabels.slice(-6);
+      const monthlyTotals = trimmedLabels.map((k) => monthlyMap.get(k));
+
+      const chainLabels = Array.from(chainMap.keys());
+      const chainTotals = chainLabels.map((k) => chainMap.get(k));
+
+      return {
+        monthlyLabels: trimmedLabels,
+        monthlyTotals,
+        chainLabels,
+        chainTotals,
+      };
+    }
+
+    function buildChartsWithMockData() {
+      const canvas1 = document.getElementById('payoutVolumeChart');
+      const canvas2 = document.getElementById('chainSplitChart');
+      if (!canvas1 || !canvas2) return;
+
+      const monthlyLabels = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+      const monthlyTotals = [800, 1200, 950, 2100, 1750, 2300];
+
+      const chainLabels = ['BASE', 'POLYGON', 'ETH', 'OTHER'];
+      const chainTotals = [3400, 2100, 900, 300];
+
+      renderPayoutVolumeChart(canvas1, monthlyLabels, monthlyTotals);
+      renderChainSplitChart(canvas2, chainLabels, chainTotals);
+    }
+
+    function renderPayoutVolumeChart(canvas, labels, data) {
+      if (payoutVolumeChart) payoutVolumeChart.destroy();
+
+      payoutVolumeChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Payout volume (USDC)',
+              data,
+              tension: 0.35,
+              fill: true,
+              backgroundColor: 'rgba(246, 196, 83, 0.18)',
+              borderColor: 'rgba(246, 196, 83, 0.9)',
+              borderWidth: 2,
+              pointRadius: 3,
+              pointBackgroundColor: '#f6c453',
+            },
+          ],
+        },
+        options: {
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label(ctx) {
+                  const v = ctx.parsed.y || 0;
+                  return ` ${v.toLocaleString()} USDC`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255,255,255,0.03)' },
+              ticks: { color: '#9fb0c4', font: { size: 11 } },
+            },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: {
+                color: '#9fb0c4',
+                font: { size: 11 },
+                callback(value) {
+                  return value >= 1000
+                    ? `${(value / 1000).toFixed(1)}k`
+                    : `${value}`;
+                },
+              },
+            },
+          },
+          responsive: true,
+          maintainAspectRatio: false,
+        },
+      });
+    }
+
+    function renderChainSplitChart(canvas, labels, data) {
+      if (chainSplitChart) chainSplitChart.destroy();
+
+      chainSplitChart = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [
+            {
+              data,
+              backgroundColor: [
+                'rgba(246, 196, 83, 0.95)', // gold
+                'rgba(94, 234, 212, 0.9)',  // teal accent
+                'rgba(129, 140, 248, 0.9)', // indigo
+                'rgba(148, 163, 184, 0.8)', // slate
+              ],
+              borderColor: '#050b16',
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#9fb0c4',
+                font: { size: 11 },
+                padding: 12,
+              },
+            },
+            tooltip: {
+              callbacks: {
+                label(ctx) {
+                  const label = ctx.label || '';
+                  const value = ctx.parsed || 0;
+                  return ` ${label}: ${value.toLocaleString()} USDC`;
+                },
+              },
+            },
+          },
+          cutout: '62%',
+          responsive: true,
+          maintainAspectRatio: false,
+        },
+      });
+    }
+
+    // === AUTH ===
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const email = form.email.value.trim();
+      const password = form.password.value;
+
+      if (!email || !password) {
+        setAuthMessage('Email and password are required.', 'error');
+        return;
+      }
+
+      setAuthMessage('Working...');
+
+      try {
+        if (authMode === 'signup') {
+          const { error } = await supabase.auth.signUp({ email, password });
+          if (error) throw error;
+          setAuthMessage(
+            'Account created. Check your email, then sign in.',
+            'success'
+          );
+          setAuthMode('signin');
+        } else {
+          const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (error) throw error;
+          setAuthMessage('');
+          await onAuthChanged();
+        }
+      } catch (err) {
+        console.error(err);
+        setAuthMessage(err.message || 'Auth error.', 'error');
+      }
+    }
+
+    async function handleSignOut() {
+      await supabase.auth.signOut();
+      await onAuthChanged();
+    }
+
+    async function onAuthChanged() {
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+
+      const authWrapper = document.getElementById('auth-wrapper');
+      const appShell = document.querySelector('.app-shell');
+      const signoutBtn = document.getElementById('signout-btn');
+
+      if (session) {
+        if (authWrapper) authWrapper.style.display = 'none';
+        if (appShell) appShell.style.display = 'block';
+        if (signoutBtn) signoutBtn.style.display = 'inline-block';
+
+        loadDashboard();
+        loadContractors();
+        loadPayouts();
+        loadDashboardCharts();
+      } else {
+        if (authWrapper) authWrapper.style.display = 'flex';
+        if (appShell) appShell.style.display = 'none';
+        if (signoutBtn) signoutBtn.style.display = 'none';
+      }
+    }
+
+    // === INIT ===
+    document.addEventListener('DOMContentLoaded', () => {
+      initTabs();
+
+      const addContractorForm = document.getElementById('add-contractor-form');
+      if (addContractorForm) {
+        addContractorForm.addEventListener('submit', addContractor);
+      }
+
+      const payoutForm = document.getElementById('payout-form');
+      if (payoutForm) {
+        payoutForm.addEventListener('submit', addPayout);
+      }
+
+      const rangeSelect = document.getElementById('dash-range');
+      const chainSelect = document.getElementById('dash-chain');
+
+      if (rangeSelect) {
+        rangeSelect.addEventListener('change', () => {
+          filterRange = rangeSelect.value;
+          loadDashboard();
+          loadPayouts();
+        });
+      }
+
+      if (chainSelect) {
+        chainSelect.addEventListener('change', () => {
+          filterChain = chainSelect.value;
+          loadDashboard();
+          loadPayouts();
+        });
+      }
+
+      const authForm = document.getElementById('auth-form');
+      const toggle = document.getElementById('auth-toggle-mode');
+      const signoutBtn = document.getElementById('signout-btn');
+
+      if (authForm) authForm.addEventListener('submit', handleAuthSubmit);
+      if (toggle) {
+        toggle.addEventListener('click', () =>
+          setAuthMode(authMode === 'signin' ? 'signup' : 'signin')
+        );
+      }
+      if (signoutBtn) signoutBtn.addEventListener('click', handleSignOut);
+
+      setAuthMode('signin');
+      onAuthChanged();
+    });
+  </script>
+</body>
+</html>
 
