@@ -137,6 +137,17 @@ a {
   font-weight: 600;
 }
 
+@media (max-width: 750px) {
+  .site-nav {
+    display: none;
+  }
+
+  .site-header {
+    padding: 12px 20px;
+  }
+}
+
+
 
 .nav-logo {
   display: flex;
