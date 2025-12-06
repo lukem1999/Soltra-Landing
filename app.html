@@ -104,6 +104,62 @@
           <!-- DASHBOARD VIEW -->
           <div id="view-dashboard" class="app-view">
             <div class="shell dashboard-shell">
+              <!-- Onboarding banner -->
+              <div id="onboarding-banner" class="onboarding-banner hidden">
+                <div class="onboarding-main">
+                  <h3>Get started in two steps</h3>
+                  <p class="onboarding-text">
+                    Add a contractor, log your first payout, and we’ll populate this dashboard
+                    with real USDC activity.
+                  </p>
+          
+                  <div class="onboarding-steps">
+                    <div class="onboarding-step">
+                      <div class="onboarding-step-number">1</div>
+                      <div class="onboarding-step-body">
+                        <div class="onboarding-step-title">Add a contractor</div>
+                        <div class="onboarding-step-text">
+                          Save a contributor with a wallet address so you can select them later.
+                        </div>
+                        <button
+                          type="button"
+                          class="mini-btn onboarding-cta"
+                          id="onboarding-go-contractors"
+                        >
+                          Go to Contractors
+                        </button>
+                      </div>
+                    </div>
+          
+                    <div class="onboarding-step">
+                      <div class="onboarding-step-number">2</div>
+                      <div class="onboarding-step-body">
+                        <div class="onboarding-step-title">Log a payout</div>
+                        <div class="onboarding-step-text">
+                          Record an on-chain USDC transfer with chain, amount, and TX hash.
+                        </div>
+                        <button
+                          type="button"
+                          class="mini-btn onboarding-cta"
+                          id="onboarding-go-payouts"
+                        >
+                          Go to Payouts
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+          
+                <button
+                  type="button"
+                  class="onboarding-dismiss"
+                  id="onboarding-dismiss"
+                  aria-label="Dismiss"
+                >
+                  ×
+                </button>
+              </div>
+              
               <!-- Top bar: title + filters -->
               <div class="dash-header">
                 <div>
@@ -555,6 +611,7 @@
     let authMode = 'signin';       // 'signin' | 'signup'
     let filterRange = '30d';       // '7d' | '30d' | '90d' | 'all'
     let filterChain = 'all';       // 'all' | 'BASE' | 'POLYGON' | 'ETHEREUM'
+    let lastDashboardPayoutCount = 0;
 
     // === UTILITIES ===
     function formatUSD(amount) {
@@ -693,6 +750,8 @@
           contractorsCountEl.textContent = data.length ? data.length : '';
         }
 
+        // Refresh onboarding banner visibility
+        updateOnboardingBanner(data.length, lastDashboardPayoutCount);
 
         if (tbody) {
           if (!data.length) {
@@ -761,6 +820,31 @@
         select.appendChild(opt);
       });
     }
+
+    function updateOnboardingBanner(contractorCount, payoutCount) {
+      const banner = document.getElementById('onboarding-banner');
+      if (!banner) return;
+    
+      let dismissed = false;
+      try {
+        dismissed = localStorage.getItem('soltra-onboarding-dismissed') === '1';
+      } catch (e) {
+        // ignore
+      }
+    
+      if (dismissed) {
+        banner.classList.add('hidden');
+        return;
+      }
+    
+      // Show as long as you are missing either contractors or payouts
+      if (!contractorCount || !payoutCount) {
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
 
     async function addContractor(event) {
       event.preventDefault();
@@ -1059,6 +1143,10 @@
           0
         );
         const payoutCount = data.length;
+
+        lastDashboardPayoutCount = payoutCount;
+        updateOnboardingBanner(contractorsCache.length || 0, payoutCount);
+
 
         // Update sidebar payouts count (for current filter range)
         const payoutsCountEl = document.getElementById('sidebar-payouts-count');
@@ -1479,6 +1567,34 @@
 
       setAuthMode('signin');
       onAuthChanged();
+      // === Onboarding banner logic ===
+      const dismissBtn = document.getElementById('onboarding-dismiss');
+      if (dismissBtn) {
+          dismissBtn.addEventListener('click', () => {
+              const banner = document.getElementById('onboarding-banner');
+              if (banner) banner.classList.add('hidden');
+              try {
+                  localStorage.setItem('soltra-onboarding-dismissed', '1');
+              } catch (e) {}
+          });
+      }
+      
+      const goContractorsBtn = document.getElementById('onboarding-go-contractors');
+      if (goContractorsBtn) {
+          goContractorsBtn.addEventListener('click', () => {
+              const btn = document.querySelector('.tab-button[data-target="contractors"]');
+              if (btn) btn.click();
+          });
+      }
+      
+      const goPayoutsBtn = document.getElementById('onboarding-go-payouts');
+      if (goPayoutsBtn) {
+          goPayoutsBtn.addEventListener('click', () => {
+              const btn = document.querySelector('.tab-button[data-target="payouts"]');
+              if (btn) btn.click();
+          });
+      }
+    
     });
   </script>
 </body>
