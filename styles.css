@@ -467,6 +467,111 @@ a {
   padding: 2.5rem 0 4rem;
 }
 
+/* === Dashboard onboarding banner === */
+
+.onboarding-banner {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(246, 196, 83, 0.32);
+  background: radial-gradient(
+      circle at top left,
+      rgba(246, 196, 83, 0.18),
+      rgba(15, 23, 42, 0.96) 55%,
+      #050b16 100%
+    );
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65);
+  display: flex;
+  gap: 1.2rem;
+}
+
+.onboarding-main {
+  flex: 1;
+}
+
+.onboarding-main h3 {
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+}
+
+.onboarding-text {
+  margin: 0 0 0.8rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.onboarding-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.4rem;
+}
+
+.onboarding-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  max-width: 280px;
+}
+
+.onboarding-step-number {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #020617;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+}
+
+.onboarding-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.onboarding-step-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.onboarding-step-text {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.onboarding-cta {
+  margin-top: 0.15rem;
+  padding-inline: 0.7rem;
+}
+
+/* dismiss button (X) */
+.onboarding-dismiss {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.7rem;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.1rem;
+}
+
+.onboarding-dismiss:hover {
+  color: var(--text);
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .onboarding-banner {
+    flex-direction: column;
+  }
+}
+
+
 .dash-header {
   display: flex;
   justify-content: space-between;
