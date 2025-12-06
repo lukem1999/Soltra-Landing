@@ -517,6 +517,27 @@ a {
   padding: 0.35rem 0.9rem;
 }
 
+.dash-filters-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.dash-updated {
+  font-size: 0.72rem;
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+/* tweak for mobile */
+@media (max-width: 900px) {
+  .dash-filters-wrap {
+    align-items: flex-start;
+  }
+}
+
+
 /* KPI cards */
 
 .dash-kpi-row {
@@ -613,6 +634,29 @@ a {
   font-size: 0.75rem;
   color: var(--muted);
 }
+
+/* === Empty states for tables === */
+
+.empty-state {
+  text-align: center;
+  padding: 1.9rem 0.75rem;
+  color: var(--muted);
+}
+
+.empty-state-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: var(--text);
+}
+
+.empty-state-text {
+  font-size: 0.8rem;
+  max-width: 340px;
+  margin: 0 auto;
+  line-height: 1.4;
+}
+
 
 /* ---------- DASHBOARD CHARTS ---------- */
 
@@ -1077,6 +1121,7 @@ footer {
 }
 
 .tab-button {
+  position: relative;
   width: 100%;
   text-align: left;
   background: transparent;
@@ -1086,13 +1131,45 @@ footer {
   font-size: 0.85rem;
   color: var(--muted);
   cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.12s ease;
 }
 
-.tab-button.active {
-  background: #111a2a;
+/* subtle slide + highlight on hover */
+.tab-button:hover {
+  background: #0e1728;
   border-color: #293555;
   color: var(--text);
+  transform: translateX(2px);
 }
+
+/* gold accent bar on active/hover */
+.tab-button::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--gold),
+    var(--amber)
+  );
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.tab-button.active::before,
+.tab-button:hover::before {
+  opacity: 1;
+}
+
 
 .sidebar-foot {
   margin-top: 2rem;
@@ -1242,6 +1319,33 @@ footer {
   font-size: 0.9rem;
   margin: 0 0 0.6rem;
 }
+
+.summary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.4rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem 1.5rem;
+  font-size: 0.8rem;
+}
+
+.summary-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: var(--muted);
+}
+
+.summary-list span {
+  max-width: 70%;
+}
+
+.summary-list strong {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
 
 /* ================= TABLES ================= */
 .app-table {
