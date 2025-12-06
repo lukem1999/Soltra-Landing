@@ -98,29 +98,34 @@
                     Overview of your USDC payouts and contractors across chains.
                   </p>
                 </div>
-
-                <div class="dash-filters">
-                  <div class="dash-filter-group">
-                    <label for="dash-range">Range</label>
-                    <select id="dash-range">
-                      <option value="7d">Last 7 days</option>
-                      <option value="30d" selected>Last 30 days</option>
-                      <option value="90d">Last 90 days</option>
-                      <option value="all">All time</option>
-                    </select>
+              
+                <div class="dash-filters-wrap">
+                  <div class="dash-filters">
+                    <div class="dash-filter-group">
+                      <label for="dash-range">Range</label>
+                      <select id="dash-range">
+                        <option value="7d">Last 7 days</option>
+                        <option value="30d" selected>Last 30 days</option>
+                        <option value="90d">Last 90 days</option>
+                        <option value="all">All time</option>
+                      </select>
+                    </div>
+              
+                    <div class="dash-filter-group">
+                      <label for="dash-chain">Chain</label>
+                      <select id="dash-chain">
+                        <option value="all" selected>All chains</option>
+                        <option value="BASE">Base</option>
+                        <option value="POLYGON">Polygon</option>
+                        <option value="ETHEREUM">Ethereum</option>
+                      </select>
+                    </div>
                   </div>
-
-                  <div class="dash-filter-group">
-                    <label for="dash-chain">Chain</label>
-                    <select id="dash-chain">
-                      <option value="all" selected>All chains</option>
-                      <option value="BASE">Base</option>
-                      <option value="POLYGON">Polygon</option>
-                      <option value="ETHEREUM">Ethereum</option>
-                    </select>
-                  </div>
+              
+                  <div class="dash-updated" id="dash-updated"></div>
                 </div>
               </div>
+
 
               <!-- KPI cards -->
               <div class="dash-kpi-row">
@@ -983,6 +988,18 @@
         }
 
         const data = await res.json();
+
+        // Update "Last updated" timestamp
+        const updatedEl = document.getElementById('dash-updated');
+        if (updatedEl) {
+          const now = new Date();
+          const timeString = now.toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit',
+          });
+          updatedEl.textContent = `Last updated at ${timeString}`;
+        }
+
 
         const totalAmount = data.reduce(
           (sum, p) => sum + (Number(p.amount) || 0),
