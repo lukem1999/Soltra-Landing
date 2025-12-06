@@ -54,11 +54,25 @@
         </div>
 
         <nav class="app-tabs">
-          <button class="tab-button active" data-target="dashboard">Overview</button>
-          <button class="tab-button" data-target="contractors">Contractors</button>
-          <button class="tab-button" data-target="payouts">Payouts</button>
-          <button class="tab-button" data-target="reports">Reports</button>
+          <button class="tab-button" data-target="dashboard">
+            <span>Overview</span>
+          </button>
+        
+          <button class="tab-button" data-target="contractors">
+            <span>Contractors</span>
+            <span class="tab-pill" id="sidebar-contractors-count"></span>
+          </button>
+        
+          <button class="tab-button" data-target="payouts">
+            <span>Payouts</span>
+            <span class="tab-pill" id="sidebar-payouts-count"></span>
+          </button>
+        
+          <button class="tab-button" data-target="reports">
+            <span>Reports</span>
+          </button>
         </nav>
+
 
         <div class="sidebar-foot">
           <span class="sidebar-label">Environment</span>
@@ -576,6 +590,7 @@
     }
 
     // === TAB NAVIGATION ===
+    // === TAB NAVIGATION ===
     function initTabs() {
       const tabButtons = document.querySelectorAll('.tab-button');
       const views = {
@@ -584,29 +599,60 @@
         payouts: document.getElementById('view-payouts'),
         reports: document.getElementById('view-reports'),
       };
-
+    
       if (!tabButtons.length) return;
-
-      tabButtons.forEach(btn => {
+    
+      function showTab(target) {
+        // activate the matching button
+        tabButtons.forEach((btn) => {
+          const isActive = btn.dataset.target === target;
+          btn.classList.toggle('active', isActive);
+        });
+    
+        // show/hide corresponding views
+        Object.entries(views).forEach(([key, el]) => {
+          if (!el) return;
+          if (key === target) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        });
+    
+        // persist selection (best-effort)
+        try {
+          localStorage.setItem('soltra-active-tab', target);
+        } catch (e) {
+          // ignore storage errors
+        }
+      }
+    
+      // click handlers
+      tabButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
-          tabButtons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-
           const target = btn.dataset.target;
-          Object.entries(views).forEach(([key, el]) => {
-            if (!el) return;
-            if (key === target) el.classList.remove('hidden');
-            else el.classList.add('hidden');
-          });
+          if (target) showTab(target);
         });
       });
-
-      // Open tab from hash (e.g. app.html#payouts)
+    
+      // Decide initial tab:
+      // 1) URL hash (e.g. app.html#payouts)
+      // 2) localStorage
+      // 3) default "dashboard"
+      let initial = 'dashboard';
+    
+      // 1) hash
       const hash = window.location.hash.replace('#', '');
       if (hash && views[hash]) {
-        const btn = document.querySelector(`.tab-button[data-target="${hash}"]`);
-        if (btn) btn.click();
+        initial = hash;
+      } else {
+        // 2) localStorage
+        try {
+          const saved = localStorage.getItem('soltra-active-tab');
+          if (saved && views[saved]) initial = saved;
+        } catch (e) {
+          // ignore
+        }
       }
+    
+      showTab(initial);
     }
 
     function shortenWallet(addr) {
@@ -640,6 +686,13 @@
 
         const data = await res.json();
         contractorsCache = data;
+
+        // Update sidebar contractors count
+        const contractorsCountEl = document.getElementById('sidebar-contractors-count');
+        if (contractorsCountEl) {
+          contractorsCountEl.textContent = data.length ? data.length : '';
+        }
+
 
         if (tbody) {
           if (!data.length) {
@@ -1006,6 +1059,13 @@
           0
         );
         const payoutCount = data.length;
+
+        // Update sidebar payouts count (for current filter range)
+        const payoutsCountEl = document.getElementById('sidebar-payouts-count');
+        if (payoutsCountEl) {
+          payoutsCountEl.textContent = payoutCount ? payoutCount : '';
+        }
+
 
         const contractorIds = new Set(
           data.map(p => p.contractor_id).filter(Boolean)
