@@ -198,15 +198,15 @@
                 <ul class="summary-list">
                   <li>
                     <span>Total contractors paid</span>
-                    <strong>6</strong>
+                    <strong id="snapshot-contractors">0</strong>
                   </li>
                   <li>
                     <span>Average payout size</span>
-                    <strong>$625</strong>
+                    <strong id="snapshot-avg">$0</strong>
                   </li>
                   <li>
                     <span>CSV exports</span>
-                    <strong>2</strong>
+                    <strong>0</strong>
                   </li>
                   <li>
                     <span>Failed payouts</span>
@@ -996,6 +996,42 @@
         const chains = new Set(
           data.map(p => (p.chain || '').toUpperCase()).filter(Boolean)
         );
+
+        // ---- "This month snapshot" stats ----
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        // Filter payouts to the current calendar month
+        const monthPayouts = data.filter(p => {
+          if (!p.tx_timestamp) return false;
+          const d = new Date(p.tx_timestamp);
+          return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+        });
+
+        const monthTotal = monthPayouts.reduce(
+          (sum, p) => sum + (Number(p.amount) || 0),
+          0
+        );
+        const monthCount = monthPayouts.length;
+        
+        const monthContractorIds = new Set(
+          monthPayouts.map(p => p.contractor_id).filter(Boolean)
+        );
+        
+        // Fill snapshot card
+        const snapshotContractorsEl = document.getElementById('snapshot-contractors');
+        const snapshotAvgEl = document.getElementById('snapshot-avg');
+        
+        if (snapshotContractorsEl) {
+          snapshotContractorsEl.textContent = monthContractorIds.size || 0;
+        }
+        
+        if (snapshotAvgEl) {
+          const avg = monthCount ? monthTotal / monthCount : 0;
+          snapshotAvgEl.textContent = formatUSD(avg);
+        }
+
 
         totalEl.textContent = formatUSD(totalAmount);
         payoutCountEl.textContent =
