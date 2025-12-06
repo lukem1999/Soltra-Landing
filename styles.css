@@ -811,6 +811,47 @@ a {
   }
 }
 
+/* ===== Dashboard highlight animations ===== */
+
+@keyframes dashPulse {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+    border-color: rgba(255, 255, 255, 0.03);
+  }
+  50% {
+    transform: translateY(-2px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+    border-color: rgba(246, 196, 83, 0.65);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+    border-color: rgba(255, 255, 255, 0.03);
+  }
+}
+
+@keyframes dashGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(246, 196, 83, 0);
+  }
+  40% {
+    box-shadow: 0 0 0 12px rgba(246, 196, 83, 0.14);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(246, 196, 83, 0);
+  }
+}
+
+.dash-pulse {
+  animation: dashPulse 0.55s ease-out;
+}
+
+.dash-pulse-soft {
+  animation: dashGlow 0.85s ease-out;
+}
+
+
 
 /* ---------- RESPONSIVE ---------- */
 
