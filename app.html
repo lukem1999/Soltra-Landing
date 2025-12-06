@@ -638,8 +638,21 @@
 
         if (tbody) {
           if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="5">No contractors yet.</td></tr>';
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state">
+                    <div class="empty-state-title">No contractors yet</div>
+                    <p class="empty-state-text">
+                      Use the form on the left to add your first contractor. Their wallet
+                      will show up here and be available when you log payouts.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+  `          ;
           } else {
+
             tbody.innerHTML = '';
             data.forEach(c => {
               const tr = document.createElement('tr');
@@ -812,10 +825,22 @@
         const data = await res.json();
 
         if (!data.length) {
-          tbody.innerHTML =
-            '<tr><td colspan="5">No payouts for this range.</td></tr>';
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-state-title">No payouts yet</div>
+                  <p class="empty-state-text">
+                    Once you log a payout, it will appear here with the contractor,
+                    amount, chain, and TX hash for your records.
+                  </p>
+                </div>
+              </td>
+            </tr>
+  `        ;
           return;
         }
+
 
         tbody.innerHTML = '';
         data.forEach(p => {
@@ -987,10 +1012,22 @@
         tableBody.innerHTML = '';
 
         if (!data.length) {
-          tableBody.innerHTML =
-            '<tr><td colspan="5">No payouts for this range.</td></tr>';
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-state-title">No payouts in this range</div>
+                  <p class="empty-state-text">
+                    Adjust the date range above or log a new payout to see activity on
+                    your dashboard.
+                  </p>
+                </div>
+              </td>
+            </tr>
+  `        ;
           return;
         }
+
 
         data.slice(0, 10).forEach(p => {
           const tr = document.createElement('tr');
