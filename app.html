@@ -534,57 +534,50 @@
             </div>
           </div>
 
-          <!-- REPORTS VIEW -->
+                  <!-- ================= REPORTS VIEW ================= -->
           <div class="app-view hidden" id="view-reports">
             <div class="list-header">
-              <h3>Reports</h3>
-              <button class="mini-btn">Export CSV</button>
+              <div>
+                <h3>Reports</h3>
+                <p class="section-subtitle">
+                  CSV-ready view of payouts matching your dashboard filters
+                  (range &amp; chain).
+                </p>
+              </div>
+              <button class="mini-btn" id="reports-export-btn">Export CSV</button>
             </div>
-
-            <div class="filters-row">
-              <select>
-                <option>September 2025</option>
-                <option>August 2025</option>
-              </select>
-              <select>
-                <option>All contractors</option>
-                <option>Anna L</option>
-                <option>Marcus V</option>
-              </select>
-              <select>
-                <option>All chains</option>
-                <option>Base</option>
-                <option>Polygon</option>
-              </select>
+  
+            <!-- Empty state -->
+            <div class="reports-empty" id="reports-empty">
+              <h4>No payouts yet</h4>
+              <p>
+                Once you log payouts, this view will summarize them for finance
+                and operations.
+              </p>
+              <button type="button" class="mini-btn" id="reports-go-payouts">
+                Log a payout
+              </button>
             </div>
-
-            <table class="app-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Contractor</th>
-                  <th>Amount</th>
-                  <th>USD value</th>
-                  <th>Hash</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Sep 12</td>
-                  <td>Anna L</td>
-                  <td>1,200 USDC</td>
-                  <td>$1,200</td>
-                  <td>0x9F1C…72a3</td>
-                </tr>
-                <tr>
-                  <td>Sep 10</td>
-                  <td>Marcus V</td>
-                  <td>850 USDC</td>
-                  <td>$850</td>
-                  <td>0xA8B7…19f0</td>
-                </tr>
-              </tbody>
-            </table>
+  
+            <!-- Table uses same style as dashboard -->
+            <div class="dash-table-wrapper hidden" id="reports-table-wrapper">
+              <table class="dash-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Contractor</th>
+                    <th>Amount</th>
+                    <th>USD value</th>
+                    <th>Tx hash</th>
+                  </tr>
+                </thead>
+                <tbody id="reports-body">
+                  <tr>
+                    <td colspan="5">Loading…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -612,6 +605,8 @@
     let filterRange = '30d';       // '7d' | '30d' | '90d' | 'all'
     let filterChain = 'all';       // 'all' | 'BASE' | 'POLYGON' | 'ETHEREUM'
     let lastDashboardPayoutCount = 0;
+    let dashboardPayoutsCache = [];
+
 
     // === UTILITIES ===
     function formatUSD(amount) {
@@ -695,16 +690,17 @@
         // persist selection (best-effort)
         try {
           localStorage.setItem('soltra-active-tab', target);
-        } catch (e) {
-          // ignore storage errors
-        }
+        } catch (e) {}
     
-        // subtle highlight when you land on Dashboard
         if (target === 'dashboard') {
-          // let layout settle, then animate
           requestAnimationFrame(() => highlightDashboard());
         }
+    
+        if (target === 'reports') {
+          loadReportsFromCache();
+        }
       }
+
 
       // click handlers
       tabButtons.forEach((btn) => {
@@ -869,6 +865,53 @@
         banner.classList.add('hidden');
       }
     }
+
+    function loadReportsFromCache() {
+      const tbody = document.getElementById('reports-body');
+      const empty = document.getElementById('reports-empty');
+      const wrapper = document.getElementById('reports-table-wrapper');
+    
+      if (!tbody || !empty || !wrapper) return;
+    
+      // No payouts for current filters
+      if (!dashboardPayoutsCache || !dashboardPayoutsCache.length) {
+        empty.classList.remove('hidden');
+        wrapper.classList.add('hidden');
+        tbody.innerHTML =
+          '<tr><td colspan="5">No payouts for this range.</td></tr>';
+        return;
+      }
+    
+      // We have data
+      empty.classList.add('hidden');
+      wrapper.classList.remove('hidden');
+    
+      tbody.innerHTML = '';
+      dashboardPayoutsCache.forEach((p) => {
+        const date = p.tx_timestamp
+          ? new Date(p.tx_timestamp).toLocaleDateString()
+          : '—';
+        const name = p.contractors?.name || 'Unknown';
+        const amount = `${p.amount} ${p.asset_symbol || 'USDC'}`;
+    
+        // For now assume 1 USDC = $1; you can later plug in FX if you want
+        const usdValue = `$${Number(p.amount || 0).toLocaleString('en-US', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })}`;
+    
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${name}</td>
+          <td>${amount}</td>
+          <td>${usdValue}</td>
+          <td>${p.tx_hash}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
 
 
     async function addContractor(event) {
@@ -1151,6 +1194,7 @@
         }
 
         const data = await res.json();
+        dashboardPayoutsCache = data;
 
         // Update "Last updated" timestamp
         const updatedEl = document.getElementById('dash-updated');
@@ -1274,6 +1318,10 @@
           `;
           tableBody.appendChild(tr);
         });
+
+        // 🔥 NEW — update Reports tab using same data
+        loadReportsFromCache();
+      
       } catch (err) {
         console.error('Dashboard error', err);
         totalEl.textContent = '$0';
@@ -1622,6 +1670,15 @@
               if (btn) btn.click();
           });
       }
+
+      const reportsGoPayoutsBtn = document.getElementById('reports-go-payouts');
+      if (reportsGoPayoutsBtn) {
+        reportsGoPayoutsBtn.addEventListener('click', () => {
+          const btn = document.querySelector('.tab-button[data-target="payouts"]');
+          if (btn) btn.click();
+        });
+      }
+
     
     });
   </script>
