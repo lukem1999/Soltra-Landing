@@ -865,6 +865,100 @@
         banner.classList.add('hidden');
       }
     }
+    
+    function exportReportsCSV() {
+      // Use the same dataset the dashboard & reports tab use
+      const data = dashboardPayoutsCache || [];
+    
+      if (!data.length) {
+        alert('No payouts to export for this range.');
+        return;
+      }
+    
+      // CSV columns
+      const headers = [
+        'Date',
+        'Contractor',
+        'Amount (USDC)',
+        'USD Value',
+        'Chain',
+        'Tx Hash',
+        'Note'
+      ];
+    
+      const rows = data.map((p) => {
+        const date = p.tx_timestamp
+          ? new Date(p.tx_timestamp).toISOString()
+          : '';
+    
+        const name = p.contractors?.name || '';
+    
+        const amount = Number(p.amount || 0);
+        const amountUsdc = amount.toString();
+    
+        // Simple assumption: 1 USDC = $1 for now
+        const usdValue = amount.toString();
+    
+        const chain = (p.chain || '').toUpperCase();
+        const txHash = p.tx_hash || '';
+        const note = (p.note || '').replace(/"/g, '""'); // escape quotes
+    
+        return [
+          date,
+          name,
+          amountUsdc,
+          usdValue,
+          chain,
+          txHash,
+          note
+        ];
+      });
+    
+      // Build CSV string
+      const lines = [];
+    
+      // header line
+      lines.push(headers.join(','));
+    
+      // data lines (quote + escape where needed)
+      rows.forEach((cols) => {
+        const line = cols
+          .map((value) => {
+            const v = value == null ? '' : String(value);
+            // Wrap in quotes if it contains comma, quote, or newline
+            if (/[",\n]/.test(v)) {
+              return `"${v.replace(/"/g, '""')}"`;
+            }
+            return v;
+          })
+          .join(',');
+        lines.push(line);
+      });
+    
+      const csvContent = lines.join('\n');
+    
+      // Create downloadable blob
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+    
+      // Filename like soltra-reports-2025-12-06.csv
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      const filename = `soltra-reports-${y}-${m}-${d}.csv`;
+    
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+    
+      // Needed for Firefox
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    
+      URL.revokeObjectURL(url);
+    }
 
     function loadReportsFromCache() {
       const tbody = document.getElementById('reports-body');
@@ -1678,6 +1772,12 @@
           if (btn) btn.click();
         });
       }
+
+      const exportBtn = document.getElementById('reports-export-btn');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', exportReportsCSV);
+      }
+
 
     
     });
