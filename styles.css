@@ -1305,6 +1305,15 @@ a {
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
 }
 
+html { scroll-behavior: smooth; }
+
+.features .feature {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+
 /* Stack nicely on mobile */
 @media (max-width: 800px) {
   .features {
