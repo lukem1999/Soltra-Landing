@@ -459,6 +459,113 @@ a {
   .scroll-hint { display: none; }
 }
 
+/* ===== Integrations strip ===== */
+.integrations {
+  padding: 0.5rem 0 2.25rem;
+}
+
+.integrations-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: radial-gradient(
+    circle at top left,
+    rgba(246,196,83,0.08),
+    rgba(8,16,32,0.92) 55%,
+    #050b16 100%
+  );
+  box-shadow: 0 18px 55px rgba(0,0,0,0.55);
+  max-width: 920px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+/* subtle sheen */
+.integrations-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.06),
+    transparent
+  );
+  transform: translateX(-120%);
+  animation: integSheen 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes integSheen {
+  0%, 55% { transform: translateX(-120%); }
+  85%    { transform: translateX(120%); }
+  100%   { transform: translateX(120%); }
+}
+
+.integrations-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  margin-right: 0.25rem;
+}
+
+.integrations-logos {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.integration-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.integration-pill.ghost {
+  color: var(--muted);
+  font-weight: 500;
+  background: rgba(255,255,255,0.03);
+}
+
+.integration-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: block;
+}
+
+.integration-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, var(--gold), var(--amber));
+  box-shadow: 0 0 14px rgba(246,196,83,0.25);
+}
+
+@media (max-width: 700px) {
+  .integrations-inner {
+    padding: 0.85rem 0.85rem;
+  }
+}
+
 
 /* Waitlist form inside hero */
 
