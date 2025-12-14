@@ -1412,6 +1412,8 @@ html { scroll-behavior: smooth; }
   display: block;
 }
 
+.features .feature.reveal { transform: translateY(16px); }
+.features .feature.reveal.in-view { transform: translateY(0); }
 
 /* Stack nicely on mobile */
 @media (max-width: 800px) {
