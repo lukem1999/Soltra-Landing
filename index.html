@@ -82,7 +82,7 @@
 
         <!-- RIGHT: payouts preview card -->
         <div class="hero-preview">
-          <div class="hero-preview-inner">
+          <div class="hero-preview-inner reveal" data-delay="1">
             <h3>Payouts — September · USDC · Base</h3>
 
             <div class="payout-row">
@@ -123,7 +123,7 @@
     <!-- HOW IT WORKS SECTION -->
     <section class="how-it-works" id="how-it-works">
       <div class="shell">
-        <div class="how-header">
+        <div class="how-header reveal">
           <h2>How Soltra works</h2>
           <p>
             A simple flow: add your contributors, log payouts you’ve already sent on-chain,
@@ -133,7 +133,7 @@
 
         <div class="how-steps">
           <!-- Step 1 -->
-          <div class="how-step">
+          <div class="how-step reveal" data-delay="1">
             <div class="how-step-badge">1</div>
             <h3>Add contractors & wallets</h3>
             <p>
@@ -148,7 +148,7 @@
           </div>
 
           <!-- Step 2 -->
-          <div class="how-step">
+          <div class="how-step reveal" data-delay="2">
             <div class="how-step-badge">2</div>
             <h3>Log on-chain USDC payouts</h3>
             <p>
@@ -163,7 +163,7 @@
           </div>
 
           <!-- Step 3 -->
-          <div class="how-step">
+          <div class="how-step reveal" data-delay="3">
             <div class="how-step-badge">3</div>
             <h3>Export clean reports</h3>
             <p>
@@ -375,42 +375,42 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Footer year
       const yearEl = document.getElementById('year');
       if (yearEl) yearEl.textContent = new Date().getFullYear();
-
+    
+      // Waitlist form
       const waitlistForm = document.getElementById('waitlist-form');
       if (waitlistForm) {
         waitlistForm.addEventListener('submit', handleWaitlistSubmit);
+      }
+    
+      // Active nav highlighting (scroll spy)
       const navLinks = document.querySelectorAll('.site-nav a');
       const sections = Array.from(navLinks)
         .map(link => document.querySelector(link.getAttribute('href')))
         .filter(Boolean);
-      
+    
       function setActiveNav() {
         const scrollY = window.scrollY + 90; // offset for sticky header
-      
         let currentSection = null;
-      
+    
         sections.forEach(section => {
-          if (section.offsetTop <= scrollY) {
-            currentSection = section;
-          }
+          if (section.offsetTop <= scrollY) currentSection = section;
         });
-      
+    
         navLinks.forEach(link => {
           link.classList.remove('active');
-          if (
-            currentSection &&
-            link.getAttribute('href') === `#${currentSection.id}`
-          ) {
+          if (currentSection && link.getAttribute('href') === `#${currentSection.id}`) {
             link.classList.add('active');
           }
         });
       }
-      
-      // Run on scroll + on load
+    
       window.addEventListener('scroll', setActiveNav);
       setActiveNav();
+    
+      // Scroll hint auto-hide
       const hint = document.querySelector('.scroll-hint');
       if (hint) {
         const hideHint = () => {
@@ -423,6 +423,25 @@
         };
         window.addEventListener('scroll', hideHint);
       }
+    
+      // Scroll reveal (IntersectionObserver)
+      const reveals = document.querySelectorAll('.reveal');
+    
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('in-view');
+              io.unobserve(entry.target); // reveal once
+            }
+          });
+        },
+        { threshold: 0.12, rootMargin: '0px 0px -10% 0px' }
+      );
+    
+      reveals.forEach((el) => io.observe(el));
+    });
+
     });
   </script>
 </body>
