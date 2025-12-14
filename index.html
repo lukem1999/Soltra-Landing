@@ -72,6 +72,12 @@
             <span style="color: var(--gold); font-weight: 600;">Early access.</span>
             No KYC required to join. Built for DAOs, Web3 teams, and crypto-native orgs.
           </p>
+          <div class="scroll-hint" aria-hidden="true">
+            <div class="scroll-hint-mouse">
+              <span class="scroll-hint-dot"></span>
+            </div>
+            <div class="scroll-hint-text">Scroll</div>
+          </div>
         </div>
 
         <!-- RIGHT: payouts preview card -->
@@ -375,39 +381,48 @@
       const waitlistForm = document.getElementById('waitlist-form');
       if (waitlistForm) {
         waitlistForm.addEventListener('submit', handleWaitlistSubmit);
+      const navLinks = document.querySelectorAll('.site-nav a');
+      const sections = Array.from(navLinks)
+        .map(link => document.querySelector(link.getAttribute('href')))
+        .filter(Boolean);
+      
+      function setActiveNav() {
+        const scrollY = window.scrollY + 90; // offset for sticky header
+      
+        let currentSection = null;
+      
+        sections.forEach(section => {
+          if (section.offsetTop <= scrollY) {
+            currentSection = section;
+          }
+        });
+      
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (
+            currentSection &&
+            link.getAttribute('href') === `#${currentSection.id}`
+          ) {
+            link.classList.add('active');
+          }
+        });
       }
-
-    const navLinks = document.querySelectorAll('.site-nav a');
-    const sections = Array.from(navLinks)
-      .map(link => document.querySelector(link.getAttribute('href')))
-      .filter(Boolean);
-    
-    function setActiveNav() {
-      const scrollY = window.scrollY + 90; // offset for sticky header
-    
-      let currentSection = null;
-    
-      sections.forEach(section => {
-        if (section.offsetTop <= scrollY) {
-          currentSection = section;
-        }
-      });
-    
-      navLinks.forEach(link => {
-        link.classList.remove('active');
-        if (
-          currentSection &&
-          link.getAttribute('href') === `#${currentSection.id}`
-        ) {
-          link.classList.add('active');
-        }
-      });
-    }
-    
-    // Run on scroll + on load
-    window.addEventListener('scroll', setActiveNav);
-    setActiveNav();
-
+      
+      // Run on scroll + on load
+      window.addEventListener('scroll', setActiveNav);
+      setActiveNav();
+      const hint = document.querySelector('.scroll-hint');
+      if (hint) {
+        const hideHint = () => {
+          if (window.scrollY > 40) {
+            hint.style.opacity = '0';
+            hint.style.transform = 'translateY(-4px)';
+            hint.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            window.removeEventListener('scroll', hideHint);
+          }
+        };
+        window.addEventListener('scroll', hideHint);
+      }
     });
   </script>
 </body>
