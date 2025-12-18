@@ -218,6 +218,19 @@ a {
   }
 }
 
+.nav-signin-link {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-decoration: none;
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+}
+
+.nav-signin-link:hover {
+  color: var(--text);
+  border-bottom-color: rgba(246,196,83,0.7);
+}
+
 
 
 .nav-logo {
@@ -1022,6 +1035,14 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+.compliance-line {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
 
 
 
