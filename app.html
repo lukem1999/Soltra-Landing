@@ -1637,7 +1637,7 @@
 
       try {
         if (authMode === 'signup') {
-          const { error } = await supabase.auth.signUp({ email, password });
+          const { error } = await sb.auth.signUp({ email, password });
           if (error) throw error;
           setAuthMessage(
             'Account created. Check your email, then sign in.',
@@ -1645,7 +1645,7 @@
           );
           setAuthMode('signin');
         } else {
-          const { data, error } = await supabase.auth.signInWithPassword({
+          const { data, error } = await sb.auth.signInWithPassword({
             email,
             password,
           });
@@ -1670,12 +1670,12 @@
     }
 
     async function handleSignOut() {
-      await supabase.auth.signOut();
+      await sb.auth.signOut();
       await onAuthChanged();
     }
 
     async function onAuthChanged() {
-      const { data } = await supabase.auth.getSession();
+      const { data } = await sb.auth.getSession();
       const session = data.session;
 
       const authWrapper = document.getElementById('auth-wrapper');
