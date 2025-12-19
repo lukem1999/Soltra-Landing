@@ -1645,14 +1645,24 @@
           );
           setAuthMode('signin');
         } else {
-          const { error } = await supabase.auth.signInWithPassword({
+          const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
           });
-          if (error) throw error;
+        
+          // ✅ DEBUG (keep this for now)
+          console.log('SIGNIN RESULT:', { data, error });
+        
+          if (error) {
+            console.error('AUTH ERROR:', error);
+            setAuthMessage(error.message || 'Sign-in failed.', 'error');
+            return;
+          }
+        
           setAuthMessage('');
           await onAuthChanged();
-        }
+       }
+
       } catch (err) {
         console.error(err);
         setAuthMessage(err.message || 'Auth error.', 'error');
