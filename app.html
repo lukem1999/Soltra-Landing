@@ -747,56 +747,60 @@
       }
 
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/contractors?select=*`, {
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        });
-
-        if (!res.ok) {
+        const tbody = document.getElementById('contractors-body');
+      
+        const { data, error } = await supabase
+          .from('contractors')
+          .select('*')
+          .order('name', { ascending: true });
+      
+        console.log('LOAD CONTRACTORS RESULT:', { data, error });
+      
+        if (error) {
+          console.error('Error loading contractors:', error);
           if (tbody) {
             tbody.innerHTML =
-              `<tr><td colspan="5">Error loading data (${res.status})</td></tr>`;
+              `<tr><td colspan="5">Error loading data</td></tr>`;
           }
           return;
         }
-
-        const data = await res.json();
-        contractorsCache = data;
-
+      
+        const contractors = data || [];
+        contractorsCache = contractors;
+      
         // Update sidebar contractors count
-        const contractorsCountEl = document.getElementById('sidebar-contractors-count');
+        const contractorsCountEl =
+          document.getElementById('sidebar-contractors-count');
         if (contractorsCountEl) {
-          contractorsCountEl.textContent = data.length ? data.length : '';
+          contractorsCountEl.textContent =
+            contractors.length ? contractors.length : '';
         }
-
+      
         // Refresh onboarding banner visibility
-        updateOnboardingBanner(data.length, lastDashboardPayoutCount);
-
+        updateOnboardingBanner(contractors.length, lastDashboardPayoutCount);
+      
         if (tbody) {
-          if (!data.length) {
+          if (!contractors.length) {
             tbody.innerHTML = `
               <tr>
                 <td colspan="5">
                   <div class="empty-state">
                     <div class="empty-state-title">No contractors yet</div>
                     <p class="empty-state-text">
-                      Use the form on the left to add your first contractor. Their wallet
-                      will show up here and be available when you log payouts.
+                      Use the form on the left to add your first contractor.
                     </p>
                   </div>
                 </td>
               </tr>
-  `          ;
+            `;
           } else {
-
             tbody.innerHTML = '';
-            data.forEach(c => {
+            contractors.forEach(c => {
               const tr = document.createElement('tr');
               const lastPaid = c.last_paid_at
                 ? new Date(c.last_paid_at).toLocaleDateString()
                 : '—';
+      
               tr.innerHTML = `
                 <td>${c.name || ''}</td>
                 <td>
@@ -817,16 +821,18 @@
             });
           }
         }
-
+      
         populateContractorSelect();
+      
       } catch (err) {
         console.error(err);
+        const tbody = document.getElementById('contractors-body');
         if (tbody) {
           tbody.innerHTML =
             '<tr><td colspan="5">Error loading contractors.</td></tr>';
         }
       }
-    }
+
 
     function populateContractorSelect() {
       const select = document.getElementById('payout-contractor');
