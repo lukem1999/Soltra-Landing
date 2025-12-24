@@ -1188,6 +1188,7 @@
 
 
     async function addPayout(event) {
+      console.log('addPayout fired ✅');
       event.preventDefault();
     
       const form = event.target;
@@ -1728,6 +1729,18 @@
       const payoutForm = document.getElementById('payout-form');
       if (payoutForm) {
         payoutForm.addEventListener('submit', addPayout);
+      }
+
+      // Force the save button to submit even if markup is wrong
+      const saveBtn =
+        document.querySelector('#payout-form button') ||
+        document.getElementById('save-payout-btn');
+      
+      if (saveBtn && payoutForm) {
+        saveBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          payoutForm.requestSubmit(); // triggers submit event + HTML validation
+        });
       }
 
       const rangeSelect = document.getElementById('dash-range');
