@@ -592,14 +592,17 @@
 
   <script>
     // === Supabase config (DEV ONLY) ===
+    // === Supabase config ===
     const SUPABASE_URL = 'https://lvuvkgnkhrzpwlssupyh.supabase.co';
     const SUPABASE_ANON_KEY =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dXZrZ25raHJ6cHdsc3N1cHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDkyOTIsImV4cCI6MjA3ODkyNTI5Mn0.9C1-3Di7tXJCgb_7ZHj7mz6QL5fDMvnvmBziYqgGeDs';
+    
+    // ✅ Create ONE client, ONE name, safely (won't crash if script is injected twice)
+    window.__soltra_sb__ =
+      window.__soltra_sb__ || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    const sb = window.__soltra_sb__;
 
-    // Supabase client (for auth + REST)
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const sb = supabase;
 
     // === GLOBAL STATE ===
     let contractorsCache = [];
@@ -751,7 +754,7 @@
       try {
         const tbody = document.getElementById('contractors-body');
       
-        const { data, error } = await supabase
+        const { data, error } = await sb
           .from('contractors')
           .select('*')
           .order('name', { ascending: true });
@@ -1033,7 +1036,7 @@
       }
     
       // Must have a logged-in user, otherwise RLS will block inserts
-      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      const { data: userData, error: userErr } = await sb.auth.getUser();
       const user = userData?.user;
     
       if (userErr || !user) {
@@ -1042,7 +1045,7 @@
         return;
       }
     
-      const { error } = await supabase
+      const { error } = await sb
         .from('contractors')
         .insert([{ name, wallet_address, role, country }]); // user_id auto-defaults to auth.uid()
     
@@ -1633,79 +1636,80 @@
     // === AUTH ===
     async function handleAuthSubmit(e) {
       e.preventDefault();
+    
       const form = e.target;
       const email = form.email.value.trim();
       const password = form.password.value;
-
+    
       if (!email || !password) {
         setAuthMessage('Email and password are required.', 'error');
         return;
       }
-
+    
       setAuthMessage('Working...');
-
+    
       try {
         if (authMode === 'signup') {
           const { error } = await sb.auth.signUp({ email, password });
           if (error) throw error;
-          setAuthMessage(
-            'Account created. Check your email, then sign in.',
-            'success'
-          );
+    
+          setAuthMessage('Account created. Now sign in.', 'success');
           setAuthMode('signin');
-        } else {
-          const { data, error } = await sb.auth.signInWithPassword({
-            email,
-            password,
-          });
-        
-          // ✅ DEBUG (keep this for now)
-          console.log('SIGNIN RESULT:', { data, error });
-        
-          if (error) {
-            console.error('AUTH ERROR:', error);
-            setAuthMessage(error.message || 'Sign-in failed.', 'error');
-            return;
-          }
-        
-          setAuthMessage('');
-          await onAuthChanged();
-       }
-
+          return;
+        }
+    
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    
+        console.log('SIGNIN RESULT:', { data, error });
+    
+        if (error) {
+          setAuthMessage(error.message || 'Sign-in failed.', 'error');
+          return;
+        }
+    
+        setAuthMessage('');
+        // onAuthStateChange will handle UI + loading, but call once to be instant:
+        await onAuthChanged();
+    
       } catch (err) {
-        console.error(err);
-        setAuthMessage(err.message || 'Auth error.', 'error');
+        console.error('AUTH EXCEPTION:', err);
+        setAuthMessage(err?.message || 'Auth error.', 'error');
       }
     }
-
+    
     async function handleSignOut() {
       await sb.auth.signOut();
       await onAuthChanged();
     }
-
+    
     async function onAuthChanged() {
-      const { data } = await sb.auth.getSession();
-      const session = data.session;
-
+      const { data, error } = await sb.auth.getSession();
+      console.log('SESSION CHECK:', { session: data?.session, error });
+    
+      const session = data?.session;
+    
       const authWrapper = document.getElementById('auth-wrapper');
       const appShell = document.querySelector('.app-shell');
       const signoutBtn = document.getElementById('signout-btn');
-
+    
       if (session) {
         if (authWrapper) authWrapper.style.display = 'none';
         if (appShell) appShell.style.display = 'block';
         if (signoutBtn) signoutBtn.style.display = 'inline-block';
-
-        loadDashboard();
-        loadContractors();
-        loadPayouts();
-        loadDashboardCharts();
+    
+        // load everything AFTER auth is definitely live
+        await loadContractors();
+        await loadPayouts();
+        await loadDashboard();
+        await loadDashboardCharts();
+    
       } else {
         if (authWrapper) authWrapper.style.display = 'flex';
         if (appShell) appShell.style.display = 'none';
         if (signoutBtn) signoutBtn.style.display = 'none';
       }
     }
+
 
     // === INIT ===
     document.addEventListener('DOMContentLoaded', () => {
@@ -1755,6 +1759,7 @@
       if (signoutBtn) signoutBtn.addEventListener('click', handleSignOut);
 
       setAuthMode('signin');
+      sb.auth.onAuthStateChange((_event, _session) => onAuthChanged());
       onAuthChanged();
       // === Onboarding banner logic ===
       const dismissBtn = document.getElementById('onboarding-dismiss');
