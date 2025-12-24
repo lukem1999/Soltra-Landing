@@ -1793,14 +1793,14 @@
         });
       }
 
-      const exportBtn = document.getElementById('reports-export-btn');
+      const exportBtn = document.getElementById('export-btn');
       if (exportBtn) {
-        exportBtn.addEventListener('click', exportReportsCSV);
+        exportBtn.addEventListener('click', () => {
+          exportPayoutsToCsv(); // or whatever your export function is called
+        });
       }
-
-
-    
-    });
+      
+      }); // <-- this closes document.addEventListener('DOMContentLoaded', ...)
   </script>
 </body>
 </html>
