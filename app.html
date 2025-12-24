@@ -592,16 +592,23 @@
 
   <script>
     // === Supabase config (DEV ONLY) ===
-    // === Supabase config ===
     const SUPABASE_URL = 'https://lvuvkgnkhrzpwlssupyh.supabase.co';
     const SUPABASE_ANON_KEY =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dXZrZ25raHJ6cHdsc3N1cHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDkyOTIsImV4cCI6MjA3ODkyNTI5Mn0.9C1-3Di7tXJCgb_7ZHj7mz6QL5fDMvnvmBziYqgGeDs';
     
-    // ✅ Create ONE client, ONE name, safely (won't crash if script is injected twice)
+    // ✅ ONE client, memory-only auth (fixes GitHub Pages + tracking prevention)
     window.__soltra_sb__ =
-      window.__soltra_sb__ || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      window.__soltra_sb__ ||
+      window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: false,      // 🔥 THIS is the key fix
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+        },
+      });
     
     const sb = window.__soltra_sb__;
+
 
 
     // === GLOBAL STATE ===
