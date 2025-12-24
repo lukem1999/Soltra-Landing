@@ -1054,15 +1054,20 @@
         return;
       }
     
-      const { error } = await sb
+      const result = await sb
         .from('contractors')
-        .insert([{ name, wallet_address, role, country }]); // user_id auto-defaults to auth.uid()
-    
-      if (error) {
-        console.error('Error inserting contractor:', error);
-        alert(`Error adding contractor: ${error.message}`);
+        .insert([{ name, wallet_address, role, country }])
+        .select();
+      
+      console.log("INSERT RESULT:", result);
+      
+      if (result.error) {
+        alert(result.error.message);
         return;
       }
+      
+      alert("Saved!");
+
     
       form.reset();
       await loadContractors();
