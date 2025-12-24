@@ -312,7 +312,7 @@
                     Store basic details and a payout address. You can edit or remove them later.
                   </p>
 
-                  <form id="add-contractor-form" class="form-grid">
+                  <form id="add-contractor-form" onsubmit="addContractor(event)" class="form-grid">
                     <div class="field">
                       <label class="field-label">Name<span>*</span></label>
                       <input
@@ -1027,6 +1027,8 @@
 
 
     async function addContractor(event) {
+      console.log("addContractor fired");
+      alert("addContractor fired");
       event.preventDefault();
     
       const form = event.target;
