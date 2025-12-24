@@ -597,7 +597,7 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dXZrZ25raHJ6cHdsc3N1cHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDkyOTIsImV4cCI6MjA3ODkyNTI5Mn0.9C1-3Di7tXJCgb_7ZHj7mz6QL5fDMvnvmBziYqgGeDs';
 
     // Supabase client (for auth + REST)
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // === GLOBAL STATE ===
     let contractorsCache = [];
