@@ -1010,45 +1010,49 @@
 
     async function addContractor(event) {
       event.preventDefault();
-
+    
       const form = event.target;
       const formData = new FormData(form);
-
+    
       const name = formData.get('name')?.trim();
-      const wallet = formData.get('wallet_address')?.trim();
+      const wallet_address = formData.get('wallet_address')?.trim();
       const role = formData.get('role')?.trim();
       const country = formData.get('country')?.trim();
-
-      if (!name || !wallet) {
+    
+      if (!name || !wallet_address) {
         alert('Name and wallet address are required.');
         return;
       }
-
+    
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/contractors`, {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-            Prefer: 'return=representation',
-          },
-          body: JSON.stringify({ name, wallet_address: wallet, role, country }),
-        });
-
-        if (!res.ok) {
-          console.error('Error inserting contractor', await res.text());
-          alert('Error adding contractor.');
+        // Make sure user is signed in
+        const { data: { user }, error: userErr } = await supabase.auth.getUser();
+        if (userErr || !user) {
+          console.error('Not signed in:', userErr);
+          alert('You must be signed in.');
           return;
         }
-
+    
+        const { data, error } = await supabase
+          .from('contractors')
+          .insert([{ name, wallet_address, role, country }]) // user_id can be defaulted in DB
+          .select();
+    
+        console.log('INSERT RESULT:', { data, error });
+    
+        if (error) {
+          alert(error.message || 'Error adding contractor.');
+          return;
+        }
+    
         form.reset();
         await loadContractors();
       } catch (err) {
         console.error(err);
-        alert('Network error adding contractor.');
+        alert(err.message || 'Network error adding contractor.');
       }
     }
+
 
     // === CHAIN ICON RENDERING ===
     function renderChainPill(chain) {
