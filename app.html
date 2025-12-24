@@ -1110,9 +1110,9 @@
     async function loadPayouts() {
       const tbody = document.getElementById('payouts-body');
       if (!tbody) return;
-
+    
       tbody.innerHTML = '<tr><td colspan="5">Loading payouts...</td></tr>';
-
+    
       // date filter
       let sinceISO = null;
       if (filterRange !== 'all') {
@@ -1122,39 +1122,27 @@
         else if (filterRange === '90d') since.setDate(since.getDate() - 90);
         sinceISO = since.toISOString();
       }
-
-      const params = [
-        'select=*,contractors(name)',
-        'order=tx_timestamp.desc',
-        'limit=50',
-      ];
-
-      if (sinceISO) {
-        params.push(`tx_timestamp=gte.${encodeURIComponent(sinceISO)}`);
-      }
-      if (filterChain !== 'all') {
-        params.push(`chain=eq.${encodeURIComponent(filterChain)}`);
-      }
-
-      const url = `${SUPABASE_URL}/rest/v1/payouts?` + params.join('&');
-
+    
       try {
-        const res = await fetch(url, {
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        });
-
-        if (!res.ok) {
-          tbody.innerHTML =
-            `<tr><td colspan="5">Error loading payouts (${res.status})</td></tr>`;
+        let q = supabase
+          .from('payout') // ✅ singular
+          .select('*, contractors(name)')
+          .order('tx_timestamp', { ascending: false })
+          .limit(50);
+    
+        if (sinceISO) q = q.gte('tx_timestamp', sinceISO);
+        if (filterChain !== 'all') q = q.eq('chain', filterChain);
+    
+        const { data, error } = await q;
+    
+        console.log('LOAD PAYOUTS RESULT:', { data, error });
+    
+        if (error) {
+          tbody.innerHTML = `<tr><td colspan="5">Error loading payouts</td></tr>`;
           return;
         }
-
-        const data = await res.json();
-
-        if (!data.length) {
+    
+        if (!data || !data.length) {
           tbody.innerHTML = `
             <tr>
               <td colspan="5">
@@ -1166,22 +1154,17 @@
                   </p>
                 </div>
               </td>
-            </tr>
-  `        ;
+            </tr>`;
           return;
         }
-
-
+    
         tbody.innerHTML = '';
         data.forEach(p => {
           const tr = document.createElement('tr');
-
-          const date = p.tx_timestamp
-            ? new Date(p.tx_timestamp).toLocaleDateString()
-            : '—';
-
+    
+          const date = p.tx_timestamp ? new Date(p.tx_timestamp).toLocaleDateString() : '—';
           const name = p.contractors?.name || 'Unknown';
-
+    
           tr.innerHTML = `
             <td>${date}</td>
             <td>${name}</td>
@@ -1191,51 +1174,56 @@
           `;
           tbody.appendChild(tr);
         });
+    
       } catch (err) {
         console.error(err);
-        tbody.innerHTML =
-          '<tr><td colspan="5">Error loading payouts.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5">Error loading payouts.</td></tr>';
       }
     }
 
+
     async function addPayout(event) {
       event.preventDefault();
-
+    
       const form = event.target;
       const formData = new FormData(form);
-
+    
       const contractor_id = formData.get('contractor_id');
       const amountStr = formData.get('amount');
       const chain = formData.get('chain');
       const tx_hash = formData.get('tx_hash')?.trim();
       const tx_date = formData.get('tx_date');
       const note = formData.get('note')?.trim();
-
+    
       if (!contractor_id || !amountStr || !chain || !tx_hash) {
         alert('Contractor, amount, chain, and tx hash are required.');
         return;
       }
-
+    
       const amount = Number(amountStr);
       if (!amount || amount <= 0) {
         alert('Amount must be a positive number.');
         return;
       }
-
+    
       const tx_timestamp = tx_date
         ? new Date(tx_date).toISOString()
         : new Date().toISOString();
-
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/payouts`, {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-            Prefer: 'return=representation',
-          },
-          body: JSON.stringify({
+    
+      // ✅ Ensure user is authenticated (RLS depends on this)
+      const { data: userData, error: userErr } = await sb.auth.getUser();
+      const user = userData?.user;
+    
+      if (userErr || !user) {
+        alert('You must be signed in.');
+        return;
+      }
+    
+      // ✅ INSERT INTO *singular* table: payout
+      const { data, error } = await sb
+        .from('payout')
+        .insert([
+          {
             contractor_id,
             amount,
             asset_symbol: 'USDC',
@@ -1243,24 +1231,22 @@
             tx_hash,
             tx_timestamp,
             note,
-          }),
-        });
-
-        if (!res.ok) {
-          console.error('Error inserting payout', await res.text());
-          alert('Error saving payout.');
-          return;
-        }
-
-        form.reset();
-        await loadPayouts();
-        await loadDashboard();
-        highlightDashboard();
-      } catch (err) {
-        console.error(err);
-        alert('Network error saving payout.');
+            // user_id auto-fills via DEFAULT auth.uid()
+          },
+        ]);
+    
+      if (error) {
+        alert(`Error saving payout: ${error.message}`);
+        return;
       }
+    
+      form.reset();
+      await loadPayouts();
+      await loadDashboard();
+      highlightDashboard();
     }
+
+
 
     // === DASHBOARD ===
     async function loadDashboard() {
