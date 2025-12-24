@@ -599,6 +599,8 @@
     // Supabase client (for auth + REST)
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    const sb = supabase;
+
     // === GLOBAL STATE ===
     let contractorsCache = [];
     let authMode = 'signin';       // 'signin' | 'signup'
