@@ -1030,34 +1030,30 @@
         return;
       }
     
-      try {
-        // Make sure user is signed in
-        const { data: { user }, error: userErr } = await supabase.auth.getUser();
-        if (userErr || !user) {
-          console.error('Not signed in:', userErr);
-          alert('You must be signed in.');
-          return;
-        }
-    
-        const { data, error } = await supabase
-          .from('contractors')
-          .insert([{ name, wallet_address, role, country }]) // user_id can be defaulted in DB
-          .select();
-    
-        console.log('INSERT RESULT:', { data, error });
-    
-        if (error) {
-          alert(error.message || 'Error adding contractor.');
-          return;
-        }
-    
-        form.reset();
-        await loadContractors();
-      } catch (err) {
-        console.error(err);
-        alert(err.message || 'Network error adding contractor.');
+      // Must be signed in for RLS
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('You must be signed in.');
+        return;
       }
+    
+      const { data, error } = await supabase
+        .from('contractors')
+        .insert([{ name, wallet_address, role, country }])
+        .select()
+        .single();
+    
+      console.log('ADD CONTRACTOR RESULT:', { data, error });
+    
+      if (error) {
+        alert(`Error adding contractor: ${error.message}`);
+        return;
+      }
+    
+      form.reset();
+      await loadContractors();
     }
+
 
 
     // === CHAIN ICON RENDERING ===
