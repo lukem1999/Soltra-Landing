@@ -597,7 +597,7 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dXZrZ25raHJ6cHdsc3N1cHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDkyOTIsImV4cCI6MjA3ODkyNTI5Mn0.9C1-3Di7tXJCgb_7ZHj7mz6QL5fDMvnvmBziYqgGeDs';
 
     // Supabase client (for auth + REST)
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // === GLOBAL STATE ===
     let contractorsCache = [];
@@ -1030,22 +1030,22 @@
         return;
       }
     
-      // Must be signed in for RLS
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      // Must have a logged-in user, otherwise RLS will block inserts
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      const user = userData?.user;
+    
+      if (userErr || !user) {
+        console.error('Not signed in / cannot fetch user:', userErr);
         alert('You must be signed in.');
         return;
       }
     
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('contractors')
-        .insert([{ name, wallet_address, role, country }])
-        .select()
-        .single();
-    
-      console.log('ADD CONTRACTOR RESULT:', { data, error });
+        .insert([{ name, wallet_address, role, country }]); // user_id auto-defaults to auth.uid()
     
       if (error) {
+        console.error('Error inserting contractor:', error);
         alert(`Error adding contractor: ${error.message}`);
         return;
       }
@@ -1053,6 +1053,7 @@
       form.reset();
       await loadContractors();
     }
+
 
 
 
