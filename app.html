@@ -1124,7 +1124,7 @@
       }
     
       let query = sb
-        .from('payout')                          // 👈 MUST be singular
+        .from('payout')      // 👈 SINGULAR
         .select(`
           id,
           amount,
@@ -1132,7 +1132,7 @@
           chain,
           tx_hash,
           tx_timestamp,
-          contractors ( name )                   // 👈 Will work once FK is added
+          contractors ( name )
         `)
         .order('tx_timestamp', { ascending: false })
         .limit(50);
@@ -1146,8 +1146,9 @@
     
       const { data, error } = await query;
     
+      console.log('LOAD PAYOUTS RESULT:', { data, error });
+    
       if (error) {
-        console.error('Error loading payouts:', error);
         tbody.innerHTML = `
           <tr><td colspan="5">
             Error loading payouts (${error.message})
@@ -1200,22 +1201,19 @@
         // === PAYOUTS ===
     async function addPayout(event) {
       event.preventDefault();
-      console.log('addPayout fired ✅');
     
       const form = event.target;
       const formData = new FormData(form);
     
       const contractor_id = formData.get('contractor_id');
-      const amountStr    = formData.get('amount');
-      const tx_hash      = formData.get('tx_hash')?.trim();
-      const tx_date      = formData.get('tx_date');
-      const note         = formData.get('note')?.trim();
+      const amountStr     = formData.get('amount');
+      const chain         = formData.get('chain');
+      const tx_hash       = formData.get('tx_hash')?.trim();
+      const tx_date       = formData.get('tx_date');
+      const note          = formData.get('note')?.trim();
     
-      // TEMP: Ignore chain for now — there's no "chain" column in "payout"
-      const chain = formData.get('chain') || null;
-    
-      if (!contractor_id || !amountStr || !tx_hash) {
-        alert('Contractor, amount, and tx hash are required.');
+      if (!contractor_id || !amountStr || !chain || !tx_hash) {
+        alert('Contractor, amount, chain, and tx hash are required.');
         return;
       }
     
@@ -1229,11 +1227,9 @@
         ? new Date(tx_date).toISOString()
         : new Date().toISOString();
     
-      // RLS: must have a logged-in user
+      // 🔐 make sure user is signed in
       const { data: userData, error: userErr } = await sb.auth.getUser();
       const user = userData?.user;
-    
-      console.log('GET USER RESULT (payout):', { userData, userErr });
     
       if (userErr || !user) {
         console.error('Not signed in / cannot fetch user:', userErr);
@@ -1241,39 +1237,35 @@
         return;
       }
     
-      try {
-        const { data, error } = await sb
-          .from('payout')          // table name is "payout", singular
-          .insert([
-            {
-              contractor_id,
-              amount,
-              asset_symbol: 'USDC',
-              tx_hash,
-              tx_timestamp,
-              note,
-              chain // user_id will default from auth.uid() in DB
-            },
-          ])
-          .select();
+      const { data, error } = await sb
+        .from('payout')                // 👈 SINGULAR
+        .insert([{
+          contractor_id,
+          amount,
+          asset_symbol: 'USDC',
+          chain,
+          tx_hash,
+          tx_timestamp,
+          note
+          // user_id will default to auth.uid() via your default
+        }])
+        .select();
     
-        console.log('ADD PAYOUT RESULT:', { data, error });
+      console.log('ADD PAYOUT RESULT:', { data, error });
     
-        if (error) {
-          alert(`Error saving payout: ${error.message}`);
-          return;
-        }
-    
-        form.reset();
-        await loadPayouts();
-        await loadDashboard();
-        highlightDashboard();
-    
-      } catch (err) {
-        console.error('UNEXPECTED ADD PAYOUT ERROR:', err);
-        alert('Unexpected error saving payout.');
+      if (error) {
+        alert(`Error saving payout: ${error.message}`);
+        return;
       }
+    
+      form.reset();
+      await loadPayouts();
+      await loadDashboard();
+      highlightDashboard();
     }
+
+    
+
 
 
 
