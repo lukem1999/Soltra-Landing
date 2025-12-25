@@ -1187,21 +1187,22 @@
 
 
 
+        // === PAYOUTS ===
     async function addPayout(event) {
-      console.log('addPayout fired ✅');
       event.preventDefault();
+      console.log('addPayout fired ✅');
     
       const form = event.target;
       const formData = new FormData(form);
     
       const contractor_id = formData.get('contractor_id');
-      const amountStr = formData.get('amount');
-      const tx_hash = formData.get('tx_hash')?.trim();
-      const tx_date = formData.get('tx_date');
+      const amountStr    = formData.get('amount');
+      const tx_hash      = formData.get('tx_hash')?.trim();
+      const tx_date      = formData.get('tx_date');
+      const note         = formData.get('note')?.trim();
     
-      // these inputs exist in the UI, but DB doesn't have columns yet:
-      // const chain = formData.get('chain');
-      // const note  = formData.get('note')?.trim();
+      // TEMP: Ignore chain for now — there's no "chain" column in "payout"
+      const chain = formData.get('chain') || null;
     
       if (!contractor_id || !amountStr || !tx_hash) {
         alert('Contractor, amount, and tx hash are required.');
@@ -1218,9 +1219,11 @@
         ? new Date(tx_date).toISOString()
         : new Date().toISOString();
     
-      // Must be signed in (RLS)
+      // RLS: must have a logged-in user
       const { data: userData, error: userErr } = await sb.auth.getUser();
       const user = userData?.user;
+    
+      console.log('GET USER RESULT (payout):', { userData, userErr });
     
       if (userErr || !user) {
         console.error('Not signed in / cannot fetch user:', userErr);
@@ -1228,28 +1231,40 @@
         return;
       }
     
-      const { error } = await sb
-        .from('payout')
-        .insert([{
-          contractor_id,
-          amount,
-          asset_symbol: 'USDC',
-          tx_hash,
-          tx_timestamp
-          // do NOT include chain/note yet
-        }]);
+      try {
+        const { data, error } = await sb
+          .from('payout')          // table name is "payout", singular
+          .insert([
+            {
+              contractor_id,
+              amount,
+              asset_symbol: 'USDC',
+              tx_hash,
+              tx_timestamp,
+              note,
+              // user_id will default from auth.uid() in DB
+            },
+          ])
+          .select();
     
-      if (error) {
-        console.error('Error inserting payout:', error);
-        alert(`Error saving payout: ${error.message}`);
-        return;
+        console.log('ADD PAYOUT RESULT:', { data, error });
+    
+        if (error) {
+          alert(`Error saving payout: ${error.message}`);
+          return;
+        }
+    
+        form.reset();
+        await loadPayouts();
+        await loadDashboard();
+        highlightDashboard();
+    
+      } catch (err) {
+        console.error('UNEXPECTED ADD PAYOUT ERROR:', err);
+        alert('Unexpected error saving payout.');
       }
-    
-      form.reset();
-      await loadPayouts();
-      await loadDashboard();
-      highlightDashboard();
     }
+
 
 
 
@@ -1721,27 +1736,29 @@
     document.addEventListener('DOMContentLoaded', () => {
       initTabs();
 
-      const addContractorForm = document.getElementById('add-contractor-form');
-      if (addContractorForm) {
-        addContractorForm.addEventListener('submit', addContractor);
-      }
+      console.log('DOM Loaded: wiring forms...');
 
+      // --- PAYOUT FORM ---
       const payoutForm = document.getElementById('payout-form');
       if (payoutForm) {
+        console.log('Found payout-form, wiring submit → addPayout');
         payoutForm.addEventListener('submit', addPayout);
+      } else {
+        console.warn('❌ payout-form NOT FOUND');
+      }
+      
+      // Also wire button → requestSubmit (safest + works in GH Pages)
+      const savePayoutBtn = document.getElementById('save-payout-btn');
+      if (savePayoutBtn && payoutForm) {
+        console.log('Found save-payout-btn, wiring click → requestSubmit()');
+        savePayoutBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          payoutForm.requestSubmit();
+        });
+      } else {
+        console.warn('⚠️ save-payout-btn or payout-form missing');
       }
 
-      // Force the save button to submit even if markup is wrong
-      const saveBtn =
-        document.querySelector('#payout-form button') ||
-        document.getElementById('save-payout-btn');
-      
-      if (saveBtn && payoutForm) {
-        saveBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          payoutForm.requestSubmit(); // triggers submit event + HTML validation
-        });
-      }
 
       const rangeSelect = document.getElementById('dash-range');
       const chainSelect = document.getElementById('dash-chain');
