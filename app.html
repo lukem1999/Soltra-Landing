@@ -884,8 +884,7 @@
       }
     }
     
-    function exportReportsCSV() {
-      // Use the same dataset the dashboard & reports tab use
+    function exportPayoutsToCsv() {
       const data = dashboardPayoutsCache || [];
     
       if (!data.length) {
@@ -893,7 +892,6 @@
         return;
       }
     
-      // CSV columns
       const headers = [
         'Date',
         'Contractor',
@@ -901,52 +899,32 @@
         'USD Value',
         'Chain',
         'Tx Hash',
-        'Note'
+        'Note',
       ];
     
       const rows = data.map((p) => {
         const date = p.tx_timestamp
           ? new Date(p.tx_timestamp).toISOString()
           : '';
-    
         const name = p.contractors?.name || '';
-    
         const amount = Number(p.amount || 0);
         const amountUsdc = amount.toString();
-    
-        // Simple assumption: 1 USDC = $1 for now
-        const usdValue = amount.toString();
-    
+        const usdValue = amount.toString(); // 1 USDC = $1 assumption
         const chain = (p.chain || '').toUpperCase();
         const txHash = p.tx_hash || '';
-        const note = (p.note || '').replace(/"/g, '""'); // escape quotes
+        const note = (p.note || '').replace(/"/g, '""');
     
-        return [
-          date,
-          name,
-          amountUsdc,
-          usdValue,
-          chain,
-          txHash,
-          note
-        ];
+        return [date, name, amountUsdc, usdValue, chain, txHash, note];
       });
     
-      // Build CSV string
       const lines = [];
-    
-      // header line
       lines.push(headers.join(','));
     
-      // data lines (quote + escape where needed)
       rows.forEach((cols) => {
         const line = cols
           .map((value) => {
             const v = value == null ? '' : String(value);
-            // Wrap in quotes if it contains comma, quote, or newline
-            if (/[",\n]/.test(v)) {
-              return `"${v.replace(/"/g, '""')}"`;
-            }
+            if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
             return v;
           })
           .join(',');
@@ -954,29 +932,25 @@
       });
     
       const csvContent = lines.join('\n');
-    
-      // Create downloadable blob
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
     
-      // Filename like soltra-reports-2025-12-06.csv
       const today = new Date();
       const y = today.getFullYear();
       const m = String(today.getMonth() + 1).padStart(2, '0');
       const d = String(today.getDate()).padStart(2, '0');
-      const filename = `soltra-reports-${y}-${m}-${d}.csv`;
+      const filename = `soltra-payouts-${y}-${m}-${d}.csv`;
     
       const link = document.createElement('a');
       link.href = url;
       link.download = filename;
-    
-      // Needed for Firefox
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     
       URL.revokeObjectURL(url);
     }
+
 
     function loadReportsFromCache() {
       const tbody = document.getElementById('reports-body');
@@ -1181,16 +1155,26 @@
     
         const contractor = p.contractors?.name || 'Unknown';
     
-        const row = `
-          <tr>
+        tbody.insertAdjacentHTML('beforeend', `
+          <tr class="payout-row">
             <td>${date}</td>
             <td>${contractor}</td>
             <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
             <td>${(p.chain || '').toUpperCase()}</td>
             <td>${p.tx_hash}</td>
           </tr>
-        `;
-        tbody.insertAdjacentHTML('beforeend', row);
+        `);
+        
+        const tr = tbody.lastElementChild; // 🔑 get the row we just added
+        
+        tr.dataset.date = date;
+        tr.dataset.contractor = contractor;
+        tr.dataset.amount = `${p.amount} ${p.asset_symbol || 'USDC'}`;
+        tr.dataset.chain = (p.chain || '').toUpperCase();
+        tr.dataset.txhash = p.tx_hash || '';
+        tr.dataset.note = p.note || '';
+
+
       });
     }
 
@@ -1265,6 +1249,52 @@
     }
 
     
+  function openPayoutModal(data) {
+    const modal = document.getElementById('payout-detail-modal');
+    if (!modal) return;
+  
+    document.getElementById('payout-modal-date').textContent = data.date || '—';
+    document.getElementById('payout-modal-contractor').textContent = data.contractor || 'Unknown';
+    document.getElementById('payout-modal-amount').textContent = data.amount || '—';
+    document.getElementById('payout-modal-chain').textContent = data.chain || '—';
+  
+    const txEl = document.getElementById('payout-modal-txhash');
+    txEl.textContent = data.txHash || '—';
+    txEl.href = data.txHash ? `https://etherscan.io/tx/${data.txHash}` : '#';
+  
+    document.getElementById('payout-modal-note').textContent = data.note || '';
+  
+    modal.classList.remove('hidden');
+  }
+  
+  function closePayoutModal() {
+    const modal = document.getElementById('payout-detail-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+  
+  function initPayoutRowClicks() {
+    const tbody = document.getElementById('payouts-body');
+    if (!tbody) return;
+  
+    tbody.addEventListener('click', (e) => {
+      const tr = e.target.closest('tr');
+      if (!tr || !tr.dataset.contractor) return;
+      openPayoutModal(tr.dataset);
+    });
+  
+    const modal = document.getElementById('payout-detail-modal');
+    const closeBtn = document.getElementById('payout-modal-close');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-backdrop')) {
+          closePayoutModal();
+        }
+      });
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closePayoutModal);
+    }
+  }
 
 
 
@@ -1737,6 +1767,7 @@
     // === INIT ===
     document.addEventListener('DOMContentLoaded', () => {
       initTabs();
+      initPayoutRowClicks();
 
       console.log('DOM Loaded: wiring forms...');
 
@@ -1843,6 +1874,30 @@
       
       }); // <-- this closes document.addEventListener('DOMContentLoaded', ...)
   </script>
+      <div id="payout-detail-modal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Payout details</h3>
+          <button id="payout-modal-close" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-row"><span>Date</span><strong id="payout-modal-date"></strong></div>
+          <div class="modal-row"><span>Contractor</span><strong id="payout-modal-contractor"></strong></div>
+          <div class="modal-row"><span>Amount</span><strong id="payout-modal-amount"></strong></div>
+          <div class="modal-row"><span>Chain</span><strong id="payout-modal-chain"></strong></div>
+          <div class="modal-row">
+            <span>Tx hash</span>
+            <a id="payout-modal-txhash" href="#" target="_blank" rel="noopener noreferrer"></a>
+          </div>
+          <div class="modal-row">
+            <span>Notes</span>
+            <p id="payout-modal-note" class="modal-note"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
 </body>
 </html>
 
