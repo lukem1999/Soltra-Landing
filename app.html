@@ -1117,77 +1117,82 @@
       let sinceISO = null;
       if (filterRange !== 'all') {
         const since = new Date();
-        if (filterRange === '7d')  since.setDate(since.getDate() - 7);
-        if (filterRange === '30d') since.setDate(since.getDate() - 30);
-        if (filterRange === '90d') since.setDate(since.getDate() - 90);
+        if (filterRange === '7d') since.setDate(since.getDate() - 7);
+        else if (filterRange === '30d') since.setDate(since.getDate() - 30);
+        else if (filterRange === '90d') since.setDate(since.getDate() - 90);
         sinceISO = since.toISOString();
       }
     
-      try {
-        let query = sb
-          .from('payout')
-          .select('*, contractors(name)')
-          .order('tx_timestamp', { ascending: false })
-          .limit(50);
+      let query = sb
+        .from('payout')                          // 👈 MUST be singular
+        .select(`
+          id,
+          amount,
+          asset_symbol,
+          chain,
+          tx_hash,
+          tx_timestamp,
+          contractors ( name )                   // 👈 Will work once FK is added
+        `)
+        .order('tx_timestamp', { ascending: false })
+        .limit(50);
     
-        if (sinceISO) {
-          query = query.gte('tx_timestamp', sinceISO);
-        }
-        if (filterChain !== 'all') {
-          query = query.eq('chain', filterChain);
-        }
-    
-        const { data, error } = await query;
-        console.log('LOAD PAYOUTS RESULT:', { data, error });
-    
-        if (error) {
-          tbody.innerHTML =
-            `<tr><td colspan="5">Error loading payouts (${error.message})</td></tr>`;
-          return;
-        }
-    
-        if (!data || !data.length) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="5">
-                <div class="empty-state">
-                  <div class="empty-state-title">No payouts yet</div>
-                  <p class="empty-state-text">
-                    Once you log a payout, it will appear here with the contractor,
-                    amount, chain, and TX hash for your records.
-                  </p>
-                </div>
-              </td>
-            </tr>
-          `;
-          return;
-        }
-    
-        tbody.innerHTML = '';
-        data.forEach((p) => {
-          const tr = document.createElement('tr');
-    
-          const date = p.tx_timestamp
-            ? new Date(p.tx_timestamp).toLocaleDateString()
-            : '—';
-    
-          const name = p.contractors?.name || 'Unknown';
-    
-          tr.innerHTML = `
-            <td>${date}</td>
-            <td>${name}</td>
-            <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
-            <td>${renderChainPill(p.chain)}</td>
-            <td>${p.tx_hash}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } catch (err) {
-        console.error('loadPayouts error:', err);
-        tbody.innerHTML =
-          '<tr><td colspan="5">Error loading payouts.</td></tr>';
+      if (sinceISO) {
+        query = query.gte('tx_timestamp', sinceISO);
       }
+      if (filterChain !== 'all') {
+        query = query.eq('chain', filterChain);
+      }
+    
+      const { data, error } = await query;
+    
+      if (error) {
+        console.error('Error loading payouts:', error);
+        tbody.innerHTML = `
+          <tr><td colspan="5">
+            Error loading payouts (${error.message})
+          </td></tr>
+        `;
+        return;
+      }
+    
+      if (!data || !data.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <div class="empty-state-title">No payouts yet</div>
+                <p class="empty-state-text">
+                  Log a payout to see it appear here.
+                </p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+    
+      tbody.innerHTML = '';
+      data.forEach((p) => {
+        const date = p.tx_timestamp
+          ? new Date(p.tx_timestamp).toLocaleDateString()
+          : '—';
+    
+        const contractor = p.contractors?.name || 'Unknown';
+    
+        const row = `
+          <tr>
+            <td>${date}</td>
+            <td>${contractor}</td>
+            <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
+            <td>${(p.chain || '').toUpperCase()}</td>
+            <td>${p.tx_hash}</td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
     }
+
 
 
 
@@ -1247,7 +1252,7 @@
               tx_hash,
               tx_timestamp,
               note,
-              // user_id will default from auth.uid() in DB
+              chain // user_id will default from auth.uid() in DB
             },
           ])
           .select();
@@ -1308,7 +1313,7 @@
         params.push(`chain=eq.${encodeURIComponent(filterChain)}`);
       }
 
-      const url = `${SUPABASE_URL}/rest/v1/payouts?` + params.join('&');
+      const url = `${SUPABASE_URL}/rest/v1/payout?` + params.join('&');
 
       try {
         const res = await fetch(url, {
