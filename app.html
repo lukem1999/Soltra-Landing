@@ -583,6 +583,48 @@
       </div>
     </div>
   </section>
+  <!-- Payout detail side panel -->
+  <div id="payout-detail-root">
+    <div id="payout-detail-backdrop" class="payout-detail-backdrop"></div>
+  
+    <aside id="payout-detail-panel" class="payout-detail-panel">
+      <div class="pd-header">
+        <div>
+          <div class="pd-kicker">Payout details</div>
+          <h2 class="pd-title" id="pd-contractor">—</h2>
+        </div>
+        <button id="pd-close" type="button" class="pd-close-btn" aria-label="Close">
+          ×
+        </button>
+      </div>
+  
+      <div class="pd-body">
+        <div class="pd-row">
+          <span class="pd-label">Date</span>
+          <span class="pd-value" id="pd-date">—</span>
+        </div>
+        <div class="pd-row">
+          <span class="pd-label">Amount</span>
+          <span class="pd-value" id="pd-amount">—</span>
+        </div>
+        <div class="pd-row">
+          <span class="pd-label">Chain</span>
+          <span class="pd-value" id="pd-chain">—</span>
+        </div>
+        <div class="pd-row">
+          <span class="pd-label">Tx hash</span>
+          <span class="pd-value">
+            <code id="pd-txhash">—</code>
+          </span>
+        </div>
+        <div class="pd-row pd-row-notes">
+          <span class="pd-label">Notes</span>
+          <p class="pd-notes" id="pd-note">No notes for this payout.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
 
   <!-- Supabase client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1080,6 +1122,39 @@
       `;
     }
 
+    function openPayoutDetailFromRow(tr) {
+      const root = document.getElementById('payout-detail-root');
+      if (!root || !tr) return;
+    
+      const date = tr.dataset.date || '—';
+      const contractor = tr.dataset.contractor || 'Unknown';
+      const amount = tr.dataset.amount || '—';
+      const chain = tr.dataset.chain || '—';
+      const txhash = tr.dataset.txhash || '—';
+      const note = tr.dataset.note || 'No notes for this payout.';
+    
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      };
+    
+      setText('pd-date', date);
+      setText('pd-contractor', contractor);
+      setText('pd-amount', amount);
+      setText('pd-chain', chain);
+      setText('pd-txhash', txhash);
+      setText('pd-note', note);
+    
+      root.classList.add('payout-detail-open');
+    }
+    
+    function closePayoutDetail() {
+      const root = document.getElementById('payout-detail-root');
+      if (!root) return;
+      root.classList.remove('payout-detail-open');
+    }
+
+    
     // === PAYOUTS ===
     async function loadPayouts() {
       const tbody = document.getElementById('payouts-body');
@@ -1840,6 +1915,32 @@
               } catch (e) {}
           });
       }
+
+        // --- Payout detail panel wiring ---
+      const payoutsBody = document.getElementById('payouts-body');
+      if (payoutsBody) {
+        payoutsBody.addEventListener('click', (e) => {
+          const tr = e.target.closest('.payout-row');
+          if (!tr) return;
+          openPayoutDetailFromRow(tr);
+        });
+      }
+    
+      const pdClose = document.getElementById('pd-close');
+      const pdBackdrop = document.getElementById('payout-detail-backdrop');
+    
+      if (pdClose) {
+        pdClose.addEventListener('click', () => {
+          closePayoutDetail();
+        });
+      }
+    
+      if (pdBackdrop) {
+        pdBackdrop.addEventListener('click', () => {
+          closePayoutDetail();
+        });
+      }
+
       
       const goContractorsBtn = document.getElementById('onboarding-go-contractors');
       if (goContractorsBtn) {
