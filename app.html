@@ -1260,7 +1260,8 @@
 
 
     // === PAYOUTS ===
-    async function loadPayouts() {
+    // === PAYOUTS ===
+    async function loadPayouts(highlightId = null) {
       const tbody = document.getElementById('payouts-body');
       if (!tbody) return;
     
@@ -1368,23 +1369,36 @@
         // 🔑 get the row we just added
         const tr = tbody.lastElementChild;
     
-        // Attach dataset for modal click
+        // Make row focusable + button-like for keyboard users
+        tr.tabIndex = 0;
+        tr.setAttribute('role', 'button');
+    
+        // Attach dataset for modal
         tr.dataset.date = date;
         tr.dataset.contractor = contractor;
         tr.dataset.amount = amountText;
         tr.dataset.chain = chainUpper;
         tr.dataset.txhash = p.tx_hash || '';
         tr.dataset.note = p.note || '';
-
-        // after you set tr.dataset.* ...
+        tr.dataset.id = p.id; // in case we need it later
+    
+        // ⭐ Highlight newly-added payout (for animation)
+        if (highlightId && p.id === highlightId) {
+          tr.classList.add('payout-row--new');
+        }
+    
+        // Mouse click opens modal
         tr.addEventListener('click', () => openPayoutModalFromRow(tr));
-
+    
+        // Keyboard: Enter / Space also open modal
+        tr.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openPayoutModalFromRow(tr);
+          }
+        });
       });
     }
-
-
-
-
 
         // === PAYOUTS ===
     async function addPayout(event) {
@@ -1447,9 +1461,14 @@
       }
     
       form.reset();
-      await loadPayouts();
+
+      const newId = data && data[0] ? data[0].id : null;
+      
+      // Pass newId so that row animates
+      await loadPayouts(newId);
       await loadDashboard();
       highlightDashboard();
+
     }
 
     
@@ -1993,6 +2012,54 @@
     }
 
 
+        // --- Toast helper ---
+    let toastTimeoutId = null;
+    
+    function showToast(message) {
+      const el = document.getElementById('app-toast');
+      if (!el) return;
+    
+      el.textContent = message;
+      el.classList.add('show');
+    
+      if (toastTimeoutId) clearTimeout(toastTimeoutId);
+      toastTimeoutId = setTimeout(() => {
+        el.classList.remove('show');
+      }, 1800);
+    }
+    
+    // --- Copy TX hash from modal ---
+    async function handleCopyTxHash() {
+      const txEl = document.getElementById('payout-modal-txhash');
+      if (!txEl) return;
+    
+      const hash = (txEl.textContent || '').trim();
+      if (!hash) {
+        showToast('No TX hash to copy');
+        return;
+      }
+    
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(hash);
+        } else {
+          // fallback
+          const tmp = document.createElement('textarea');
+          tmp.value = hash;
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand('copy');
+          document.body.removeChild(tmp);
+        }
+    
+        showToast('TX hash copied');
+      } catch (err) {
+        console.error('Clipboard error', err);
+        showToast('Could not copy TX hash');
+      }
+    }
+
+      
     // === INIT ===
     document.addEventListener('DOMContentLoaded', () => {
       initTabs();
@@ -2129,6 +2196,11 @@
 
       const modalCloseBtn = document.getElementById('payout-modal-close');
       const payoutModal = document.getElementById('payout-modal');
+      const copyBtn = document.getElementById('payout-modal-copy');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', handleCopyTxHash);
+      }
+
       
       if (modalCloseBtn) {
         modalCloseBtn.addEventListener('click', closePayoutModal);
@@ -2172,19 +2244,20 @@
         </div>
       </div>
     </div>
-        <!-- Payout detail modal -->
+        <!-- Payout detail modal (single source of truth) -->
     <div id="payout-modal" class="payout-modal hidden">
       <div class="payout-modal-backdrop"></div>
     
-      <div class="payout-modal-dialog">
+      <div class="payout-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="payout-modal-title">
         <div class="payout-modal-header">
-          <h3>Payout details</h3>
+          <h3 id="payout-modal-title">Payout details</h3>
           <button id="payout-modal-close" class="payout-modal-close" aria-label="Close">
             &times;
           </button>
         </div>
     
         <div class="payout-modal-body">
+          <!-- Main details -->
           <dl class="payout-modal-grid">
             <div>
               <dt>Contractor</dt>
@@ -2202,15 +2275,28 @@
               <dt>Chain</dt>
               <dd id="payout-modal-chain">—</dd>
             </div>
-            <div>
-              <dt>Tx hash</dt>
-              <dd id="payout-modal-txhash">—</dd>
-            </div>
-            <div>
-              <dt>Note</dt>
-              <dd id="payout-modal-note">—</dd>
-            </div>
           </dl>
+    
+          <!-- Tx hash with copy button -->
+          <div class="payout-modal-field">
+            <div class="modal-label-row">
+              <span class="modal-label">TX hash</span>
+              <button
+                type="button"
+                id="payout-modal-copy"
+                class="modal-copy-btn"
+              >
+                Copy
+              </button>
+            </div>
+            <code id="payout-modal-txhash" class="modal-code">—</code>
+          </div>
+    
+          <!-- Notes -->
+          <div class="payout-modal-field">
+            <span class="modal-label">Notes</span>
+            <p id="payout-modal-note" class="modal-note">—</p>
+          </div>
         </div>
       </div>
     </div>
