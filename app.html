@@ -1176,6 +1176,28 @@
       if (!root) return;
       root.classList.remove('payout-detail-open');
     }
+    function openPayoutModalFromRow(row) {
+      const modal = document.getElementById('payout-modal');
+      if (!modal) return;
+    
+      const c = (id) => modal.querySelector(`#${id}`);
+    
+      c('payout-modal-contractor').textContent = row.dataset.contractor || '—';
+      c('payout-modal-amount').textContent = row.dataset.amount || '—';
+      c('payout-modal-date').textContent = row.dataset.date || '—';
+      c('payout-modal-chain').textContent = row.dataset.chain || '—';
+      c('payout-modal-txhash').textContent = row.dataset.txhash || '—';
+      c('payout-modal-note').textContent = row.dataset.note || '—';
+    
+      modal.classList.remove('hidden');
+    }
+
+    function closePayoutModal() {
+      const modal = document.getElementById('payout-modal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+    }
+
 
     // === PAYOUTS ===
     async function loadPayouts() {
@@ -1293,6 +1315,10 @@
         tr.dataset.chain = chainUpper;
         tr.dataset.txhash = p.tx_hash || '';
         tr.dataset.note = p.note || '';
+
+        // after you set tr.dataset.* ...
+        tr.addEventListener('click', () => openPayoutModalFromRow(tr));
+
       });
     }
 
@@ -2015,6 +2041,26 @@
           exportPayoutsToCsv(); // or whatever your export function is called
         });
       }
+
+      const modalCloseBtn = document.getElementById('payout-modal-close');
+      const payoutModal = document.getElementById('payout-modal');
+      
+      if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', closePayoutModal);
+      }
+      
+      if (payoutModal) {
+        payoutModal.addEventListener('click', (e) => {
+          if (e.target.classList.contains('payout-modal-backdrop')) {
+            closePayoutModal();
+          }
+        });
+      }
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePayoutModal();
+      });
+
       
       }); // <-- this closes document.addEventListener('DOMContentLoaded', ...)
   </script>
@@ -2041,6 +2087,49 @@
         </div>
       </div>
     </div>
+        <!-- Payout detail modal -->
+    <div id="payout-modal" class="payout-modal hidden">
+      <div class="payout-modal-backdrop"></div>
+    
+      <div class="payout-modal-dialog">
+        <div class="payout-modal-header">
+          <h3>Payout details</h3>
+          <button id="payout-modal-close" class="payout-modal-close" aria-label="Close">
+            &times;
+          </button>
+        </div>
+    
+        <div class="payout-modal-body">
+          <dl class="payout-modal-grid">
+            <div>
+              <dt>Contractor</dt>
+              <dd id="payout-modal-contractor">—</dd>
+            </div>
+            <div>
+              <dt>Amount</dt>
+              <dd id="payout-modal-amount">—</dd>
+            </div>
+            <div>
+              <dt>Date</dt>
+              <dd id="payout-modal-date">—</dd>
+            </div>
+            <div>
+              <dt>Chain</dt>
+              <dd id="payout-modal-chain">—</dd>
+            </div>
+            <div>
+              <dt>Tx hash</dt>
+              <dd id="payout-modal-txhash">—</dd>
+            </div>
+            <div>
+              <dt>Note</dt>
+              <dd id="payout-modal-note">—</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+
 
 </body>
 </html>
