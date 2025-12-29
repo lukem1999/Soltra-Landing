@@ -3449,6 +3449,82 @@ textarea:focus {
   opacity: 1;
 }
 
+/* Copy TX button */
+.modal-copy-btn {
+  border: none;
+  background: rgba(246, 196, 83, 0.08);
+  color: #f6c453;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    background-color 120ms ease-out,
+    transform 120ms ease-out;
+}
+
+.modal-copy-btn:hover {
+  background: rgba(246, 196, 83, 0.18);
+  transform: translateY(-1px);
+}
+
+.modal-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.modal-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+/* Toast */
+.app-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(15, 23, 42, 0.95);
+  color: #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease-out,
+    transform 160ms ease-out;
+  z-index: 9999;
+}
+
+.app-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.payout-row--new {
+  animation: payoutRowFlash 700ms ease-out;
+}
+
+@keyframes payoutRowFlash {
+  0% {
+    background-color: rgba(246, 196, 83, 0.35);
+    transform: translateY(-2px);
+  }
+  100% {
+    background-color: transparent;
+    transform: none;
+  }
+}
+
 
 
 
