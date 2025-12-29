@@ -1176,27 +1176,87 @@
       if (!root) return;
       root.classList.remove('payout-detail-open');
     }
-    function openPayoutModalFromRow(row) {
+    function fillPayoutModalFromRow(tr) {
+      if (!tr) return;
+      document.getElementById('payout-modal-date').textContent = tr.dataset.date || '';
+      document.getElementById('payout-modal-contractor').textContent = tr.dataset.contractor || '';
+      document.getElementById('payout-modal-amount').textContent = tr.dataset.amount || '';
+      document.getElementById('payout-modal-chain').textContent = tr.dataset.chain || '';
+      document.getElementById('payout-modal-txhash').textContent = tr.dataset.txhash || '';
+      document.getElementById('payout-modal-note').textContent = tr.dataset.note || '';
+    }
+    
+    function openPayoutModalFromRow(tr) {
       const modal = document.getElementById('payout-modal');
       if (!modal) return;
     
-      const c = (id) => modal.querySelector(`#${id}`);
+      // Set active index based on this row
+      const rows = getPayoutRows();
+      currentPayoutRowIndex = rows.indexOf(tr);
+      setActivePayoutRow(currentPayoutRowIndex);
     
-      c('payout-modal-contractor').textContent = row.dataset.contractor || '—';
-      c('payout-modal-amount').textContent = row.dataset.amount || '—';
-      c('payout-modal-date').textContent = row.dataset.date || '—';
-      c('payout-modal-chain').textContent = row.dataset.chain || '—';
-      c('payout-modal-txhash').textContent = row.dataset.txhash || '—';
-      c('payout-modal-note').textContent = row.dataset.note || '—';
+      // Fill modal fields
+      fillPayoutModalFromRow(tr);
     
-      modal.classList.remove('hidden');
+      // Show modal (animated via CSS .open class)
+      modal.classList.add('open');
+    
+      // Focus close button (or any primary control) for accessibility
+      const closeBtn = document.getElementById('payout-modal-close');
+      if (closeBtn) closeBtn.focus();
+    
+      attachPayoutModalKeyListeners();
     }
-
+    
     function closePayoutModal() {
       const modal = document.getElementById('payout-modal');
       if (!modal) return;
-      modal.classList.add('hidden');
+      modal.classList.remove('open');
+      detachPayoutModalKeyListeners();
     }
+
+    function handlePayoutModalKeyDown(e) {
+      const modal = document.getElementById('payout-modal');
+      if (!modal || !modal.classList.contains('open')) return;
+    
+      // ESC closes
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closePayoutModal();
+        return;
+      }
+    
+      // Up/down (and optional vim-style j/k)
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        e.preventDefault();
+        const rows = getPayoutRows();
+        if (!rows.length) return;
+    
+        const newIndex = Math.min(currentPayoutRowIndex + 1, rows.length - 1);
+        const newRow = setActivePayoutRow(newIndex);
+        fillPayoutModalFromRow(newRow);
+      }
+    
+      if (e.key === 'ArrowUp' || e.key === 'k') {
+        e.preventDefault();
+        const rows = getPayoutRows();
+        if (!rows.length) return;
+    
+        const newIndex = Math.max(currentPayoutRowIndex - 1, 0);
+        const newRow = setActivePayoutRow(newIndex);
+        fillPayoutModalFromRow(newRow);
+      }
+    }
+    
+    function attachPayoutModalKeyListeners() {
+      document.addEventListener('keydown', handlePayoutModalKeyDown);
+    }
+    
+    function detachPayoutModalKeyListeners() {
+      document.removeEventListener('keydown', handlePayoutModalKeyDown);
+    }
+
+
 
 
     // === PAYOUTS ===
@@ -1439,13 +1499,38 @@
       closeBtn.addEventListener('click', closePayoutModal);
     }
   }
+    
+
+    let currentPayoutRowIndex = -1;
+    
+    function getPayoutRows() {
+      return Array.from(document.querySelectorAll('#payouts-body .payout-row'));
+    }
+    
+    function setActivePayoutRow(index) {
+      const rows = getPayoutRows();
+      if (!rows.length) {
+        currentPayoutRowIndex = -1;
+        return;
+      }
+    
+      // Clamp index
+      if (index < 0) index = 0;
+      if (index >= rows.length) index = rows.length - 1;
+    
+      currentPayoutRowIndex = index;
+    
+      rows.forEach(r => r.classList.remove('payout-row--active'));
+      const row = rows[currentPayoutRowIndex];
+      if (row) {
+        row.classList.add('payout-row--active');
+        row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    
+      return row;
+    }
 
 
-
-
-
-
-    // === DASHBOARD ===
     async function loadDashboard() {
       const totalEl = document.getElementById('dash-total-30d');
       const payoutCountEl = document.getElementById('dash-payout-count');
