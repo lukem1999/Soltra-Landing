@@ -1122,6 +1122,29 @@
       `;
     }
 
+    function getExplorerUrl(chain, txHash) {
+      if (!txHash) return '#';
+      const c = (chain || '').toUpperCase();
+    
+      if (c.includes('BASE')) {
+        return `https://basescan.org/tx/${txHash}`;
+      }
+      if (c.includes('POLYGON') || c.includes('MATIC')) {
+        return `https://polygonscan.com/tx/${txHash}`;
+      }
+      if (c.includes('ETH')) {
+        return `https://etherscan.io/tx/${txHash}`;
+      }
+      // Fallback – you can change this later if you support more chains
+      return `https://etherscan.io/tx/${txHash}`;
+    }
+    
+    function shortenHash(txHash) {
+      if (!txHash || txHash.length <= 12) return txHash || '';
+      return txHash.slice(0, 6) + '...' + txHash.slice(-4);
+    }
+
+
     function openPayoutDetailFromRow(tr) {
       const root = document.getElementById('payout-detail-root');
       if (!root || !tr) return;
@@ -1154,7 +1177,6 @@
       root.classList.remove('payout-detail-open');
     }
 
-    
     // === PAYOUTS ===
     async function loadPayouts() {
       const tbody = document.getElementById('payouts-body');
@@ -1173,7 +1195,7 @@
       }
     
       let query = sb
-        .from('payout')      // 👈 SINGULAR
+        .from('payout') // 👈 singular table name
         .select(`
           id,
           amount,
@@ -1181,6 +1203,7 @@
           chain,
           tx_hash,
           tx_timestamp,
+          note,
           contractors ( name )
         `)
         .order('tx_timestamp', { ascending: false })
@@ -1223,33 +1246,53 @@
       }
     
       tbody.innerHTML = '';
+    
       data.forEach((p) => {
         const date = p.tx_timestamp
           ? new Date(p.tx_timestamp).toLocaleDateString()
           : '—';
     
         const contractor = p.contractors?.name || 'Unknown';
+        const amountText = `${p.amount} ${p.asset_symbol || 'USDC'}`;
+        const chainUpper = (p.chain || '').toUpperCase();
+        const explorerUrl = getExplorerUrl(p.chain, p.tx_hash);
+        const shortHash = shortenHash(p.tx_hash);
     
-        tbody.insertAdjacentHTML('beforeend', `
+        tbody.insertAdjacentHTML(
+          'beforeend',
+          `
           <tr class="payout-row">
             <td>${date}</td>
             <td>${contractor}</td>
-            <td>${p.amount} ${p.asset_symbol || 'USDC'}</td>
-            <td>${(p.chain || '').toUpperCase()}</td>
-            <td>${p.tx_hash}</td>
+            <td>${amountText}</td>
+            <td>${renderChainPill(p.chain)}</td>
+            <td>
+              ${
+                p.tx_hash
+                  ? `<a href="${explorerUrl}"
+                         target="_blank"
+                         rel="noopener"
+                         class="tx-link"
+                         title="${p.tx_hash}">
+                       ${shortHash}
+                     </a>`
+                  : '—'
+              }
+            </td>
           </tr>
-        `);
-        
-        const tr = tbody.lastElementChild; // 🔑 get the row we just added
-        
+        `
+        );
+    
+        // 🔑 get the row we just added
+        const tr = tbody.lastElementChild;
+    
+        // Attach dataset for modal click
         tr.dataset.date = date;
         tr.dataset.contractor = contractor;
-        tr.dataset.amount = `${p.amount} ${p.asset_symbol || 'USDC'}`;
-        tr.dataset.chain = (p.chain || '').toUpperCase();
+        tr.dataset.amount = amountText;
+        tr.dataset.chain = chainUpper;
         tr.dataset.txhash = p.tx_hash || '';
         tr.dataset.note = p.note || '';
-
-
       });
     }
 
