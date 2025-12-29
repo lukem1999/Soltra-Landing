@@ -3390,6 +3390,64 @@ textarea:focus {
   }
 }
 
+/* --- Payout rows --- */
+
+.payout-row {
+  cursor: pointer;
+  transition:
+    background-color 120ms ease-out,
+    transform 120ms ease-out;
+}
+
+.payout-row:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+  transform: translateY(-1px);
+}
+
+.payout-row--active {
+  background-color: rgba(246, 196, 83, 0.08); /* gold-ish highlight */
+}
+
+.payout-row--active td {
+  color: #f6c453;
+}
+
+/* --- Payout detail modal animations --- */
+
+#payout-modal {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease-out;
+}
+
+#payout-modal.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Dimmed background */
+#payout-modal .modal-backdrop {
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
+
+#payout-modal.open .modal-backdrop {
+  opacity: 1;
+}
+
+/* Panel itself */
+#payout-modal .modal-panel {
+  transform: translateY(14px) scale(0.97);
+  opacity: 0;
+  transition:
+    transform 170ms ease-out,
+    opacity 170ms ease-out;
+}
+
+#payout-modal.open .modal-panel {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
 
 
 
