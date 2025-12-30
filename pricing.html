@@ -36,11 +36,19 @@
     <ul>
       <li><strong>Unlimited contractors</strong></li>
       <li><strong>Unlimited payouts</strong></li>
-      <li>All chains supported</li>
-      <li>Priority email support</li>
+      <li>All chains supported</strong></li>
+      <li>Priority email support</strong></li>
     </ul>
-    <button id="btn-pro-checkout" class="plan-btn gold">Upgrade</button>
+  
+    <!-- 👇 Add your Stripe Price ID here (example shown) -->
+    <button
+      class="plan-btn gold"
+      data-price-id="prod_ThJUNMwRDRfwLi"
+    >
+      Upgrade
+    </button>
   </div>
+
 
   <!-- ORG -->
   <div class="plan-card">
@@ -55,6 +63,62 @@
     <button id="btn-org-checkout" class="plan-btn">Contact Sales</button>
   </div>
 </section>
+<script>
+  // Supabase Edge Function endpoint for Stripe checkout
+  const CHECKOUT_ENDPOINT =
+    "https://lvuvkgnkhrzpwlssupyh.functions.supabase.co/create-checkout-session";
+
+  async function startCheckout(priceId, button) {
+    if (!priceId) {
+      console.error("Missing priceId on button");
+      return;
+    }
+
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = "Redirecting…";
+
+    try {
+      const res = await fetch(CHECKOUT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        console.error("Checkout error:", data);
+        alert(data.error || "Could not start checkout. Please try again.");
+        button.disabled = false;
+        button.textContent = originalText;
+        return;
+      }
+
+      // 🔁 Redirect to Stripe-hosted checkout page
+      window.location.href = data.url;
+    } catch (err) {
+      console.error("Network/JS error starting checkout:", err);
+      alert("Something went wrong starting checkout. Please try again.");
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+
+  // Wire up all buttons that have a data-price-id
+  document.addEventListener("DOMContentLoaded", () => {
+    const upgradeButtons = document.querySelectorAll("[data-price-id]");
+
+    upgradeButtons.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const priceId = btn.dataset.priceId;
+        startCheckout(priceId, btn);
+      });
+    });
+  });
+</script>
+
 
 </body>
 </html>
