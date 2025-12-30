@@ -3902,6 +3902,81 @@ textarea:focus {
   background: rgba(15, 23, 42, 0.96);
 }
 
+.pricing-page {
+  background: #050b16;
+  color: #fff;
+  font-family: sans-serif;
+  padding: 40px;
+}
+
+.pricing-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.pricing-plans {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.plan-card {
+  background: #0d1627;
+  border-radius: 12px;
+  padding: 24px;
+  width: 280px;
+  border: 1px solid #1e2a40;
+  transition: 0.2s;
+}
+.plan-card:hover {
+  transform: translateY(-4px);
+  border-color: #f6c453;
+}
+
+.plan-card.highlight {
+  border: 2px solid #f6c453;
+  box-shadow: 0 0 20px rgba(246,196,83,0.2);
+}
+
+.price {
+  font-size: 2rem;
+  margin: 16px 0;
+}
+
+.plan-btn {
+  background: #1a2538;
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.plan-btn.gold {
+  background: #f6c453;
+  color: #000;
+  font-weight: bold;
+}
+
+.upgrade-cta {
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, #FFD86F, #FFB44A);
+  color: #000;
+  font-weight: 600;
+  border-radius: 8px;
+  text-align: center;
+  padding: 10px;
+  transition: 0.2s ease;
+}
+
+.upgrade-cta:hover {
+  background: linear-gradient(135deg, #FFE9A9, #FFCB7E);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 214, 120, 0.6);
+}
+
 
 
 
