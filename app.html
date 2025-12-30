@@ -671,6 +671,23 @@
       })}`;
     }
 
+    function showToast(message = 'Copied!') {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+    
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      toast.classList.add('toast-visible');
+    
+      // clear previous timer if any
+      clearTimeout(showToast._timeout);
+      showToast._timeout = setTimeout(() => {
+        toast.classList.remove('toast-visible');
+        toast.classList.add('hidden');
+      }, 1800);
+    }
+
+
     function setAuthMessage(text, type = '') {
       const el = document.getElementById('auth-message');
       if (!el) return;
@@ -2059,6 +2076,31 @@
       }
     }
 
+    // ===== COPY HASH BUTTON =====
+    const copyBtn = document.getElementById('payout-modal-copy');
+    const hashEl = document.getElementById('payout-modal-txhash');
+    const toast = document.getElementById('copy-toast');
+    
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        const text = hashEl.textContent.trim();
+        if (!text || text === '—') return;
+    
+        try {
+          await navigator.clipboard.writeText(text);
+          showCopyToast();
+        } catch (err) {
+          console.error('Failed to copy:', err);
+        }
+      });
+    }
+    
+    function showCopyToast() {
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
+    }
+
+
       
     // === INIT ===
     document.addEventListener('DOMContentLoaded', () => {
@@ -2194,6 +2236,23 @@
         });
       }
 
+      const copyBtn = document.getElementById('payout-modal-copy');
+        if (copyBtn) {
+          copyBtn.addEventListener('click', async () => {
+            const el = document.getElementById('payout-modal-txhash');
+            const hash = el?.textContent?.trim();
+            if (!hash || hash === '—') return;
+        
+            try {
+              await navigator.clipboard.writeText(hash);
+              showToast('TX hash copied');
+            } catch (err) {
+              console.error('Clipboard error', err);
+              showToast('Could not copy');
+            }
+          });
+        }
+
       const modalCloseBtn = document.getElementById('payout-modal-close');
       const payoutModal = document.getElementById('payout-modal');
       const copyBtn = document.getElementById('payout-modal-copy');
@@ -2276,11 +2335,11 @@
               <dd id="payout-modal-chain">—</dd>
             </div>
           </dl>
-    
+        
           <!-- Tx hash with copy button -->
           <div class="payout-modal-field">
             <div class="modal-label-row">
-              <span class="modal-label">TX hash</span>
+              <span class="modal-label">Tx hash</span>
               <button
                 type="button"
                 id="payout-modal-copy"
@@ -2291,7 +2350,7 @@
             </div>
             <code id="payout-modal-txhash" class="modal-code">—</code>
           </div>
-    
+        
           <!-- Notes -->
           <div class="payout-modal-field">
             <span class="modal-label">Notes</span>
@@ -2301,7 +2360,8 @@
       </div>
     </div>
 
-
+  <div id="toast" class="toast hidden">Copied!</div>
+  <div id="copy-toast" class="copy-toast">Copied!</div>
 </body>
 </html>
 
