@@ -8,119 +8,120 @@
 </head>
 
 <body class="pricing-page">
+  <header class="pricing-header">
+    <h1>Simple, Transparent Pricing</h1>
+    <p>Start for free — scale when you're ready.</p>
+    <a href="index.html" class="back-link">← Back to home</a>
+  </header>
 
-<header class="pricing-header">
-  <h1>Simple, Transparent Pricing</h1>
-  <p>Start for free — scale when you're ready.</p>
-  <a href="index.html" class="back-link">← Back to home</a>
-</header>
+  <section class="pricing-plans">
+    <!-- FREE -->
+    <div class="plan-card">
+      <h2>Free</h2>
+      <p class="price">$0 / month</p>
+      <ul>
+        <li>Up to <strong>5 contractors</strong></li>
+        <li>Up to <strong>10 payouts / month</strong></li>
+        <li>Base &amp; Polygon only</li>
+        <li>Basic support</li>
+      </ul>
+      <a href="app.html" class="plan-btn">Get Started</a>
+    </div>
 
-<section class="pricing-plans">
-  <!-- FREE -->
-  <div class="plan-card">
-    <h2>Free</h2>
-    <p class="price">$0 / month</p>
-    <ul>
-      <li>Up to <strong>5 contractors</strong></li>
-      <li>Up to <strong>10 payouts / month</strong></li>
-      <li>Base & Polygon only</li>
-      <li>Basic support</li>
-    </ul>
-    <a href="app.html" class="plan-btn">Get Started</a>
-  </div>
+    <!-- PRO -->
+    <div class="plan-card highlight">
+      <h2>Pro</h2>
+      <p class="price">$29 / month</p>
+      <ul>
+        <li><strong>Unlimited contractors</strong></li>
+        <li><strong>Unlimited payouts</strong></li>
+        <li>All chains supported</li>
+        <li>Priority email support</li>
+      </ul>
 
-  <!-- PRO -->
-  <div class="plan-card highlight">
-    <h2>Pro</h2>
-    <p class="price">$29 / month</p>
-    <ul>
-      <li><strong>Unlimited contractors</strong></li>
-      <li><strong>Unlimited payouts</strong></li>
-      <li>All chains supported</li>
-      <li>Priority email support</li>
-    </ul>
-  
-    <button
-      id="btn-pro-checkout"
-      class="plan-btn gold"
-      data-price-id="price_1SjurWH8mH6Wr4HGWUeyezdC"
-    >
-      Upgrade
-    </button>
-  </div>
+      <!-- IMPORTANT: id + data-price-id -->
+      <button
+        id="btn-pro-checkout"
+        class="plan-btn gold"
+        data-price-id="price_1SjurWH8mH6Wr4HGWUeyezdC"
+        type="button"
+      >
+        Upgrade
+      </button>
+    </div>
 
-  <!-- ORG -->
-  <div class="plan-card">
-    <h2>Organization</h2>
-    <p class="price">$99 / month</p>
-    <ul>
-      <li>Everything in Pro +</li>
-      <li>Team accounts (coming soon)</li>
-      <li>Onboarding assistance</li>
-      <li>Quarterly check-ins</li>
-    </ul>
-    <button id="btn-org-checkout" class="plan-btn">Contact Sales</button>
-  </div>
-</section>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const proBtn = document.getElementById('btn-pro-checkout');
-    console.log('pricing init, proBtn =', proBtn);
+    <!-- ORG -->
+    <div class="plan-card">
+      <h2>Organization</h2>
+      <p class="price">$99 / month</p>
+      <ul>
+        <li>Everything in Pro +</li>
+        <li>Team accounts (coming soon)</li>
+        <li>Onboarding assistance</li>
+        <li>Quarterly check-ins</li>
+      </ul>
+      <button id="btn-org-checkout" class="plan-btn" type="button">
+        Contact Sales
+      </button>
+    </div>
+  </section>
 
-    if (!proBtn) return;
+  <!-- Checkout script: KEEP THIS RIGHT BEFORE </body> -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const proBtn = document.getElementById('btn-pro-checkout');
+      console.log('pricing init, proBtn =', proBtn);
 
-    proBtn.addEventListener('click', async () => {
-      const priceId = proBtn.dataset.priceId;
-      console.log('Upgrade clicked, priceId =', priceId);
+      if (!proBtn) return;
 
-      if (!priceId) {
-        alert('Missing price ID on button.');
-        return;
-      }
+      proBtn.addEventListener('click', async () => {
+        const priceId = proBtn.dataset.priceId;
+        console.log('Upgrade clicked, priceId =', priceId);
 
-      proBtn.disabled = true;
-      const originalText = proBtn.textContent;
-      proBtn.textContent = 'Redirecting...';
+        if (!priceId) {
+          alert('Missing price ID on button.');
+          return;
+        }
 
-      try {
-        const res = await fetch(
-          'https://lvuvkgnkhrzpwlssupyh.supabase.co/functions/v1/create-checkout-session',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ priceId }),
+        proBtn.disabled = true;
+        const originalText = proBtn.textContent;
+        proBtn.textContent = 'Redirecting…';
+
+        try {
+          const res = await fetch(
+            'https://lvuvkgnkhrzpwlssupyh.supabase.co/functions/v1/create-checkout-session',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ priceId }),
+            }
+          );
+
+          console.log('Checkout response status:', res.status);
+
+          const data = await res.json().catch(() => ({}));
+          console.log('Checkout response body:', data);
+
+          if (!res.ok) {
+            throw new Error(data.error || `HTTP ${res.status}`);
           }
-        );
 
-        console.log('Checkout response status:', res.status);
-        const data = await res.json().catch(() => ({}));
-        console.log('Checkout response body:', data);
+          if (!data.url) {
+            throw new Error('No URL returned from checkout function');
+          }
 
-        if (!res.ok) {
-          throw new Error(data.error || `HTTP ${res.status}`);
+          // ✅ Redirect to Stripe Checkout
+          window.location.href = data.url;
+        } catch (err) {
+          console.error('Checkout error:', err);
+          alert('Something went wrong starting checkout. Check console for details.');
+        } finally {
+          proBtn.disabled = false;
+          proBtn.textContent = originalText;
         }
-
-        if (!data.url) {
-          throw new Error('No URL returned from checkout function');
-        }
-
-        // ✅ redirect to Stripe Checkout
-        window.location.href = data.url;
-      } catch (err) {
-        console.error('Checkout error:', err);
-        alert('Something went wrong starting checkout. Check console for details.');
-      } finally {
-        proBtn.disabled = false;
-        proBtn.textContent = originalText;
-      }
+      });
     });
-  });
-</script>
-</body>
-</html>
-
-
-
+  </script>
 </body>
 </html>
 
