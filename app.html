@@ -1639,6 +1639,7 @@
     }
 
         // === DASHBOARD ===
+    // === DASHBOARD ===
     async function loadDashboard(highlightId = null) {
       const totalEl        = document.getElementById('dash-total-30d');
       const payoutCountEl  = document.getElementById('dash-payout-count');
@@ -1649,88 +1650,92 @@
     
       if (!totalEl || !tableBody) return;
     
-      // date filter
+      // --- date filter, same as before ---
       let sinceISO = null;
       if (filterRange !== 'all') {
         const since = new Date();
         if (filterRange === '7d')  since.setDate(since.getDate() - 7);
-        else if (filterRange === '30d') since.setDate(since.getDate() - 30);
-        else if (filterRange === '90d') since.setDate(since.getDate() - 90);
+        if (filterRange === '30d') since.setDate(since.getDate() - 30);
+        if (filterRange === '90d') since.setDate(since.getDate() - 90);
         sinceISO = since.toISOString();
       }
     
-      const params = [
-        'select=*,contractors(name)', // includes id & joined contractor name
-        'order=tx_timestamp.desc',
-        'limit=200'
-      ];
+      // --- query payouts via Supabase client (same as Payouts tab) ---
+      let query = sb
+        .from('payout')  // 👈 singular table
+        .select(`
+          id,
+          amount,
+          asset_symbol,
+          chain,
+          tx_hash,
+          tx_timestamp,
+          note,
+          contractor_id,
+          contractors ( name )
+        `)
+        .order('tx_timestamp', { ascending: false })
+        .limit(200);
     
       if (sinceISO) {
-        params.push(`tx_timestamp=gte.${encodeURIComponent(sinceISO)}`);
+        query = query.gte('tx_timestamp', sinceISO);
       }
       if (filterChain !== 'all') {
-        params.push(`chain=eq.${encodeURIComponent(filterChain)}`);
+        query = query.eq('chain', filterChain);
       }
     
-      const url = `${SUPABASE_URL}/rest/v1/payout?` + params.join('&');
-    
       try {
-        const res = await fetch(url, {
-          headers: {
-            apikey:       SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        });
+        const { data, error } = await query;
     
-        if (!res.ok) {
-          console.error('Dashboard fetch error', res.status, await res.text());
-          totalEl.textContent = '$0';
+        if (error) {
+          console.error('Dashboard fetch error:', error);
+          totalEl.textContent       = '$0';
           payoutCountEl.textContent = 'Error loading payouts';
+          tableBody.innerHTML =
+            '<tr><td colspan="5">Error loading payouts.</td></tr>';
           return;
         }
     
-        const data = await res.json();
-        dashboardPayoutsCache = data;
+        const payouts = data || [];
+        dashboardPayoutsCache = payouts; // used by Reports + CSV export
     
-        // Update "Last updated" timestamp
+        // --- "Last updated" timestamp ---
         const updatedEl = document.getElementById('dash-updated');
         if (updatedEl) {
           const now = new Date();
-          const timeString = now.toLocaleTimeString([], {
-            hour: 'numeric',
-            minute: '2-digit',
-          });
-          updatedEl.textContent = `Last updated at ${timeString}`;
+          updatedEl.textContent =
+            `Last updated at ${now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
         }
     
-        // Totals / stats
-        const totalAmount = data.reduce(
+        // --- KPIs ---
+        const totalAmount = payouts.reduce(
           (sum, p) => sum + (Number(p.amount) || 0),
           0
         );
-        const payoutCount = data.length;
+        const payoutCount = payouts.length;
     
         lastDashboardPayoutCount = payoutCount;
         updateOnboardingBanner(contractorsCache.length || 0, payoutCount);
     
+        // sidebar count
         const payoutsCountEl = document.getElementById('sidebar-payouts-count');
         if (payoutsCountEl) {
-          payoutsCountEl.textContent = payoutCount ? payoutCount : '';
+          payoutsCountEl.textContent = payoutCount ? String(payoutCount) : '';
         }
     
         const contractorIds = new Set(
-          data.map(p => p.contractor_id).filter(Boolean)
+          payouts.map(p => p.contractor_id).filter(Boolean)
         );
         const chains = new Set(
-          data.map(p => (p.chain || '').toUpperCase()).filter(Boolean)
+          payouts.map(p => (p.chain || '').toUpperCase()).filter(Boolean)
         );
     
-        // This-month snapshot
+        // --- "This month snapshot" (same logic as before, just on payouts array) ---
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear  = now.getFullYear();
     
-        const monthPayouts = data.filter(p => {
+        const monthPayouts = payouts.filter(p => {
           if (!p.tx_timestamp) return false;
           const d = new Date(p.tx_timestamp);
           return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
@@ -1756,6 +1761,7 @@
           snapshotAvgEl.textContent = formatUSD(avg);
         }
     
+        // write KPI numbers
         totalEl.textContent = formatUSD(totalAmount);
         payoutCountEl.textContent =
           payoutCount === 1 ? '1 payout' : `${payoutCount} payouts`;
@@ -1768,10 +1774,10 @@
             : 'No payouts for this range.';
         }
     
-        // ---- Table ----
+        // --- Table rows: clickable + keyboard + highlight ---
         tableBody.innerHTML = '';
     
-        if (!data.length) {
+        if (!payouts.length) {
           tableBody.innerHTML = `
             <tr>
               <td colspan="5">
@@ -1788,22 +1794,30 @@
           return;
         }
     
-        data.slice(0, 10).forEach((p) => {
-          const tr = document.createElement('tr');
-    
-          const date   = p.tx_timestamp
+        payouts.slice(0, 10).forEach((p) => {
+          const date = p.tx_timestamp
             ? new Date(p.tx_timestamp).toLocaleDateString()
             : '—';
-          const name        = p.contractors?.name || 'Unknown';
-          const amountText  = `${p.amount} ${p.asset_symbol || 'USDC'}`;
+    
+          const contractor = p.contractors?.name || 'Unknown';
+          const amountText = `${p.amount} ${p.asset_symbol || 'USDC'}`;
+          const chainUpper = (p.chain || '').toUpperCase();
           const explorerUrl = getExplorerUrl(p.chain, p.tx_hash);
           const shortHash   = shortenHash(p.tx_hash);
     
+          const tr = document.createElement('tr');
+          tr.classList.add('payout-row');
+    
+          // 🔥 highlight if this is the newly-added payout
+          if (highlightId && p.id === highlightId) {
+            tr.classList.add('payout-row--new');
+          }
+    
           tr.innerHTML = `
             <td>${date}</td>
-            <td>${name}</td>
+            <td>${contractor}</td>
             <td>${amountText}</td>
-            <td>${renderChainPill(p.chain)}</td>
+            <td>${chainUpper}</td>
             <td>
               ${
                 p.tx_hash
@@ -1819,24 +1833,44 @@
             </td>
           `;
     
-          // ⭐ Highlight the newly-added payout row
-          if (highlightId && p.id === highlightId) {
-            tr.classList.add('dash-row--new');
-          }
+          // Make row focusable & button-like
+          tr.tabIndex = 0;
+          tr.setAttribute('role', 'button');
+    
+          // Attach dataset for the shared payout modal
+          tr.dataset.date       = date;
+          tr.dataset.contractor = contractor;
+          tr.dataset.amount     = amountText;
+          tr.dataset.chain      = chainUpper;
+          tr.dataset.txhash     = p.tx_hash || '';
+          tr.dataset.note       = p.note || '';
+          tr.dataset.id         = p.id;
+    
+          // Click opens the modal
+          tr.addEventListener('click', () => openPayoutModalFromRow(tr));
+    
+          // Enter / Space opens the modal
+          tr.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openPayoutModalFromRow(tr);
+            }
+          });
     
           tableBody.appendChild(tr);
         });
     
-        // keep Reports tab in sync
+        // Also keep reports tab in sync
         loadReportsFromCache();
       } catch (err) {
-        console.error('Dashboard error', err);
-        totalEl.textContent = '$0';
+        console.error('Dashboard error:', err);
+        totalEl.textContent       = '$0';
         payoutCountEl.textContent = 'Error loading data';
         tableBody.innerHTML =
           '<tr><td colspan="5">Error loading payouts.</td></tr>';
       }
     }
+
 
    
     // ----- Dashboard charts -----
