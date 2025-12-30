@@ -3511,19 +3511,19 @@ textarea:focus {
 }
 
 .payout-row--new {
-  animation: payoutRowFlash 700ms ease-out;
+  animation: payoutRowFlash 900ms ease-out;
 }
 
 @keyframes payoutRowFlash {
-  0% {
-    background-color: rgba(246, 196, 83, 0.35);
-    transform: translateY(-2px);
-  }
-  100% {
-    background-color: transparent;
-    transform: none;
-  }
+  0%   { background-color: rgba(246, 196, 83, 0.28); }
+  60%  { background-color: rgba(246, 196, 83, 0.12); }
+  100% { background-color: transparent; }
 }
+
+.dash-row--new {
+  animation: payoutRowFlash 900ms ease-out; /* reuse same keyframes */
+}
+
 
 /* Toast */
 .toast {
