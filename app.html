@@ -2313,29 +2313,31 @@
           deleteBtn.addEventListener('click', handleDeletePayout);
         }
 
+      // ==== COPY HASH BUTTON ====
       const copyBtn = document.getElementById('payout-modal-copy');
-        if (copyBtn) {
-          copyBtn.addEventListener('click', async () => {
-            const el = document.getElementById('payout-modal-txhash');
-            const hash = el?.textContent?.trim();
-            if (!hash || hash === '—') return;
-        
-            try {
-              await navigator.clipboard.writeText(hash);
-              showToast('TX hash copied');
-            } catch (err) {
-              console.error('Clipboard error', err);
-              showToast('Could not copy');
-            }
-          });
+      const hashEl  = document.getElementById('payout-modal-txhash');
+      const toast   = document.getElementById('copy-toast'); // optional if you're using toast
+      
+      async function handleCopyTxHash() {
+        const text = hashEl?.textContent?.trim();
+        if (!text || text === '—') return;
+      
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast('TX hash copied!'); // if using toast system
+        } catch (err) {
+          console.error('Failed to copy:', err);
+          showToast('Clipboard error');
         }
-
-      const modalCloseBtn = document.getElementById('payout-modal-close');
-      const payoutModal = document.getElementById('payout-modal');
-      const copyBtn = document.getElementById('payout-modal-copy');
+      }
+      
       if (copyBtn) {
         copyBtn.addEventListener('click', handleCopyTxHash);
       }
+
+
+      const modalCloseBtn = document.getElementById('payout-modal-close');
+      const payoutModal = document.getElementById('payout-modal');
 
       
       if (modalCloseBtn) {
