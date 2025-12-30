@@ -66,62 +66,65 @@
     </div>
   </section>
 
-  <!-- Checkout script: KEEP THIS RIGHT BEFORE </body> -->
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const proBtn = document.getElementById('btn-pro-checkout');
-      console.log('pricing init, proBtn =', proBtn);
+  const SUPABASE_FUNCTION_URL =
+    'https://lvuvkgnkhrzpwlssupyh.functions.supabase.co/create-checkout-session';
 
-      if (!proBtn) return;
+  document.addEventListener('DOMContentLoaded', () => {
+    const proBtn = document.getElementById('btn-pro-checkout');
+    if (!proBtn) return;
 
-      proBtn.addEventListener('click', async () => {
-        const priceId = proBtn.dataset.priceId;
-        console.log('Upgrade clicked, priceId =', priceId);
+    proBtn.addEventListener('click', async () => {
+      const priceId = proBtn.dataset.priceId; // from data-price-id attribute
+      if (!priceId) {
+        console.error('No data-price-id set on Pro button');
+        alert('Price not configured on this plan.');
+        return;
+      }
 
-        if (!priceId) {
-          alert('Missing price ID on button.');
+      proBtn.disabled = true;
+      proBtn.textContent = 'Redirecting…';
+
+      try {
+        const res = await fetch(SUPABASE_FUNCTION_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ priceId }),
+        });
+
+        if (!res.ok) {
+          const bodyText = await res.text().catch(() => '');
+          console.error('Checkout HTTP error:', res.status, bodyText);
+          alert('Something went wrong starting checkout. Check console for details.');
           return;
         }
 
-        proBtn.disabled = true;
-        const originalText = proBtn.textContent;
-        proBtn.textContent = 'Redirecting…';
+        const data = await res.json().catch((err) => {
+          console.error('Failed to parse JSON from checkout function:', err);
+          throw err;
+        });
 
-        try {
-          const res = await fetch(
-            'https://lvuvkgnkhrzpwlssupyh.supabase.co/functions/v1/create-checkout-session',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ priceId }),
-            }
-          );
+        console.log('Checkout response:', data);
 
-          console.log('Checkout response status:', res.status);
-
-          const data = await res.json().catch(() => ({}));
-          console.log('Checkout response body:', data);
-
-          if (!res.ok) {
-            throw new Error(data.error || `HTTP ${res.status}`);
-          }
-
-          if (!data.url) {
-            throw new Error('No URL returned from checkout function');
-          }
-
-          // ✅ Redirect to Stripe Checkout
-          window.location.href = data.url;
-        } catch (err) {
-          console.error('Checkout error:', err);
-          alert('Something went wrong starting checkout. Check console for details.');
-        } finally {
-          proBtn.disabled = false;
-          proBtn.textContent = originalText;
+        if (!data || !data.url) {
+          console.error('No URL returned from checkout function', data);
+          alert('No checkout URL returned. Check console for details.');
+          return;
         }
-      });
+
+        window.location.href = data.url;
+      } catch (err) {
+        console.error('Error starting checkout:', err);
+        alert('Something went wrong starting checkout. Check console for details.');
+      } finally {
+        proBtn.disabled = false;
+        proBtn.textContent = 'Upgrade';
+      }
     });
-  </script>
+  });
+</script>
 </body>
 </html>
 
