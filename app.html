@@ -1207,23 +1207,51 @@
       const modal = document.getElementById('payout-modal');
       if (!modal) return;
     
-      // Set active index based on this row
-      const rows = getPayoutRows();
-      currentPayoutRowIndex = rows.indexOf(tr);
-      setActivePayoutRow(currentPayoutRowIndex);
+      const contractorEl = document.getElementById('payout-modal-contractor');
+      const amountEl = document.getElementById('payout-modal-amount');
+      const dateEl = document.getElementById('payout-modal-date');
+      const chainEl = document.getElementById('payout-modal-chain');
+      const txEl = document.getElementById('payout-modal-txhash');
+      const noteEl = document.getElementById('payout-modal-note');
+      const explorerLink = document.getElementById('payout-modal-explorer');
+    
+      // Extract from dataset
+      const contractor = tr.dataset.contractor || '—';
+      const amount = tr.dataset.amount || '—';
+      const date = tr.dataset.date || '—';
+      const chain = tr.dataset.chain || '—';
+      const txhash = tr.dataset.txhash || '—';
+      const note = tr.dataset.note || '—';
     
       // Fill modal fields
-      fillPayoutModalFromRow(tr);
+      contractorEl.textContent = contractor;
+      amountEl.textContent = amount;
+      dateEl.textContent = date;
+      chainEl.textContent = chain;
+      txEl.textContent = txhash;
+      noteEl.textContent = note;
     
-      // Show modal (animated via CSS .open class)
-      modal.classList.add('open');
+      // Build explorer link only if hash exists
+      if (explorerLink) {
+        if (txhash && txhash !== '—') {
+          const url = getExplorerUrl(chain, txhash);
+          explorerLink.href = url;
+          explorerLink.style.display = 'inline-flex';
+        } else {
+          explorerLink.style.display = 'none';
+          explorerLink.removeAttribute('href');
+        }
+      }
     
-      // Focus close button (or any primary control) for accessibility
+      // Open modal
+      modal.classList.remove('hidden');
+      modal.setAttribute('aria-hidden', 'false');
+    
+      // Focus close button (accessibility + UX)
       const closeBtn = document.getElementById('payout-modal-close');
       if (closeBtn) closeBtn.focus();
-    
-      attachPayoutModalKeyListeners();
     }
+
     
     function closePayoutModal() {
       const modal = document.getElementById('payout-modal');
@@ -2336,18 +2364,30 @@
             </div>
           </dl>
         
-          <!-- Tx hash with copy button -->
+          <!-- Tx hash with copy + explorer -->
           <div class="payout-modal-field">
             <div class="modal-label-row">
-              <span class="modal-label">Tx hash</span>
-              <button
-                type="button"
-                id="payout-modal-copy"
-                class="modal-copy-btn"
-              >
-                Copy
-              </button>
+              <span class="modal-label">TX hash</span>
+              <div class="modal-actions">
+                <button
+                  type="button"
+                  id="payout-modal-copy"
+                  class="modal-copy-btn"
+                >
+                  Copy
+                </button>
+                <a
+                  id="payout-modal-explorer"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="modal-explorer-link"
+                >
+                  Open in explorer ↗
+                </a>
+              </div>
             </div>
+        
             <code id="payout-modal-txhash" class="modal-code">—</code>
           </div>
         
@@ -2357,7 +2397,6 @@
             <p id="payout-modal-note" class="modal-note">—</p>
           </div>
         </div>
-      </div>
     </div>
 
   <div id="toast" class="toast hidden">Copied!</div>
