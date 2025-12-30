@@ -1203,55 +1203,38 @@
       document.getElementById('payout-modal-note').textContent = tr.dataset.note || '';
     }
     
+    let activePayoutRow = null;
+
     function openPayoutModalFromRow(tr) {
       const modal = document.getElementById('payout-modal');
       if (!modal) return;
     
+      activePayoutRow = row;
+    
+      // ---- Fill modal from dataset (same as before) ----
+      const dateEl       = document.getElementById('payout-modal-date');
       const contractorEl = document.getElementById('payout-modal-contractor');
-      const amountEl = document.getElementById('payout-modal-amount');
-      const dateEl = document.getElementById('payout-modal-date');
-      const chainEl = document.getElementById('payout-modal-chain');
-      const txEl = document.getElementById('payout-modal-txhash');
-      const noteEl = document.getElementById('payout-modal-note');
-      const explorerLink = document.getElementById('payout-modal-explorer');
+      const amountEl     = document.getElementById('payout-modal-amount');
+      const chainEl      = document.getElementById('payout-modal-chain');
+      const hashEl       = document.getElementById('payout-modal-txhash');
+      const noteEl       = document.getElementById('payout-modal-note');
     
-      // Extract from dataset
-      const contractor = tr.dataset.contractor || '—';
-      const amount = tr.dataset.amount || '—';
-      const date = tr.dataset.date || '—';
-      const chain = tr.dataset.chain || '—';
-      const txhash = tr.dataset.txhash || '—';
-      const note = tr.dataset.note || '—';
+      if (dateEl)       dateEl.textContent       = row.dataset.date || '—';
+      if (contractorEl) contractorEl.textContent = row.dataset.contractor || '—';
+      if (amountEl)     amountEl.textContent     = row.dataset.amount || '—';
+      if (chainEl)      chainEl.textContent      = row.dataset.chain || '—';
+      if (hashEl)       hashEl.textContent       = row.dataset.txhash || '—';
+      if (noteEl)       noteEl.textContent       = row.dataset.note || '—';
     
-      // 🔑 Store payout id on the modal for later delete
-      modal.dataset.payoutId = tr.dataset.id || '';
-    
-      // Fill modal fields
-      contractorEl.textContent = contractor;
-      amountEl.textContent = amount;
-      dateEl.textContent = date;
-      chainEl.textContent = chain;
-      txEl.textContent = txhash;
-      noteEl.textContent = note;
-    
-      // Explorer link (if you added it)
-      if (explorerLink) {
-        if (txhash && txhash !== '—') {
-          const url = getExplorerUrl(chain, txhash);
-          explorerLink.href = url;
-          explorerLink.style.display = 'inline-flex';
-        } else {
-          explorerLink.style.display = 'none';
-          explorerLink.removeAttribute('href');
-        }
-      }
-    
-      // Open modal
+      // ---- Animate open ----
       modal.classList.remove('hidden');
-      modal.setAttribute('aria-hidden', 'false');
+      // wait one frame so transitions fire
+      requestAnimationFrame(() => {
+        modal.classList.add('payout-modal--open');
+      });
     
       const closeBtn = document.getElementById('payout-modal-close');
-      if (closeBtn) closeBtn.focus();
+      closeBtn?.focus();
     }
 
     async function handleDeletePayout() {
@@ -1300,8 +1283,13 @@
     function closePayoutModal() {
       const modal = document.getElementById('payout-modal');
       if (!modal) return;
-      modal.classList.remove('open');
-      detachPayoutModalKeyListeners();
+    
+      modal.classList.remove('payout-modal--open');
+    
+      // After transition, hide it
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 190);
     }
 
     function handlePayoutModalKeyDown(e) {
