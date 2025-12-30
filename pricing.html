@@ -36,19 +36,18 @@
     <ul>
       <li><strong>Unlimited contractors</strong></li>
       <li><strong>Unlimited payouts</strong></li>
-      <li>All chains supported</strong></li>
-      <li>Priority email support</strong></li>
+      <li>All chains supported</li>
+      <li>Priority email support</li>
     </ul>
   
-    <!-- 👇 Add your Stripe Price ID here (example shown) -->
     <button
+      id="btn-pro-checkout"
       class="plan-btn gold"
       data-price-id="price_1SjurWH8mH6Wr4HGWUeyezdC"
     >
       Upgrade
     </button>
   </div>
-
 
   <!-- ORG -->
   <div class="plan-card">
@@ -63,56 +62,63 @@
     <button id="btn-org-checkout" class="plan-btn">Contact Sales</button>
   </div>
 </section>
-<script type="module">
-  const proBtn = document.getElementById("btn-pro-checkout");
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const proBtn = document.getElementById('btn-pro-checkout');
+    console.log('pricing init, proBtn =', proBtn);
 
-  if (proBtn) {
-    proBtn.addEventListener("click", async () => {
+    if (!proBtn) return;
+
+    proBtn.addEventListener('click', async () => {
       const priceId = proBtn.dataset.priceId;
+      console.log('Upgrade clicked, priceId =', priceId);
+
       if (!priceId) {
-        alert("Missing price ID on button.");
+        alert('Missing price ID on button.');
         return;
       }
 
       proBtn.disabled = true;
       const originalText = proBtn.textContent;
-      proBtn.textContent = "Redirecting...";
+      proBtn.textContent = 'Redirecting...';
 
       try {
         const res = await fetch(
-          "https://lvuvkgnkhrzpwlssupyh.supabase.co/functions/v1/create-checkout-session",
+          'https://lvuvkgnkhrzpwlssupyh.supabase.co/functions/v1/create-checkout-session',
           {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ priceId }),
           }
         );
 
-        console.log("Checkout response status:", res.status);
-
+        console.log('Checkout response status:', res.status);
         const data = await res.json().catch(() => ({}));
-        console.log("Checkout response body:", data);
+        console.log('Checkout response body:', data);
 
         if (!res.ok) {
           throw new Error(data.error || `HTTP ${res.status}`);
         }
 
         if (!data.url) {
-          throw new Error("No URL returned from checkout function");
+          throw new Error('No URL returned from checkout function');
         }
 
-        // ✅ Redirect to Stripe Checkout
+        // ✅ redirect to Stripe Checkout
         window.location.href = data.url;
       } catch (err) {
-        console.error("Checkout error:", err);
-        alert("Something went wrong starting checkout. Check console for details.");
+        console.error('Checkout error:', err);
+        alert('Something went wrong starting checkout. Check console for details.');
       } finally {
         proBtn.disabled = false;
         proBtn.textContent = originalText;
       }
     });
-  }
+  });
 </script>
+</body>
+</html>
+
 
 
 </body>
