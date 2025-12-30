@@ -3668,7 +3668,239 @@ textarea:focus {
 }
 
 
+/* === Payout modal base === */
+.payout-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;        /* turned back on when open */
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
 
+.payout-modal--open {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+/* Backdrop */
+.payout-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(246,196,83,0.18), transparent),
+              rgba(3, 7, 18, 0.82);
+  backdrop-filter: blur(10px);
+}
+
+/* Dialog card */
+.payout-modal-dialog {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 540px;
+  margin: 0 1.5rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: 1.25rem;
+  background: radial-gradient(circle at top left, rgba(246,196,83,0.12), transparent),
+              #050816;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  transform: translateY(12px) scale(0.97);
+  opacity: 0;
+  transition:
+    opacity 180ms ease-out,
+    transform 180ms ease-out;
+}
+
+.payout-modal--open .payout-modal-dialog {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Header */
+.payout-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.payout-modal-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* Close button */
+.payout-modal-close {
+  border: none;
+  background: transparent;
+  color: #e5e7eb;
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 120ms ease-out, color 120ms ease-out, transform 80ms;
+}
+
+.payout-modal-close:hover {
+  background: rgba(148, 163, 184, 0.12);
+  color: #f9fafb;
+}
+
+.payout-modal-close:active {
+  transform: scale(0.93);
+}
+
+/* Body / grid */
+.payout-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.payout-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1.4rem;
+}
+
+.payout-modal-grid dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #9ca3af;
+}
+
+.payout-modal-grid dd {
+  margin-top: 0.15rem;
+  font-size: 0.92rem;
+}
+
+/* Field sections (TX hash + notes) */
+.payout-modal-field {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(31, 41, 55, 0.9);
+}
+
+.modal-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+}
+
+.modal-label {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #9ca3af;
+}
+
+/* Copy button */
+.modal-copy-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.2rem 0.8rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(246, 196, 83, 0.1);
+  color: #f6c453;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition:
+    background-color 140ms ease-out,
+    box-shadow 140ms ease-out,
+    transform 80ms ease-out;
+}
+
+.modal-copy-btn:hover {
+  background: rgba(246, 196, 83, 0.2);
+  box-shadow: 0 0 0 1px rgba(246, 196, 83, 0.35);
+}
+
+.modal-copy-btn:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+/* TX hash code block */
+.modal-code {
+  display: inline-flex;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.78rem;
+  color: #e5e7eb;
+}
+
+/* Note text */
+.modal-note {
+  font-size: 0.86rem;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+/* Little toast (if you’re using a #copy-toast div) */
+.copy-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 90;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.96);
+  color: #e5e7eb;
+  font-size: 0.78rem;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
+}
+
+.copy-toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .payout-modal,
+  .payout-modal-dialog,
+  .copy-toast {
+    transition: none !important;
+  }
+}
+
+.payout-row {
+  cursor: pointer;
+  transition: background-color 120ms ease-out, transform 100ms ease-out;
+}
+
+.payout-row:hover {
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.payout-row:focus-visible {
+  outline: 2px solid rgba(246, 196, 83, 0.75);
+  outline-offset: 2px;
+  background: rgba(15, 23, 42, 0.96);
+}
 
 
 
