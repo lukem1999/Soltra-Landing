@@ -63,60 +63,55 @@
     <button id="btn-org-checkout" class="plan-btn">Contact Sales</button>
   </div>
 </section>
-<script>
-  // Supabase Edge Function endpoint for Stripe checkout
-  const CHECKOUT_ENDPOINT =
-    "https://lvuvkgnkhrzpwlssupyh.functions.supabase.co/create-checkout-session";
+<script type="module">
+  const proBtn = document.getElementById("btn-pro-checkout");
 
-  async function startCheckout(priceId, button) {
-    if (!priceId) {
-      console.error("Missing priceId on button");
-      return;
-    }
-
-    const originalText = button.textContent;
-    button.disabled = true;
-    button.textContent = "Redirecting…";
-
-    try {
-      const res = await fetch(CHECKOUT_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.url) {
-        console.error("Checkout error:", data);
-        alert(data.error || "Could not start checkout. Please try again.");
-        button.disabled = false;
-        button.textContent = originalText;
+  if (proBtn) {
+    proBtn.addEventListener("click", async () => {
+      const priceId = proBtn.dataset.priceId;
+      if (!priceId) {
+        alert("Missing price ID on button.");
         return;
       }
 
-      // 🔁 Redirect to Stripe-hosted checkout page
-      window.location.href = data.url;
-    } catch (err) {
-      console.error("Network/JS error starting checkout:", err);
-      alert("Something went wrong starting checkout. Please try again.");
-      button.disabled = false;
-      button.textContent = originalText;
-    }
-  }
+      proBtn.disabled = true;
+      const originalText = proBtn.textContent;
+      proBtn.textContent = "Redirecting...";
 
-  // Wire up all buttons that have a data-price-id
-  document.addEventListener("DOMContentLoaded", () => {
-    const upgradeButtons = document.querySelectorAll("[data-price-id]");
+      try {
+        const res = await fetch(
+          "https://lvuvkgnkhrzpwlssupyh.supabase.co/functions/v1/create-checkout-session",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ priceId }),
+          }
+        );
 
-    upgradeButtons.forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        const priceId = btn.dataset.priceId;
-        startCheckout(priceId, btn);
-      });
+        console.log("Checkout response status:", res.status);
+
+        const data = await res.json().catch(() => ({}));
+        console.log("Checkout response body:", data);
+
+        if (!res.ok) {
+          throw new Error(data.error || `HTTP ${res.status}`);
+        }
+
+        if (!data.url) {
+          throw new Error("No URL returned from checkout function");
+        }
+
+        // ✅ Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } catch (err) {
+        console.error("Checkout error:", err);
+        alert("Something went wrong starting checkout. Check console for details.");
+      } finally {
+        proBtn.disabled = false;
+        proBtn.textContent = originalText;
+      }
     });
-  });
+  }
 </script>
 
 
