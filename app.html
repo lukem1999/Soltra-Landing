@@ -2408,6 +2408,34 @@
 
       
       }); // <-- this closes document.addEventListener('DOMContentLoaded', ...)
+          // ==== STRIPE BILLING ====
+      const stripePublicKey = "pk_live_REPLACE_ME"; // Your publishable key
+      const stripe = Stripe(stripePublicKey);
+      
+      // Price IDs (from Stripe)
+      const PRICE_PRO = "price_1Qabc123Pro29"; 
+      const PRICE_ORG = "price_1Qabc123Org99"; 
+      
+      async function startCheckout(priceId) {
+        const { data: { email } } = await sb.auth.getUser();
+        if (!email) {
+          alert("Please sign in first.");
+          return;
+        }
+      
+        const session = await fetch("https://YOUR-SUPABASE-FUNCTION-ENDPOINT/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ priceId, email }),
+        }).then(r => r.json());
+      
+        if (session.url) {
+          window.location.href = session.url; // Redirect to Stripe Checkout
+        } else {
+          alert("Error starting checkout. Please try again.");
+        }
+      }
+
   </script>
       <div id="payout-detail-modal" class="modal hidden">
       <div class="modal-backdrop"></div>
