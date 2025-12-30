@@ -1223,6 +1223,9 @@
       const txhash = tr.dataset.txhash || '—';
       const note = tr.dataset.note || '—';
     
+      // 🔑 Store payout id on the modal for later delete
+      modal.dataset.payoutId = tr.dataset.id || '';
+    
       // Fill modal fields
       contractorEl.textContent = contractor;
       amountEl.textContent = amount;
@@ -1231,7 +1234,7 @@
       txEl.textContent = txhash;
       noteEl.textContent = note;
     
-      // Build explorer link only if hash exists
+      // Explorer link (if you added it)
       if (explorerLink) {
         if (txhash && txhash !== '—') {
           const url = getExplorerUrl(chain, txhash);
@@ -1247,9 +1250,50 @@
       modal.classList.remove('hidden');
       modal.setAttribute('aria-hidden', 'false');
     
-      // Focus close button (accessibility + UX)
       const closeBtn = document.getElementById('payout-modal-close');
       if (closeBtn) closeBtn.focus();
+    }
+
+    async function handleDeletePayout() {
+      const modal = document.getElementById('payout-modal');
+      if (!modal) return;
+    
+      const payoutId = modal.dataset.payoutId;
+      if (!payoutId) {
+        alert('Missing payout id.');
+        return;
+      }
+    
+      const confirmDelete = window.confirm(
+        'Delete this payout from Soltra? This will not move any on-chain funds.'
+      );
+      if (!confirmDelete) return;
+    
+      try {
+        const { error } = await sb
+          .from('payout')      // 👈 singular table name
+          .delete()
+          .eq('id', payoutId);
+    
+        if (error) {
+          console.error('Error deleting payout:', error);
+          alert(`Error deleting payout: ${error.message}`);
+          return;
+        }
+    
+        // Close modal
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+        modal.dataset.payoutId = '';
+    
+        // Refresh UI
+        await loadPayouts();
+        await loadDashboard();
+        highlightDashboard();
+      } catch (err) {
+        console.error(err);
+        alert('Network error while deleting payout.');
+      }
     }
 
     
@@ -2264,6 +2308,11 @@
         });
       }
 
+      const deleteBtn = document.getElementById('payout-modal-delete');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', handleDeletePayout);
+        }
+
       const copyBtn = document.getElementById('payout-modal-copy');
         if (copyBtn) {
           copyBtn.addEventListener('click', async () => {
@@ -2364,11 +2413,31 @@
             </div>
           </dl>
         
-          <!-- Tx hash with copy + explorer -->
-          <div class="payout-modal-field">
-            <div class="modal-label-row">
-              <span class="modal-label">TX hash</span>
-              <div class="modal-actions">
+          <div class="payout-modal-body">
+            <!-- Main details -->
+            <dl class="payout-modal-grid">
+              <div>
+                <dt>Contractor</dt>
+                <dd id="payout-modal-contractor">—</dd>
+              </div>
+              <div>
+                <dt>Amount</dt>
+                <dd id="payout-modal-amount">—</dd>
+              </div>
+              <div>
+                <dt>Date</dt>
+                <dd id="payout-modal-date">—</dd>
+              </div>
+              <div>
+                <dt>Chain</dt>
+                <dd id="payout-modal-chain">—</dd>
+              </div>
+            </dl>
+          
+            <!-- Tx hash with copy button -->
+            <div class="payout-modal-field">
+              <div class="modal-label-row">
+                <span class="modal-label">TX hash</span>
                 <button
                   type="button"
                   id="payout-modal-copy"
@@ -2376,28 +2445,28 @@
                 >
                   Copy
                 </button>
-                <a
-                  id="payout-modal-explorer"
-                  href="#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="modal-explorer-link"
-                >
-                  Open in explorer ↗
-                </a>
               </div>
+              <code id="payout-modal-txhash" class="modal-code">—</code>
             </div>
-        
-            <code id="payout-modal-txhash" class="modal-code">—</code>
+          
+            <!-- Notes -->
+            <div class="payout-modal-field">
+              <span class="modal-label">Notes</span>
+              <p id="payout-modal-note" class="modal-note">—</p>
+            </div>
           </div>
-        
-          <!-- Notes -->
-          <div class="payout-modal-field">
-            <span class="modal-label">Notes</span>
-            <p id="payout-modal-note" class="modal-note">—</p>
+          
+          <!-- ✅ Add this footer -->
+          <div class="payout-modal-footer">
+            <button
+              type="button"
+              id="payout-modal-delete"
+              class="payout-modal-delete-btn"
+            >
+              Delete payout
+            </button>
           </div>
-        </div>
-    </div>
+      </div>
 
   <div id="toast" class="toast hidden">Copied!</div>
   <div id="copy-toast" class="copy-toast">Copied!</div>
