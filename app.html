@@ -2541,7 +2541,126 @@
 
 
       const modalCloseBtn = document.getElementById('payout-modal-close');
+      // ===== PAYOUT MODAL ELEMENTS =====
       const payoutModal = document.getElementById('payout-modal');
+      const payoutModalClose = document.getElementById('payout-modal-close');
+      const payoutModalForm = document.getElementById('payout-modal-form');
+      const payoutDeleteBtn = document.getElementById('payout-modal-delete');
+      
+      const payoutIdInput = document.getElementById('payout-modal-id');
+      const payoutDateEl = document.getElementById('payout-modal-date');
+      const payoutContractorEl = document.getElementById('payout-modal-contractor');
+      const payoutAmountEl = document.getElementById('payout-modal-amount');
+      const payoutChainEl = document.getElementById('payout-modal-chain');
+      const payoutTxhashEl = document.getElementById('payout-modal-txhash');
+      const payoutNoteInput = document.getElementById('payout-modal-note');
+
+            // ===== PAYOUT MODAL BEHAVIOUR =====
+      document.addEventListener('DOMContentLoaded', () => {
+        // Close helpers
+        function closePayoutModal() {
+          payoutModal?.classList.remove('is-open');
+        }
+      
+        if (payoutModalClose) {
+          payoutModalClose.addEventListener('click', closePayoutModal);
+        }
+      
+        if (payoutModal) {
+          payoutModal.addEventListener('click', (e) => {
+            if (e.target === payoutModal) closePayoutModal();
+          });
+        }
+      
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && payoutModal?.classList.contains('is-open')) {
+            closePayoutModal();
+          }
+        });
+      
+        // SAVE CHANGES (update note only)
+        if (payoutModalForm) {
+          payoutModalForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+      
+            const id = payoutIdInput.value;
+            if (!id) {
+              alert('Missing payout id – cannot update.');
+              return;
+            }
+      
+            const note = payoutNoteInput.value.trim() || null;
+      
+            try {
+              const { error } = await sb
+                .from('payout')        // singular table name
+                .update({ note })
+                .eq('id', id);
+      
+              if (error) {
+                console.error('UPDATE PAYOUT ERROR', error);
+                alert('Error saving payout: ' + error.message);
+                return;
+              }
+      
+              closePayoutModal();
+      
+              // refresh payouts tab
+              if (typeof loadPayouts === 'function') {
+                await loadPayouts();
+              }
+              // refresh dashboard recent payouts if you have that function
+              if (typeof loadDashboard === 'function') {
+                await loadDashboard();
+              }
+            } catch (err) {
+              console.error('UNEXPECTED UPDATE PAYOUT ERROR', err);
+              alert('Something went wrong saving this payout.');
+            }
+          });
+        }
+
+  // DELETE PAYOUT
+  if (payoutDeleteBtn) {
+    payoutDeleteBtn.addEventListener('click', async () => {
+      const id = payoutIdInput.value;
+      if (!id) {
+        alert('Missing payout id – cannot delete.');
+        return;
+      }
+
+      const ok = confirm('Delete this payout? This cannot be undone.');
+      if (!ok) return;
+
+      try {
+        const { error } = await sb
+          .from('payout')        // singular table name
+          .delete()
+          .eq('id', id);
+
+        if (error) {
+          console.error('DELETE PAYOUT ERROR', error);
+          alert('Error deleting payout: ' + error.message);
+          return;
+        }
+
+        closePayoutModal();
+
+        if (typeof loadPayouts === 'function') {
+          await loadPayouts();
+        }
+        if (typeof loadDashboard === 'function') {
+          await loadDashboard();
+        }
+      } catch (err) {
+        console.error('UNEXPECTED DELETE PAYOUT ERROR', err);
+        alert('Something went wrong deleting this payout.');
+      }
+    });
+  }
+});
+
+
 
       
       if (modalCloseBtn) {
@@ -2614,19 +2733,27 @@
         </div>
       </div>
     </div>
-        <!-- Payout detail modal (single source of truth) -->
+        <!-- Payout detail modal -->
     <div id="payout-modal" class="payout-modal hidden">
       <div class="payout-modal-backdrop"></div>
     
-      <div class="payout-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="payout-modal-title">
+      <div class="payout-modal-dialog">
         <div class="payout-modal-header">
-          <h3 id="payout-modal-title">Payout details</h3>
-          <button id="payout-modal-close" class="payout-modal-close" aria-label="Close">
+          <h3>Payout details</h3>
+          <button
+            id="payout-modal-close"
+            class="payout-modal-close"
+            aria-label="Close"
+          >
             &times;
           </button>
         </div>
     
-        <div class="payout-modal-body">
+        <!-- turn body into a form so we can save the note -->
+        <form id="payout-modal-form" class="payout-modal-body">
+          <!-- hidden id so we know which payout to update/delete -->
+          <input type="hidden" id="payout-modal-id" />
+    
           <!-- Main details -->
           <dl class="payout-modal-grid">
             <div>
@@ -2646,61 +2773,52 @@
               <dd id="payout-modal-chain">—</dd>
             </div>
           </dl>
-        
-          <div class="payout-modal-body">
-            <!-- Main details -->
-            <dl class="payout-modal-grid">
-              <div>
-                <dt>Contractor</dt>
-                <dd id="payout-modal-contractor">—</dd>
-              </div>
-              <div>
-                <dt>Amount</dt>
-                <dd id="payout-modal-amount">—</dd>
-              </div>
-              <div>
-                <dt>Date</dt>
-                <dd id="payout-modal-date">—</dd>
-              </div>
-              <div>
-                <dt>Chain</dt>
-                <dd id="payout-modal-chain">—</dd>
-              </div>
-            </dl>
-          
-            <!-- Tx hash with copy button -->
-            <div class="payout-modal-field">
-              <div class="modal-label-row">
-                <span class="modal-label">TX hash</span>
-                <button
-                  type="button"
-                  id="payout-modal-copy"
-                  class="modal-copy-btn"
-                >
-                  Copy
-                </button>
-              </div>
-              <code id="payout-modal-txhash" class="modal-code">—</code>
+    
+          <!-- Tx hash with copy button (unchanged functionally) -->
+          <div class="payout-modal-field">
+            <div class="modal-label-row">
+              <span class="modal-label">TX hash</span>
+              <button
+                type="button"
+                id="payout-modal-copy"
+                class="modal-copy-btn"
+              >
+                Copy
+              </button>
             </div>
-          
-            <!-- Notes -->
-            <div class="payout-modal-field">
-              <span class="modal-label">Notes</span>
-              <p id="payout-modal-note" class="modal-note">—</p>
-            </div>
+            <code id="payout-modal-txhash" class="modal-code">—</code>
           </div>
-          
-          <!-- ✅ Add this footer -->
+    
+          <!-- Editable Notes -->
+          <div class="payout-modal-field">
+            <span class="modal-label">Notes</span>
+            <textarea
+              id="payout-modal-note"
+              class="modal-note-input"
+              rows="3"
+              placeholder="Add an internal note about this payout…"
+            ></textarea>
+          </div>
+    
+          <!-- Footer buttons -->
           <div class="payout-modal-footer">
             <button
               type="button"
               id="payout-modal-delete"
-              class="payout-modal-delete-btn"
+              class="modal-btn secondary danger"
             >
               Delete payout
             </button>
+    
+            <button type="submit" class="modal-btn primary">
+              Save changes
+            </button>
           </div>
+        </form>
       </div>
+    </div>
+
+
       <!-- Contractor detail modal -->
       <div id="contractor-modal" class="payout-modal hidden">
         <div class="payout-modal-backdrop"></div>
