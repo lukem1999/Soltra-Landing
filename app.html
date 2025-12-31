@@ -1188,53 +1188,68 @@
       });
     }
 
-
-
+        // === ADD CONTRACTOR ===
     async function addContractor(event) {
-      console.log("addContractor fired");
-      alert("addContractor fired");
       event.preventDefault();
     
       const form = event.target;
       const formData = new FormData(form);
     
-      const name = formData.get('name')?.trim();
-      const wallet_address = formData.get('wallet_address')?.trim();
-      const role = formData.get('role')?.trim();
-      const country = formData.get('country')?.trim();
+      const name = (formData.get('contractor_name') || '').toString().trim();
+      const role = (formData.get('contractor_role') || '').toString().trim();
+      const wallet = (formData.get('wallet_address') || '').toString().trim();
+      const country = (formData.get('contractor_country') || '').toString().trim();
     
-      if (!name || !wallet_address) {
+      // Basic validation
+      if (!name || !wallet) {
         alert('Name and wallet address are required.');
         return;
       }
     
-      // Must have a logged-in user, otherwise RLS will block inserts
-      const { data: userData, error: userErr } = await sb.auth.getUser();
-      const user = userData?.user;
+      try {
+        // Make sure user is signed in (for RLS)
+        const { data: userData, error: userErr } = await sb.auth.getUser();
+        if (userErr || !userData?.user) {
+          console.error('AUTH ERROR', userErr);
+          alert('You must be signed in to add contractors.');
+          return;
+        }
     
-      if (userErr || !user) {
-        console.error('Not signed in / cannot fetch user:', userErr);
-        alert('You must be signed in.');
-        return;
+        const userId = userData.user.id;
+    
+        // Insert into "contractors" table
+        const { data, error } = await sb
+          .from('contractors')
+          .insert([
+            {
+              name,
+              role,
+              wallet_address: wallet,
+              country,
+              user_id: userId,
+            },
+          ])
+          .select('id')
+          .single();
+    
+        if (error) {
+          console.error('ADD CONTRACTOR ERROR', error);
+          alert(`Error saving contractor: ${error.message}`);
+          return;
+        }
+    
+        // Clear form
+        form.reset();
+    
+        // Reload contractors list
+        await loadContractors();
+    
+        // (Optional) small toast instead of alert
+        // showToast('Contractor added');
+      } catch (err) {
+        console.error('UNEXPECTED ADD CONTRACTOR ERROR', err);
+        alert('Something went wrong adding the contractor.');
       }
-    
-      const result = await sb
-        .from('contractors')
-        .insert([{ name, wallet_address, role, country }])
-        .select();
-      
-      console.log("INSERT RESULT:", result);
-      
-      if (result.error) {
-        alert(result.error.message);
-        return;
-      }
-      
-      alert("Saved!");
-
-    
-      form.reset();
-      await loadContractors();
     }
 
 
