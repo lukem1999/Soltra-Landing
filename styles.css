@@ -4200,4 +4200,48 @@ textarea:focus {
   display: block;
 }
 
+/* Base pill icon style (chains) */
+.integration-icon,
+.treasury-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Chain “logos” */
+.integration-icon-usdc {
+  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #1c64f2 50%, #0b1d3a 100%);
+}
+
+.integration-icon-base {
+  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #0ea5e9 50%, #022c43 100%);
+}
+
+.integration-icon-polygon {
+  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #a855f7 55%, #2b0f46 100%);
+}
+
+.integration-icon-ethereum {
+  background: radial-gradient(circle at 30% 10%, #e5e7eb 0%, #4b5563 45%, #020617 100%);
+}
+
+.integration-icon-solana {
+  background: linear-gradient(135deg, #22d3ee, #a855f7, #22c55e);
+}
+
+/* Wallet “logos” */
+.treasury-icon-safe {
+  background: radial-gradient(circle at 30% 30%, #ecfeff 0%, #22c55e 55%, #052e16 100%);
+}
+
+.treasury-icon-ledger {
+  background: radial-gradient(circle at 30% 30%, #f9fafb 0%, #111827 60%, #020617 100%);
+}
+
+.treasury-icon-browser {
+  background: radial-gradient(circle at 30% 30%, #fef9c3 0%, #f97316 55%, #1b1a2f 100%);
+}
+
+
 
