@@ -948,42 +948,40 @@
       }
     }
 
-    // ===== CONTRACTOR MODAL LOGIC =====
-    const contractorModal      = document.getElementById('contractor-modal');
-    const contractorModalForm  = document.getElementById('contractor-modal-form');
-    const contractorModalClose = document.getElementById('contractor-modal-close');
+        // === CONTRACTOR MODAL ===
+    const contractorModal       = document.getElementById('contractor-modal');
+    const contractorModalForm   = document.getElementById('contractor-modal-form');
+    const contractorModalClose  = document.getElementById('contractor-modal-close');
+    const contractorModalDelete = document.getElementById('contractor-modal-delete');
     
-    const contractorIdInput      = document.getElementById('contractor-modal-id');
-    const contractorNameInput    = document.getElementById('contractor-modal-name');
-    const contractorRoleInput    = document.getElementById('contractor-modal-role');
-    const contractorWalletInput  = document.getElementById('contractor-modal-wallet');
-    const contractorCountryInput = document.getElementById('contractor-modal-country');
-    
-    const contractorDeleteBtn = document.getElementById('contractor-modal-delete');
+    const contractorModalId      = document.getElementById('contractor-modal-id');
+    const contractorModalName    = document.getElementById('contractor-modal-name');
+    const contractorModalRole    = document.getElementById('contractor-modal-role');
+    const contractorModalWallet  = document.getElementById('contractor-modal-wallet');
+    const contractorModalCountry = document.getElementById('contractor-modal-country');
     
     function openContractorModalFromRow(row) {
       if (!contractorModal) return;
     
-      // Fill form from row dataset
-      contractorIdInput.value      = row.dataset.id || '';
-      contractorNameInput.value    = row.dataset.name || '';
-      contractorRoleInput.value    = row.dataset.role || '';
-      contractorWalletInput.value  = row.dataset.wallet || '';
-      contractorCountryInput.value = row.dataset.country || '';
+      contractorModalId.value      = row.dataset.id || '';
+      contractorModalName.value    = row.dataset.name || '';
+      contractorModalRole.value    = row.dataset.role || '';
+      contractorModalWallet.value  = row.dataset.wallet || '';
+      contractorModalCountry.value = row.dataset.country || '';
     
       contractorModal.classList.remove('hidden');
-      contractorModal.classList.add('is-open');
-    
-      // focus first input for snappy UX
-      contractorNameInput.focus();
     }
     
     function closeContractorModal() {
       if (!contractorModal) return;
-      contractorModal.classList.remove('is-open');
-      contractorModal.classList.add('hidden');
-    }
     
+      contractorModal.classList.add('hidden');
+      if (contractorModalForm) {
+        contractorModalForm.reset();
+        contractorModalId.value = '';
+      }
+    }
+
     // Wire everything on DOM ready
     document.addEventListener('DOMContentLoaded', () => {
       // Close button
