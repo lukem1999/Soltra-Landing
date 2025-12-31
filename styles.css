@@ -4255,5 +4255,13 @@ textarea:focus {
   display: inline-block;
 }
 
+.pill-logo {
+  height: 16px;
+  width: 16px;
+  margin-right: 6px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 
 
