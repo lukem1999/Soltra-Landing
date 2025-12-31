@@ -4323,5 +4323,59 @@ textarea:focus {
   border-radius: 999px;      /* keep it perfectly round */
 }
 
+/* Container Fix */
+.integrations-inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Default Pill Layout */
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.05);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 15px;
+  color: #fff;
+}
+
+/* Highlighted Primary Pills (USDC + Base) */
+.pill--primary {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+/* Coming soon (Solana) */
+.pill--ghost {
+  opacity: 0.35;
+}
+
+/* Logo Sizing */
+.pill-icon img,
+.pill-logo,
+.integration-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+/* Label inside pill */
+.pill-label {
+  display: block;
+  line-height: 1;
+}
+
+/* Coming soon text */
+.pill-meta {
+  font-size: 12px;
+  opacity: 0.55;
+  margin-left: 4px;
+}
+
 
 
