@@ -10,11 +10,11 @@
 <body>
   <!-- Sticky top nav -->
   <header class="site-header">
-    <div class="nav-logo">
+    <a href="#hero" class="nav-logo">
       <img src="soltra-s.png" alt="Soltra logo" class="nav-logo-img" />
       <span class="nav-logo-text">Soltra</span>
-    </div>
-
+    </a>
+  
     <nav class="site-nav">
       <a href="#how-it-works">How it works</a>
       <a href="#features">Features</a>
@@ -23,15 +23,16 @@
       <a href="#security">Security</a>
       <a href="#app-preview">Preview</a>
     </nav>
-
+  
     <div class="site-nav-cta">
       <a href="app.html" class="nav-signin-link">Sign in</a>
     </div>
   </header>
 
+
   <main>
     <!-- HERO / LANDING SECTION -->
-    <section class="hero-section">
+    <section class="hero-section" id="hero">
       <div class="shell hero-row">
 
         <!-- LEFT: copy + waitlist -->
@@ -45,7 +46,7 @@
               placeholder="you@dao.xyz"
               required
             />
-            <button type="submit" class="btn waitlist-btn">
+            <button type="submit" class="btn primary-btn waitlist-btn">
               Join the waitlist
             </button>
             <div id="waitlist-message" class="waitlist-message"></div>
