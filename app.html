@@ -814,7 +814,7 @@
       return addr.slice(0, 6) + '...' + addr.slice(-4);
     }
 
-   // === LOAD CONTRACTORS ===
+      // === LOAD CONTRACTORS ===
     async function loadContractors() {
       const tbody = document.getElementById('contractors-body');
       if (!tbody) return;
@@ -824,13 +824,17 @@
       try {
         const { data, error } = await sb
           .from('contractors')
-          .select('id, name, role, wallet_address, country'); // removed .order()
+          .select('id, name, role, wallet_address, country'); // 👈 NO .order() HERE
+    
+        console.log('LOAD CONTRACTORS RESULT:', { data, error });
     
         if (error) {
           console.error('LOAD CONTRACTORS ERROR', error);
           tbody.innerHTML = `
             <tr>
-              <td colspan="4">Error loading contractors (${error.message})</td>
+              <td colspan="4">
+                Error loading contractors (${error.message})
+              </td>
             </tr>
           `;
           return;
@@ -860,15 +864,18 @@
           const wallet = c.wallet_address || '—';
           const country = c.country || '—';
     
+          // Build the row
           tbody.insertAdjacentHTML(
             'beforeend',
             `
-              <tr class="contractor-row" tabindex="0" role="button"
-                data-id="${c.id}"
-                data-name="${name}"
-                data-role="${role}"
-                data-wallet="${wallet}"
-                data-country="${country}">
+              <tr class="contractor-row"
+                  tabindex="0"
+                  role="button"
+                  data-id="${c.id}"
+                  data-name="${name}"
+                  data-role="${role}"
+                  data-wallet="${wallet}"
+                  data-country="${country}">
                 <td>${name}</td>
                 <td>${wallet}</td>
                 <td>${role}</td>
@@ -877,21 +884,28 @@
             `
           );
     
+          // Wire up modal open on click / keyboard
           const tr = tbody.lastElementChild;
+    
           tr.addEventListener('click', () => openContractorModalFromRow(tr));
+    
           tr.addEventListener('keydown', (e) => {
-            if (['Enter', ' '].includes(e.key)) {
+            if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               openContractorModalFromRow(tr);
             }
           });
         });
-    
       } catch (err) {
         console.error('UNEXPECTED LOAD CONTRACTORS ERROR', err);
-        tbody.innerHTML = `<tr><td colspan="4">Something went wrong.</td></tr>`;
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4">Something went wrong loading contractors.</td>
+          </tr>
+        `;
       }
     }
+
 
 
 
