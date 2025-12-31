@@ -4263,5 +4263,19 @@ textarea:focus {
   vertical-align: middle;
 }
 
+.integration-pill img {
+  height: 18px;
+  width: 18px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.integration-pill img[src*="base.svg"] {
+  height: 18px;
+  width: 18px;
+  margin-right: 6px;
+  border-radius: 50%;
+}
+
 
 
