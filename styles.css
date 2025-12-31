@@ -3977,6 +3977,39 @@ textarea:focus {
   box-shadow: 0 2px 8px rgba(255, 214, 120, 0.6);
 }
 
+.modal-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.3);
+  color: #f8fafc;
+  font-size: 13px;
+}
+
+.modal-btn.primary {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: #f6b74b;
+  color: #050816;
+  font-weight: 600;
+}
+
+.modal-btn.secondary {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(248, 250, 252, 0.14);
+  background: transparent;
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.modal-btn.secondary.danger {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fecaca;
+}
 
 
 
