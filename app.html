@@ -816,98 +816,111 @@
 
     // === CONTRACTORS ===
     async function loadContractors() {
-      const tbody = document.getElementById('contractors-body');
-      if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="5">Loading contractors...</td></tr>';
+      const tbody = document.getElementById('contractors-body'); // 👈 make sure this matches your <tbody id="">
+      const countBadge = document.getElementById('sidebar-contractors-count'); // optional pill in sidebar
+    
+      if (!tbody) return;
+    
+      // Loading state
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4">Loading contractors...</td>
+        </tr>
+      `;
+    
+      // Fetch from Supabase
+      const { data, error } = await sb
+        .from('contractors')
+        .select('id, name, role, wallet_address, country')
+        .order('name', { ascending: true });
+    
+      if (error) {
+        console.error('LOAD CONTRACTORS ERROR', error);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4">
+              Error loading contractors (${error.message})
+            </td>
+          </tr>
+        `;
+        if (countBadge) countBadge.textContent = '0';
+        return;
       }
-
-      try {
-        const tbody = document.getElementById('contractors-body');
-      
-        const { data, error } = await sb
-          .from('contractors')
-          .select('*')
-          .order('name', { ascending: true });
-      
-        console.log('LOAD CONTRACTORS RESULT:', { data, error });
-      
-        if (error) {
-          console.error('Error loading contractors:', error);
-          if (tbody) {
-            tbody.innerHTML =
-              `<tr><td colspan="5">Error loading data</td></tr>`;
-          }
-          return;
-        }
-      
-        const contractors = data || [];
-        contractorsCache = contractors;
-      
-        // Update sidebar contractors count
-        const contractorsCountEl =
-          document.getElementById('sidebar-contractors-count');
-        if (contractorsCountEl) {
-          contractorsCountEl.textContent =
-            contractors.length ? contractors.length : '';
-        }
-      
-        // Refresh onboarding banner visibility
-        updateOnboardingBanner(contractors.length, lastDashboardPayoutCount);
-      
-        if (tbody) {
-          if (!contractors.length) {
-            tbody.innerHTML = `
-              <tr>
-                <td colspan="5">
-                  <div class="empty-state">
-                    <div class="empty-state-title">No contractors yet</div>
-                    <p class="empty-state-text">
-                      Use the form on the left to add your first contractor.
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            `;
-          } else {
-            tbody.innerHTML = '';
-            contractors.forEach(c => {
-              const tr = document.createElement('tr');
-              const lastPaid = c.last_paid_at
-                ? new Date(c.last_paid_at).toLocaleDateString()
-                : '—';
-      
-              tr.innerHTML = `
-                <td>${c.name || ''}</td>
-                <td>
-                  <div class="wallet-cell">
-                    <div class="wallet-avatar">
-                      ${(c.name || c.wallet_address || '?')[0].toUpperCase()}
-                    </div>
-                    <span class="wallet-text">
-                      ${shortenWallet(c.wallet_address || '')}
-                    </span>
-                  </div>
-                </td>
-                <td>${c.role || ''}</td>
-                <td>${c.country || ''}</td>
-                <td>${lastPaid}</td>
-              `;
-              tbody.appendChild(tr);
-            });
-          }
-        }
-      
-        populateContractorSelect();
-      
-      } catch (err) {
-        console.error(err);
-        const tbody = document.getElementById('contractors-body');
-        if (tbody) {
-          tbody.innerHTML =
-            '<tr><td colspan="5">Error loading contractors.</td></tr>';
-        }
+    
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <div class="empty-state-title">No contractors yet</div>
+                <p class="empty-state-text">
+                  Add your first contractor to start logging payouts.
+                </p>
+              </div>
+            </td>
+          </tr>
+        `;
+        if (countBadge) countBadge.textContent = '0';
+        return;
       }
+    
+      // Update badge count
+      if (countBadge) {
+        countBadge.textContent = String(data.length);
+      }
+    
+      // Render rows
+      tbody.innerHTML = '';
+    
+      data.forEach((c) => {
+        const name = c.name || 'Unnamed';
+        const role = c.role || '—';
+        const country = c.country || '—';
+    
+        const shortWallet = c.wallet_address
+          ? c.wallet_address.slice(0, 6) + '...' + c.wallet_address.slice(-4)
+          : '—';
+    
+        // Insert row
+        tbody.insertAdjacentHTML(
+          'beforeend',
+          `
+          <tr class="contractor-row">
+            <td>${name}</td>
+            <td>${role}</td>
+            <td>${shortWallet}</td>
+            <td>${country}</td>
+          </tr>
+        `
+        );
+    
+        // Get the <tr> we just added
+        const tr = tbody.lastElementChild;
+    
+        // Attach all data the modal needs
+        tr.dataset.id = c.id;
+        tr.dataset.name = c.name || '';
+        tr.dataset.role = c.role || '';
+        tr.dataset.wallet = c.wallet_address || '';
+        tr.dataset.country = c.country || '';
+    
+        // Make row behave like a button (for accessibility)
+        tr.tabIndex = 0;
+        tr.setAttribute('role', 'button');
+    
+        // Mouse click → open modal
+        tr.addEventListener('click', () => openContractorModalFromRow(tr));
+    
+        // Keyboard: Enter / Space → open modal
+        tr.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openContractorModalFromRow(tr);
+          }
+        });
+      });
     }
+
     
     function populateContractorSelect() {
       const select = document.getElementById('payout-contractor');
@@ -946,6 +959,120 @@
         banner.classList.add('hidden');
       }
     }
+
+    // ===== CONTRACTOR MODAL =====
+    const contractorModal = document.getElementById('contractor-modal');
+    const contractorModalClose = document.getElementById('contractor-modal-close');
+    const contractorModalForm = document.getElementById('contractor-modal-form');
+    const contractorModalDelete = document.getElementById('contractor-modal-delete');
+    
+    const contractorIdInput = document.getElementById('contractor-modal-id');
+    const contractorNameInput = document.getElementById('contractor-modal-name');
+    const contractorRoleInput = document.getElementById('contractor-modal-role');
+    const contractorWalletInput = document.getElementById('contractor-modal-wallet');
+    const contractorCountryInput = document.getElementById('contractor-modal-country');
+    
+    function openContractorModalFromRow(row) {
+      if (!contractorModal) return;
+    
+      contractorIdInput.value = row.dataset.id || '';
+      contractorNameInput.value = row.dataset.name || '';
+      contractorRoleInput.value = row.dataset.role || '';
+      contractorWalletInput.value = row.dataset.wallet || '';
+      contractorCountryInput.value = row.dataset.country || '';
+    
+      contractorModal.classList.remove('hidden');
+    }
+    
+    function closeContractorModal() {
+      if (!contractorModal) return;
+      contractorModal.classList.add('hidden');
+    }
+    
+    if (contractorModalClose) {
+      contractorModalClose.addEventListener('click', closeContractorModal);
+    }
+    
+    // click on backdrop closes modal
+    if (contractorModal) {
+      contractorModal.addEventListener('click', (e) => {
+        if (e.target === contractorModal) {
+          closeContractorModal();
+        }
+      });
+    }
+    
+    // ESC closes modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !contractorModal.classList.contains('hidden')) {
+        closeContractorModal();
+      }
+    });
+    
+    // Save changes (UPDATE)
+    if (contractorModalForm) {
+      contractorModalForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+    
+        const id = contractorIdInput.value ? Number(contractorIdInput.value) : null;
+        if (!id) {
+          alert('Missing contractor id.');
+          return;
+        }
+    
+        const name = contractorNameInput.value.trim();
+        const role = contractorRoleInput.value.trim();
+        const wallet_address = contractorWalletInput.value.trim();
+        const country = contractorCountryInput.value.trim();
+    
+        const { error } = await sb
+          .from('contractors')
+          .update({ name, role, wallet_address, country })
+          .eq('id', id);
+    
+        if (error) {
+          console.error('UPDATE CONTRACTOR ERROR', error);
+          alert('Error saving contractor: ' + error.message);
+          return;
+        }
+    
+        if (typeof showToast === 'function') {
+          showToast('Contractor updated');
+        }
+    
+        closeContractorModal();
+        await loadContractors();
+        await loadDashboard(); // optional: keep dashboard in sync
+      });
+    }
+    
+    // Delete contractor
+    if (contractorModalDelete) {
+      contractorModalDelete.addEventListener('click', async () => {
+        const id = contractorIdInput.value ? Number(contractorIdInput.value) : null;
+        if (!id) return;
+    
+        const ok = confirm('Delete this contractor? This cannot be undone.');
+        if (!ok) return;
+    
+        const { error } = await sb.from('contractors').delete().eq('id', id);
+    
+        if (error) {
+          console.error('DELETE CONTRACTOR ERROR', error);
+          alert('Error deleting contractor: ' + error.message);
+          return;
+        }
+    
+        if (typeof showToast === 'function') {
+          showToast('Contractor deleted');
+        }
+    
+        closeContractorModal();
+        await loadContractors();
+        await loadDashboard(); // optional
+      });
+    }
+
     
     function exportPayoutsToCsv() {
       const data = dashboardPayoutsCache || [];
@@ -2547,6 +2674,89 @@
             </button>
           </div>
       </div>
+      <!-- Contractor detail modal -->
+      <div id="contractor-modal" class="payout-modal hidden">
+        <div class="payout-modal-backdrop"></div>
+      
+        <div class="payout-modal-dialog">
+          <div class="payout-modal-header">
+            <h3 id="contractor-modal-title">Edit contractor</h3>
+            <button
+              id="contractor-modal-close"
+              class="payout-modal-close"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </div>
+      
+          <form id="contractor-modal-form" class="payout-modal-body">
+            <input type="hidden" id="contractor-modal-id" />
+      
+            <dl class="payout-modal-grid">
+              <div>
+                <dt>Name</dt>
+                <dd>
+                  <input
+                    id="contractor-modal-name"
+                    type="text"
+                    class="modal-input"
+                    required
+                  />
+                </dd>
+              </div>
+      
+              <div>
+                <dt>Role</dt>
+                <dd>
+                  <input
+                    id="contractor-modal-role"
+                    type="text"
+                    class="modal-input"
+                  />
+                </dd>
+              </div>
+      
+              <div>
+                <dt>Wallet address</dt>
+                <dd>
+                  <input
+                    id="contractor-modal-wallet"
+                    type="text"
+                    class="modal-input"
+                  />
+                </dd>
+              </div>
+      
+              <div>
+                <dt>Country</dt>
+                <dd>
+                  <input
+                    id="contractor-modal-country"
+                    type="text"
+                    class="modal-input"
+                  />
+                </dd>
+              </div>
+            </dl>
+      
+            <div class="payout-modal-footer">
+              <button
+                type="button"
+                id="contractor-modal-delete"
+                class="modal-btn secondary danger"
+              >
+                Delete contractor
+              </button>
+      
+              <button type="submit" class="modal-btn primary">
+                Save changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
 
   <div id="toast" class="toast hidden">Copied!</div>
   <div id="copy-toast" class="copy-toast">Copied!</div>
