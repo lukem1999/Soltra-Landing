@@ -4243,5 +4243,17 @@ textarea:focus {
   background: radial-gradient(circle at 30% 30%, #fef9c3 0%, #f97316 55%, #1b1a2f 100%);
 }
 
+/* Real logo icons for chain + wallets */
+.integration-icon,
+.treasury-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  object-fit: contain;
+  background: #020617;        /* subtle dark circle behind logo */
+  padding: 2px;
+  display: inline-block;
+}
+
 
 
