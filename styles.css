@@ -4277,5 +4277,12 @@ textarea:focus {
   border-radius: 50%;
 }
 
+.integration-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+}
+
 
 
