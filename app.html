@@ -814,7 +814,7 @@
       return addr.slice(0, 6) + '...' + addr.slice(-4);
     }
 
-    // === LOAD CONTRACTORS ===
+   // === LOAD CONTRACTORS ===
     async function loadContractors() {
       const tbody = document.getElementById('contractors-body');
       if (!tbody) return;
@@ -824,8 +824,7 @@
       try {
         const { data, error } = await sb
           .from('contractors')
-          .select('id, name, role, wallet_address, country')
-          .order('created_at', { ascending: true });
+          .select('id, name, role, wallet_address, country'); // removed .order()
     
         if (error) {
           console.error('LOAD CONTRACTORS ERROR', error);
@@ -861,11 +860,15 @@
           const wallet = c.wallet_address || '—';
           const country = c.country || '—';
     
-          // basic table row
           tbody.insertAdjacentHTML(
             'beforeend',
             `
-              <tr class="contractor-row">
+              <tr class="contractor-row" tabindex="0" role="button"
+                data-id="${c.id}"
+                data-name="${name}"
+                data-role="${role}"
+                data-wallet="${wallet}"
+                data-country="${country}">
                 <td>${name}</td>
                 <td>${wallet}</td>
                 <td>${role}</td>
@@ -875,36 +878,18 @@
           );
     
           const tr = tbody.lastElementChild;
-    
-          // Make row focusable & button-like
-          tr.tabIndex = 0;
-          tr.setAttribute('role', 'button');
-    
-          // Attach data for modal
-          tr.dataset.id = c.id;
-          tr.dataset.name = name;
-          tr.dataset.role = role;
-          tr.dataset.wallet = wallet;
-          tr.dataset.country = country;
-    
-          // Mouse click opens modal
           tr.addEventListener('click', () => openContractorModalFromRow(tr));
-    
-          // Keyboard: Enter / Space open modal
           tr.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
+            if (['Enter', ' '].includes(e.key)) {
               e.preventDefault();
               openContractorModalFromRow(tr);
             }
           });
         });
+    
       } catch (err) {
         console.error('UNEXPECTED LOAD CONTRACTORS ERROR', err);
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="4">Something went wrong loading contractors.</td>
-          </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="4">Something went wrong.</td></tr>`;
       }
     }
 
