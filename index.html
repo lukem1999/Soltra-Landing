@@ -243,32 +243,27 @@
       </div>
     </section>
 
-    <section class="pricing-page" id="pricing">
-      <div class="shell pricing-page-inner">
+    <section class="pricing-page">
+      <div class="pricing-shell">
     
-        <!-- Header -->
-        <div class="pricing-page-header">
+        <header class="pricing-header">
           <h1>Simple, transparent pricing</h1>
           <p>
             Start for free — scale when your team is ready.
-            <span class="pricing-highlight">
-              Early access customers get 50% off Pro and Organization for life.
-            </span>
+            <strong>Early access customers get 50% off Pro and Organization for life.</strong>
           </p>
-        </div>
+        </header>
     
-        <!-- Plans wrapper -->
         <div class="pricing-grid">
-    
           <!-- Free -->
           <article class="pricing-card pricing-card--free">
-            <header class="pricing-card-header">
-              <h2 class="pricing-name">Free</h2>
-              <p class="pricing-price">
+            <div class="pricing-card-header">
+              <span class="pricing-name">Free</span>
+              <div class="pricing-price">
                 <span class="pricing-amount">$0</span>
                 <span class="pricing-period">/ month</span>
-              </p>
-            </header>
+              </div>
+            </div>
     
             <ul class="pricing-features">
               <li>Up to 5 contractors</li>
@@ -277,23 +272,25 @@
               <li>Email support</li>
             </ul>
     
-            <a href="#waitlist-form" class="btn pricing-btn">
+            <a href="#get-started" class="pricing-cta pricing-cta--outline">
               Get started
             </a>
           </article>
     
-          <!-- Pro (most popular) -->
-          <article class="pricing-card pricing-card--pro pricing-card--featured">
-            <header class="pricing-card-header">
-              <div class="pricing-name-row">
-                <h2 class="pricing-name">Pro</h2>
-                <span class="pricing-tag">Most popular</span>
-              </div>
-              <p class="pricing-price">
+          <!-- Pro (highlighted) -->
+          <article class="pricing-card pricing-card--pro">
+            <div class="pricing-badge">Most popular</div>
+    
+            <div class="pricing-card-header">
+              <span class="pricing-name">Pro</span>
+              <div class="pricing-price">
                 <span class="pricing-amount">$29</span>
                 <span class="pricing-period">/ month</span>
+              </div>
+              <p class="pricing-note">
+                Early access teams pay <strong>$14.50 / month for life.</strong>
               </p>
-            </header>
+            </div>
     
             <ul class="pricing-features">
               <li>Unlimited contractors</li>
@@ -302,20 +299,20 @@
               <li>Priority email support</li>
             </ul>
     
-            <a href="#waitlist-form" class="btn primary-btn pricing-btn">
+            <a href="#upgrade-pro" class="pricing-cta pricing-cta--primary">
               Upgrade to Pro
             </a>
           </article>
     
           <!-- Organization -->
           <article class="pricing-card pricing-card--org">
-            <header class="pricing-card-header">
-              <h2 class="pricing-name">Organization</h2>
-              <p class="pricing-price">
+            <div class="pricing-card-header">
+              <span class="pricing-name">Organization</span>
+              <div class="pricing-price">
                 <span class="pricing-amount">$59</span>
                 <span class="pricing-period">/ month</span>
-              </p>
-            </header>
+              </div>
+            </div>
     
             <ul class="pricing-features">
               <li>Everything in Pro</li>
@@ -324,21 +321,19 @@
               <li>Quarterly check-ins</li>
             </ul>
     
-            <a href="#waitlist-form" class="btn secondary-btn pricing-btn">
+            <a href="#contact-sales" class="pricing-cta pricing-cta--ghost">
               Contact sales
             </a>
           </article>
-    
         </div>
     
-        <!-- Footnote -->
         <p class="pricing-footnote">
           Early access discounts apply to Pro and Organization plans and are locked in
           for as long as your subscription remains active.
         </p>
-    
       </div>
     </section>
+
 
 
 
