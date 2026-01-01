@@ -4596,3 +4596,95 @@ textarea:focus {
   text-align: center;
 }
 
+/* Pricing button sizing improvements */
+.pricing-btn,
+.pricing-card .btn {
+  width: 60%;                /* was 100% */
+  max-width: 260px;          /* keeps consistency across screen sizes */
+  padding: 0.6rem 1.25rem;   /* reduce height */
+  font-size: 0.95rem;        /* slightly smaller text */
+  border-radius: 999px;      /* keep pill shape */
+  margin: 1.25rem auto 0;    /* re-center button */
+  display: block;
+  text-align: center;
+}
+
+/* Featured (Pro) button tweak */
+.pricing-card--featured .pricing-btn {
+  background: #e9aa34;
+  color: #050608;
+  box-shadow: 0 0 8px rgba(255, 200, 80, 0.35);
+}
+
+/* Make buttons react on hover */
+.pricing-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.92;
+  transition: 0.15s;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
