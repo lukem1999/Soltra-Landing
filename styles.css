@@ -4377,5 +4377,50 @@ textarea:focus {
   margin-left: 4px;
 }
 
+.treasury-logos {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.treasury-label {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-right: 1.25rem;
+}
+
+.treasury-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pill-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top left, #1c2638, #020617);
+}
+
+.pill-icon-img {
+  width: 16px;
+  height: 16px;
+}
+
+.pill-label {
+  font-size: 0.85rem;
+  color: #F1F5F9;
+}
+
 
 
