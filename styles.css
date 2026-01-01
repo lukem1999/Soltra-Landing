@@ -4498,4 +4498,78 @@ textarea:focus {
   border-radius: 4px;            /* rounded square, not a circle */
 }
 
+/* Layout */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+  margin-top: 2.5rem;
+}
+
+.pricing-card {
+  background: rgba(7, 13, 24, 0.95);
+  border-radius: 18px;
+  padding: 2rem 2.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* Highlight Pro */
+.pricing-card--highlight {
+  border-color: #f2b549;
+  box-shadow: 0 0 0 1px rgba(242, 181, 73, 0.6), 0 18px 40px rgba(0, 0, 0, 0.7);
+}
+
+/* Typography */
+.pricing-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.pricing-price .price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #f2b549;
+}
+
+.pricing-price .price-sub {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-left: 0.2rem;
+}
+
+.pricing-features {
+  list-style: disc;
+  margin: 1.5rem 0 2rem;
+  padding-left: 1.2rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Badge & note */
+.pricing-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(242, 181, 73, 0.08);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.pricing-note {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* Section footnote */
+.pricing-footnote--section {
+  margin-top: 1.75rem;
+  font-size: 0.8rem;
+  opacity: 0.75;
+  text-align: center;
+}
 
