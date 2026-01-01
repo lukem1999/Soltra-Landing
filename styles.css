@@ -4473,3 +4473,29 @@ textarea:focus {
   border-radius: 4px; /* rounded square, not a circle */
 }
 
+/* 1. Give ALL chain icons the same circular shell */
+.pill-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 2. Default logo size for USDC / Polygon / Ethereum / Solana */
+.pill-icon > img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+/* 3. Base override: same shell, but smaller square inside */
+.pill-icon--base > img,
+.pill-icon-img--base {           /* covers the class on your <img> */
+  width: 14px;                   /* tweak to 15–16 if you want it a touch bigger */
+  height: 14px;
+  border-radius: 4px;            /* rounded square, not a circle */
+}
+
+
