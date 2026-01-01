@@ -4500,10 +4500,12 @@ textarea:focus {
 
 /* Layout */
 .pricing-grid {
-  display: grid;
+  display: flex;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 2rem;
   margin-top: 2.5rem;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .pricing-card {
@@ -4512,6 +4514,21 @@ textarea:focus {
   padding: 2rem 2.25rem;
   border: 1px solid rgba(255, 255, 255, 0.04);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+.pricing-card--featured {
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.6); /* gold outline */
+  background: radial-gradient(circle at top, #141926 0%, #05060a 55%);
+  transform: translateY(-4px);
+}
+
+.pricing-tag {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.7);
 }
 
 /* Highlight Pro */
@@ -4563,6 +4580,12 @@ textarea:focus {
   margin-top: 0.3rem;
   font-size: 0.8rem;
   opacity: 0.8;
+}
+
+.pricing-btn {
+  width: 100%;
+  text-align: center;
+  margin-top: 1.5rem;
 }
 
 /* Section footnote */
