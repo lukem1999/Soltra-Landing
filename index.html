@@ -243,107 +243,104 @@
       </div>
     </section>
 
-        <!-- PRICING -->
-    <section class="pricing-section" id="pricing">
-      <div class="shell pricing-inner reveal" data-delay="4">
+    <section class="pricing-page" id="pricing">
+      <div class="shell pricing-page-inner">
     
         <!-- Header -->
-        <div class="pricing-header">
-          <h2>Simple, Transparent Pricing</h2>
+        <div class="pricing-page-header">
+          <h1>Simple, transparent pricing</h1>
           <p>
-            Start for free — scale when you’re ready.
-            <strong>Early access teams get 50% off paid plans for life.</strong>
+            Start for free — scale when your team is ready.
+            <span class="pricing-highlight">
+              Early access customers get 50% off Pro and Organization for life.
+            </span>
           </p>
         </div>
     
-        <!-- Pricing grid -->
+        <!-- Plans wrapper -->
         <div class="pricing-grid">
     
-          <!-- FREE -->
-          <div class="pricing-card">
-            <div class="pricing-tier pricing-tier--free">
-              <div class="pricing-name">Free</div>
+          <!-- Free -->
+          <article class="pricing-card pricing-card--free">
+            <header class="pricing-card-header">
+              <h2 class="pricing-name">Free</h2>
+              <p class="pricing-price">
+                <span class="pricing-amount">$0</span>
+                <span class="pricing-period">/ month</span>
+              </p>
+            </header>
     
-              <div class="pricing-price">
-                <span class="price">$0</span>
-                <span class="price-sub">/ month</span>
+            <ul class="pricing-features">
+              <li>Up to 5 contractors</li>
+              <li>Up to 10 payouts / month</li>
+              <li>Base &amp; Polygon only</li>
+              <li>Email support</li>
+            </ul>
+    
+            <a href="#waitlist-form" class="btn pricing-btn">
+              Get started
+            </a>
+          </article>
+    
+          <!-- Pro (most popular) -->
+          <article class="pricing-card pricing-card--pro pricing-card--featured">
+            <header class="pricing-card-header">
+              <div class="pricing-name-row">
+                <h2 class="pricing-name">Pro</h2>
+                <span class="pricing-tag">Most popular</span>
               </div>
+              <p class="pricing-price">
+                <span class="pricing-amount">$29</span>
+                <span class="pricing-period">/ month</span>
+              </p>
+            </header>
     
-              <ul class="pricing-features">
-                <li>Up to 5 contractors</li>
-                <li>Up to 10 payouts / month</li>
-                <li>Base &amp; Polygon only</li>
-                <li>Basic support</li>
-              </ul>
+            <ul class="pricing-features">
+              <li>Unlimited contractors</li>
+              <li>Unlimited payouts</li>
+              <li>All supported chains (Base, Polygon, Ethereum)</li>
+              <li>Priority email support</li>
+            </ul>
     
-              <a href="#waitlist-form" class="btn secondary-btn pricing-cta">
-                <span>Get started</span>
-              </a>
-            </div>
-          </div>
+            <a href="#waitlist-form" class="btn primary-btn pricing-btn">
+              Upgrade to Pro
+            </a>
+          </article>
     
-          <!-- PRO -->
-          <div class="pricing-card pricing-card--highlight">
-            <div class="pricing-tier pricing-tier--pro">
-              <div class="pricing-name">
-                Pro
-                <span class="pricing-badge">Most popular</span>
-              </div>
+          <!-- Organization -->
+          <article class="pricing-card pricing-card--org">
+            <header class="pricing-card-header">
+              <h2 class="pricing-name">Organization</h2>
+              <p class="pricing-price">
+                <span class="pricing-amount">$59</span>
+                <span class="pricing-period">/ month</span>
+              </p>
+            </header>
     
-              <div class="pricing-price">
-                <span class="price">$29</span>
-                <span class="price-sub">/ month</span>
-              </div>
+            <ul class="pricing-features">
+              <li>Everything in Pro</li>
+              <li>Team accounts &amp; roles (coming soon)</li>
+              <li>Onboarding assistance</li>
+              <li>Quarterly check-ins</li>
+            </ul>
     
-              <div class="pricing-note">
-                Early access teams pay <strong>$14.50 / month for life.</strong>
-              </div>
+            <a href="#waitlist-form" class="btn secondary-btn pricing-btn">
+              Contact sales
+            </a>
+          </article>
     
-              <ul class="pricing-features">
-                <li>Unlimited contractors</li>
-                <li>Unlimited payouts</li>
-                <li>All chains supported</li>
-                <li>Priority email support</li>
-              </ul>
+        </div>
     
-              <a href="#waitlist-form" class="btn primary-btn pricing-cta">
-                <span>Upgrade</span>
-              </a>
-            </div>
-          </div>
-    
-          <!-- ORGANIZATION -->
-          <div class="pricing-card">
-            <div class="pricing-tier pricing-tier--org">
-              <div class="pricing-name">Organization</div>
-    
-              <div class="pricing-price">
-                <span class="price">$59</span>
-                <span class="price-sub">/ month</span>
-              </div>
-    
-              <ul class="pricing-features">
-                <li>Everything in Pro +</li>
-                <li>Team accounts (coming soon)</li>
-                <li>Onboarding assistance</li>
-                <li>Quarterly check-ins</li>
-              </ul>
-    
-              <a href="#waitlist-form" class="btn ghost-btn pricing-cta">
-                <span>Contact sales</span>
-              </a>
-            </div>
-          </div>
-    
-        </div> <!-- /.pricing-grid -->
-    
-        <div class="pricing-footnote pricing-footnote--section">
+        <!-- Footnote -->
+        <p class="pricing-footnote">
           Early access discounts apply to Pro and Organization plans and are locked in
           for as long as your subscription remains active.
-        </div>
+        </p>
     
       </div>
     </section>
+
+
 
     <!-- CSV PREVIEW -->
     <section class="csv-preview">
