@@ -4439,5 +4439,32 @@ textarea:focus {
   object-fit: contain;
 }
 
+/* Make Base pill match other pill dimensions */
+.integration-pill.base-pill {
+  height: 40px; /* same height as others */
+  padding: 0 14px; /* match horizontal spacing */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Adjust the square icon inside */
+.base-pill .base-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px; /* still square, but smooth edges */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure the Base SVG fills properly */
+.base-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 
 
