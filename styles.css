@@ -4709,6 +4709,20 @@ textarea:focus {
   margin: 0 auto;
 }
 
+/* Make ALL pricing cards align buttons at the bottom */
+.pricing-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Ensure button stays at bottom and keeps consistent spacing */
+.pricing-card .pricing-cta {
+  margin-top: auto;
+  align-self: center;
+  width: 70%;                    /* adjust if you want thinner or wider */
+  text-align: center;
+}
 
 
 
