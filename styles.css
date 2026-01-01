@@ -4498,130 +4498,217 @@ textarea:focus {
   border-radius: 4px;            /* rounded square, not a circle */
 }
 
-/* Layout */
+/* ===========================
+   PRICING PAGE
+   =========================== */
+
+.pricing-page {
+  padding: 4rem 0 5rem;
+}
+
+.pricing-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Header */
+
+.pricing-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.pricing-header h1 {
+  font-size: 1.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.pricing-header p {
+  max-width: 640px;
+  margin: 0 auto;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Grid layout */
+
 .pricing-grid {
-  display: flex;
+  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2rem;
-  margin-top: 2.5rem;
+  gap: 1.75rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (max-width: 900px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card base */
+
+.pricing-card {
+  position: relative;
+  border-radius: 1.5rem;
+  padding: 1.75rem 1.75rem 2.25rem;
+  background: rgba(5, 9, 20, 0.92);      /* dark panel */
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
-.pricing-card {
-  background: rgba(7, 13, 24, 0.95);
-  border-radius: 18px;
-  padding: 2rem 2.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+/* Highlighted Pro card */
+
+.pricing-card--pro {
+  border-color: #f4b73c;
+  box-shadow: 0 0 0 1px rgba(244, 183, 60, 0.35);
 }
 
-.pricing-card--featured {
-  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.6); /* gold outline */
-  background: radial-gradient(circle at top, #141926 0%, #05060a 55%);
-  transform: translateY(-4px);
-}
-
-.pricing-tag {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  border: 1px solid rgba(250, 204, 21, 0.7);
-}
-
-/* Highlight Pro */
-.pricing-card--highlight {
-  border-color: #f2b549;
-  box-shadow: 0 0 0 1px rgba(242, 181, 73, 0.6), 0 18px 40px rgba(0, 0, 0, 0.7);
-}
-
-/* Typography */
-.pricing-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
-
-.pricing-price .price {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #f2b549;
-}
-
-.pricing-price .price-sub {
-  font-size: 0.9rem;
-  opacity: 0.8;
-  margin-left: 0.2rem;
-}
-
-.pricing-features {
-  list-style: disc;
-  margin: 1.5rem 0 2rem;
-  padding-left: 1.2rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-/* Badge & note */
 .pricing-badge {
-  display: inline-block;
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  background: rgba(242, 181, 73, 0.08);
+  position: absolute;
+  top: 1.2rem;
+  right: 1.5rem;
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(244, 183, 60, 0.12);
+  color: #f4b73c;
+}
+
+/* Header in card */
+
+.pricing-card-header {
+  margin-bottom: 1.3rem;
+}
+
+.pricing-name {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pricing-price {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.pricing-amount {
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.pricing-period {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .pricing-note {
-  margin-top: 0.3rem;
+  margin-top: 0.4rem;
   font-size: 0.8rem;
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.pricing-btn {
-  width: 100%;
+/* Features list */
+
+.pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.75rem;
+  font-size: 0.9rem;
+}
+
+.pricing-features li {
+  position: relative;
+  padding-left: 1.1rem;
+  margin-bottom: 0.4rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.pricing-features li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: rgba(244, 183, 60, 0.9);
+}
+
+/* CTA buttons (smaller, consistent pills) */
+
+.pricing-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  min-width: 0;
+  padding: 0.65rem 1.8rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease,
+              transform 0.12s ease;
+}
+
+/* Primary (Pro) */
+
+.pricing-cta--primary {
+  background: #f4b73c;
+  color: #111318;
+  border-color: #f4b73c;
+}
+
+.pricing-cta--primary:hover {
+  background: #ffca52;
+  border-color: #ffca52;
+  transform: translateY(-1px);
+}
+
+/* Outline (Free) */
+
+.pricing-cta--outline {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pricing-cta--outline:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Ghost (Organization contact) */
+
+.pricing-cta--ghost {
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.pricing-cta--ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Footnote */
+
+.pricing-footnote {
   text-align: center;
-  margin-top: 1.5rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 640px;
+  margin: 0 auto;
 }
 
-/* Section footnote */
-.pricing-footnote--section {
-  margin-top: 1.75rem;
-  font-size: 0.8rem;
-  opacity: 0.75;
-  text-align: center;
-}
-
-/* Pricing button sizing improvements */
-.pricing-btn,
-.pricing-card .btn {
-  width: 60%;                /* was 100% */
-  max-width: 260px;          /* keeps consistency across screen sizes */
-  padding: 0.6rem 1.25rem;   /* reduce height */
-  font-size: 0.95rem;        /* slightly smaller text */
-  border-radius: 999px;      /* keep pill shape */
-  margin: 1.25rem auto 0;    /* re-center button */
-  display: block;
-  text-align: center;
-}
-
-/* Featured (Pro) button tweak */
-.pricing-card--featured .pricing-btn {
-  background: #e9aa34;
-  color: #050608;
-  box-shadow: 0 0 8px rgba(255, 200, 80, 0.35);
-}
-
-/* Make buttons react on hover */
-.pricing-btn:hover {
-  transform: translateY(-2px);
-  opacity: 0.92;
-  transition: 0.15s;
-}
 
 
 
