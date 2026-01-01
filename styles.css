@@ -4466,5 +4466,10 @@ textarea:focus {
   object-fit: cover;
 }
 
-
+/* Base-only tweak: keep the square, but centered in the same shell */
+.pill-icon--base .pill-icon-img {
+  width: 18px;        /* slightly smaller so corners don't touch the circle */
+  height: 18px;
+  border-radius: 4px; /* rounded square, not a circle */
+}
 
