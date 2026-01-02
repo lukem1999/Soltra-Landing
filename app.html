@@ -87,7 +87,7 @@
         </div>
       </aside>
 
-      <!-- Main content -->
+            <!-- Main content -->
       <div class="app-main">
         <header class="app-header">
           <div>
@@ -104,10 +104,10 @@
             </select>
       
             <!-- Wallet selector -->
-            <div class="wallet-selector">
+            <div class="wallet-selector" id="walletSelector">
               <button class="wallet-selector-toggle" type="button">
                 <span class="wallet-selector-label">Wallet</span>
-                <span class="wallet-selector-current">All wallets</span>
+                <span class="wallet-selector-current" id="walletSelectorCurrent">All wallets</span>
                 <span class="wallet-selector-chevron">▾</span>
               </button>
       
@@ -115,28 +115,28 @@
                 <div class="wallet-selector-section">
                   <span class="wallet-selector-section-label">Wallets</span>
       
-                  <button class="wallet-selector-item wallet-selector-item--active" data-wallet="all">
+                  <button class="wallet-selector-item wallet-selector-item--active" data-wallet="all" type="button">
                     <span class="wallet-selector-item-name">All wallets</span>
                     <span class="wallet-selector-item-address">Combined overview</span>
                   </button>
       
-                  <button class="wallet-selector-item" data-wallet="safe-treasury">
+                  <button class="wallet-selector-item" data-wallet="safe-treasury" type="button">
                     <span class="wallet-selector-item-name">Safe (Treasury)</span>
                     <span class="wallet-selector-item-address">0xa3f1…c72a3</span>
                   </button>
       
-                  <button class="wallet-selector-item" data-wallet="ledger-ops">
+                  <button class="wallet-selector-item" data-wallet="ledger-ops" type="button">
                     <span class="wallet-selector-item-name">Ledger Ops Wallet</span>
                     <span class="wallet-selector-item-address">0x002b…ff19a</span>
                   </button>
       
-                  <button class="wallet-selector-item" data-wallet="mm-grants">
+                  <button class="wallet-selector-item" data-wallet="mm-grants" type="button">
                     <span class="wallet-selector-item-name">MetaMask Grants</span>
                     <span class="wallet-selector-item-address">0x9cb4…528e1</span>
                   </button>
                 </div>
       
-                <button class="wallet-selector-add">
+                <button class="wallet-selector-add" type="button">
                   <span class="wallet-selector-add-plus">+</span>
                   <span>Add new wallet</span>
                 </button>
@@ -150,7 +150,6 @@
             </div>
           </div>
         </header>
-      </div>
 
 
         <div class="app-main-inner">
@@ -2425,12 +2424,57 @@
       setTimeout(() => toast.classList.remove('show'), 1500);
     }
 
+    function initWalletSelector() {
+      const selector = document.querySelector('.wallet-selector');
+      if (!selector) return;
+    
+      const current = selector.querySelector('.wallet-selector-current');
+    
+      // Toggle open/close + click outside closes
+      document.addEventListener('click', (event) => {
+        const clickedInside = selector.contains(event.target);
+        const clickedToggle = event.target.closest('.wallet-selector-toggle');
+    
+        if (clickedInside && clickedToggle) {
+          selector.classList.toggle('is-open');
+          return;
+        }
+    
+        if (!clickedInside) {
+          selector.classList.remove('is-open');
+        }
+      });
+    
+      // Pick an item
+      selector.addEventListener('click', (e) => {
+        const item = e.target.closest('.wallet-selector-item');
+        if (!item) return;
+    
+        // Active UI
+        selector.querySelectorAll('.wallet-selector-item').forEach(btn =>
+          btn.classList.remove('wallet-selector-item--active')
+        );
+        item.classList.add('wallet-selector-item--active');
+    
+        // Update label
+        const name = item.querySelector('.wallet-selector-item-name')?.textContent?.trim();
+        if (current && name) current.textContent = name;
+    
+        // Close menu
+        selector.classList.remove('is-open');
+    
+        // TODO: set your wallet filter state here
+        // selectedWallet = item.dataset.wallet;  // e.g. global var
+        // loadDashboard(); loadPayouts(); highlightDashboard();
+      });
+    }
 
       
     // === INIT ===
     document.addEventListener('DOMContentLoaded', () => {
       initTabs();
       initPayoutRowClicks();
+      initWalletSelector();
 
         // =========================
       // Wallet selector (open/close)
