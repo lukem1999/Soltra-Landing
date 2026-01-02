@@ -4909,6 +4909,45 @@ textarea:focus {
   transform: rotate(180deg);
 }
 
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.app-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap; /* allows wrapping on narrow widths */
+  justify-content: flex-end;
+}
+
+/* Wallet selector should size like a control */
+.wallet-selector {
+  position: relative;
+}
+
+.wallet-selector-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.wallet-selector-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 260px;
+  z-index: 50;
+  display: none;
+}
+
+.wallet-selector.is-open .wallet-selector-menu {
+  display: block;
+}
 
 
 
