@@ -4949,6 +4949,48 @@ textarea:focus {
   display: block;
 }
 
+/* ===== APP LAYOUT GRID (fixes sidebar/content alignment) ===== */
+.app-layout{
+  display:grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 28px;
+  align-items:start;
+  max-width: 1120px;          /* keep everything centered like your screenshots */
+  margin: 0 auto;
+  padding: 24px 24px 40px;
+}
+
+.app-main{ min-width:0; }      /* critical: prevents tables/charts forcing overflow */
+
+/* ===== HEADER ALIGNMENT ===== */
+.app-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  margin-bottom: 18px;
+}
+.app-header > div:first-child{ min-width:0; }
+.app-header-controls{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* ===== KPI GRID ===== */
+.dash-kpi-row{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 14px 0 16px;
+}
+.dash-kpi-row .dash-card{
+  min-height: 90px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
 
 
 
