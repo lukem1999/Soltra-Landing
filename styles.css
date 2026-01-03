@@ -5034,6 +5034,48 @@ textarea:focus {
   font-variant-numeric: tabular-nums;
 }
 
+/* ================================
+   TABLE HARD RESET (fix collapse)
+   ================================ */
+
+/* Force real table layout (overrides any flex/block table hacks) */
+.dash-table{
+  display: table !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: fixed !important;
+}
+
+.dash-table thead{ display: table-header-group !important; }
+.dash-table tbody{ display: table-row-group !important; }
+.dash-table tr{ display: table-row !important; }
+.dash-table th,
+.dash-table td{
+  display: table-cell !important;
+  padding: 10px 12px !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Header labels should be left-aligned (except Amount) */
+.dash-table thead th{ text-align: left !important; }
+.dash-table thead th:nth-child(3),
+.dash-table tbody td:nth-child(3){
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Let wrapper scroll horizontally if needed (instead of crushing columns) */
+.dash-table-wrapper{
+  overflow-x: auto !important;
+}
+
+/* Give payout tables a sane minimum width so columns don't shrink to dust */
+.dash-table.payout-table{
+  min-width: 780px; /* adjust if you add/remove columns */
+}
 
 
 
