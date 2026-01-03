@@ -4992,6 +4992,36 @@ textarea:focus {
   justify-content:center;
 }
 
+/* payout-table column model */
+.dash-table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed; /* KEY */
+}
+
+.dash-table th,
+.dash-table td{
+  padding:10px 12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  vertical-align:middle;
+}
+
+/* Shared payout column widths */
+.payout-table .col-date{ width:110px; }
+.payout-table .col-contractor{ width:32%; }
+.payout-table .col-amount{ width:140px; }
+.payout-table .col-chain{ width:150px; }
+.payout-table .col-tx{ width:180px; }
+
+/* Right align amounts */
+.payout-table th.th-amount,
+.payout-table td:nth-child(3){
+  text-align:right;
+  font-variant-numeric: tabular-nums;
+}
+
 
 
 
