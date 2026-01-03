@@ -280,18 +280,28 @@
                     </div>
                   </div>
                 </div>
-
+              
                 <div class="dash-table-wrapper">
-                  <table class="dash-table">
+                  <table class="dash-table payout-table">
+                    <!-- ✅ Forces identical column widths across Overview + Payouts + Reports -->
+                    <colgroup>
+                      <col class="col-date" />
+                      <col class="col-contractor" />
+                      <col class="col-amount" />
+                      <col class="col-chain" />
+                      <col class="col-tx" />
+                    </colgroup>
+              
                     <thead>
                       <tr>
                         <th>Date</th>
                         <th>Contractor</th>
-                        <th>Amount</th>
+                        <th class="th-amount">Amount</th>
                         <th>Chain</th>
                         <th>Tx hash</th>
                       </tr>
                     </thead>
+              
                     <tbody id="dash-payouts-table">
                       <tr>
                         <td colspan="5">Loading payouts…</td>
@@ -300,6 +310,7 @@
                   </table>
                 </div>
               </div>
+
 
               <!-- Charts -->
               <section class="dash-charts">
