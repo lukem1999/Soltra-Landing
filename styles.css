@@ -5022,7 +5022,17 @@ textarea:focus {
   font-variant-numeric: tabular-nums;
 }
 
+/* ===== FIX: header labels alignment ===== */
+.dash-table thead th{
+  text-align: left !important;   /* override any prior right-align */
+}
 
+/* Amount column right aligned (header + cells) */
+.dash-table thead th:nth-child(3),
+.dash-table tbody td:nth-child(3){
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
 
 
 
