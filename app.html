@@ -1135,61 +1135,80 @@
 
     
     function exportPayoutsToCsv() {
-      const data = dashboardPayoutsCache || [];
+      const payouts = dashboardPayoutsCache || [];
     
-      if (!data.length) {
+      if (!payouts.length) {
         alert('No payouts to export for this range.');
         return;
       }
     
-      const headers = [
-        'Date',
-        'Contractor',
-        'Amount (USDC)',
-        'USD Value',
-        'Chain',
-        'Tx Hash',
-        'Note',
-      ];
+      // Helper
+      const safe = (v) => (v == null ? '' : String(v));
     
-      const rows = data.map((p) => {
-        const date = p.tx_timestamp
-          ? new Date(p.tx_timestamp).toISOString()
+      // Add a couple derived fields that make CSV “finance usable”
+      const rows = payouts.map((p) => {
+        const ts = p.tx_timestamp ? new Date(p.tx_timestamp) : null;
+        const iso = ts && !isNaN(ts.getTime()) ? ts.toISOString() : '';
+        const dateLocal = ts && !isNaN(ts.getTime()) ? ts.toLocaleDateString() : '';
+        const month = ts && !isNaN(ts.getTime())
+          ? `${ts.getFullYear()}-${String(ts.getMonth() + 1).padStart(2, '0')}`
           : '';
-        const name = p.contractors?.name || '';
-        const amount = Number(p.amount || 0);
-        const amountUsdc = amount.toString();
-        const usdValue = amount.toString(); // 1 USDC = $1 assumption
-        const chain = (p.chain || '').toUpperCase();
-        const txHash = p.tx_hash || '';
-        const note = (p.note || '').replace(/"/g, '""');
     
-        return [date, name, amountUsdc, usdValue, chain, txHash, note];
+        const contractorName = p.contractors?.name || '';
+        const chain = (p.chain || '').toUpperCase();
+        const asset = p.asset_symbol || 'USDC';
+        const amount = Number(p.amount || 0);
+    
+        const txHash = p.tx_hash || '';
+        const explorerUrl = txHash ? getExplorerUrl(chain, txHash) : '';
+    
+        return {
+          month,                         // YYYY-MM
+          date: dateLocal,               // local date
+          timestamp_iso: iso,            // ISO timestamp
+          contractor: contractorName,    // contractor name
+          amount: amount,                // numeric
+          asset: asset,                  // USDC
+          usd_value: amount,             // assumption 1 USDC = $1
+          chain: chain,                  // ETHEREUM / BASE / POLYGON
+          tx_hash: txHash,
+          explorer_url: explorerUrl,
+          note: p.note || '',
+        };
       });
     
+      const headers = Object.keys(rows[0]);
+    
+      // Convert to CSV with proper escaping
       const lines = [];
       lines.push(headers.join(','));
     
-      rows.forEach((cols) => {
-        const line = cols
-          .map((value) => {
-            const v = value == null ? '' : String(value);
-            if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
-            return v;
-          })
-          .join(',');
+      for (const r of rows) {
+        const line = headers.map((h) => {
+          const v = safe(r[h]);
+    
+          // escape commas/quotes/newlines
+          if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+          return v;
+        }).join(',');
+    
         lines.push(line);
-      });
+      }
     
       const csvContent = lines.join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
     
+      // Filename includes active filters
       const today = new Date();
       const y = today.getFullYear();
       const m = String(today.getMonth() + 1).padStart(2, '0');
       const d = String(today.getDate()).padStart(2, '0');
-      const filename = `soltra-payouts-${y}-${m}-${d}.csv`;
+    
+      const rangeTag = filterRange || 'range';
+      const chainTag = filterChain || 'all';
+    
+      const filename = `soltra-reports-${y}-${m}-${d}-${rangeTag}-${chainTag}.csv`;
     
       const link = document.createElement('a');
       link.href = url;
@@ -1200,6 +1219,7 @@
     
       URL.revokeObjectURL(url);
     }
+
 
 
     function loadReportsFromCache() {
