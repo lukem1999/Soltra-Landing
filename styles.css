@@ -5214,6 +5214,39 @@ textarea:focus {
   body { overflow-x: hidden; }
 }
 
+.chart-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  margin-bottom:12px;
+}
+.chart-kicker{
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.55);
+}
+.chart-big{
+  font-size:28px;
+  font-weight:700;
+  line-height:1.1;
+  color:rgba(255,255,255,.92);
+  margin-top:6px;
+}
+.chart-sub{
+  margin-top:6px;
+  font-size:13px;
+  color:rgba(255,255,255,.55);
+}
+
+.chart-canvas-wrap{
+  position:relative;
+  height:160px; /* key: keeps it consistent */
+}
+.chart-canvas-wrap canvas{
+  width:100% !important;
+  height:100% !important;
+}
 
 
 
