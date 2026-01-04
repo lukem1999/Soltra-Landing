@@ -794,50 +794,69 @@
   }
 
 
-    // === TAB NAVIGATION ===
-    // === TAB NAVIGATION ===
-    function initTabs() {
-      const tabButtons = document.querySelectorAll('.tab-button');
-      const views = {
-        dashboard: document.getElementById('view-dashboard'),
-        contractors: document.getElementById('view-contractors'),
-        payouts: document.getElementById('view-payouts'),
-        reports: document.getElementById('view-reports'),
-      };
-    
-      if (!tabButtons.length) return;
-    
+   // === TAB NAVIGATION ===
+  function initTabs() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+  
+    const views = {
+      dashboard: document.getElementById('view-dashboard'),
+      contractors: document.getElementById('view-contractors'),
+      payouts: document.getElementById('view-payouts'),
+      reports: document.getElementById('view-reports'),
+    };
+  
+    if (!tabButtons.length) return;
+  
     function showTab(target) {
-      // 1. Activate the correct sidebar button
-      tabButtons.forEach(btn => {
+      // 1) Sidebar active state
+      tabButtons.forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.target === target);
       });
-    
-      // 2. Show / hide views
+  
+      // 2) View visibility
       Object.entries(views).forEach(([key, el]) => {
         if (!el) return;
         el.classList.toggle('hidden', key !== target);
       });
-    
-      // 3. Tab-specific side effects
+  
+      // 3) Tab-specific side effects
       if (target === 'dashboard') {
         requestAnimationFrame(() => highlightDashboard());
       }
-    
+  
       if (target === 'payouts') {
+        // load contractors into payout dropdown when opening payouts tab
         loadPayoutContractorOptions();
       }
-    
+  
       if (target === 'reports') {
         loadReportsFromCache();
       }
-    
-      // 4. Persist active tab (optional, but you already had this)
+  
+      // 4) Persist tab (optional)
       try {
         localStorage.setItem('soltra-active-tab', target);
       } catch (e) {}
     }
-    
+  
+    // Wire tab clicks
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.target;
+        if (!target) return;
+        showTab(target);
+      });
+    });
+  
+    // Initial tab (restore or default)
+    let initial = 'dashboard';
+    try {
+      initial = localStorage.getItem('soltra-active-tab') || 'dashboard';
+    } catch (e) {}
+    if (!views[initial]) initial = 'dashboard';
+  
+    showTab(initial);
+  }
 
     function shortenWallet(addr) {
       if (!addr || typeof addr !== 'string') return '';
