@@ -5102,6 +5102,63 @@ textarea:focus {
   line-height: 1;
 }
 
+/* ================================
+   Soltra custom scrollbar
+   (Recent payouts table)
+   ================================ */
+
+/* Firefox */
+.dash-table-wrapper{
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 193, 71, 0.45) rgba(255,255,255,0.06);
+}
+
+/* Chromium / WebKit */
+.dash-table-wrapper::-webkit-scrollbar{
+  height: 10px;              /* horizontal scrollbar height */
+}
+
+.dash-table-wrapper::-webkit-scrollbar-track{
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+}
+
+.dash-table-wrapper::-webkit-scrollbar-thumb{
+  background: linear-gradient(
+    180deg,
+    rgba(255, 193, 71, 0.65),
+    rgba(255, 193, 71, 0.35)
+  );
+  border-radius: 8px;
+  border: 2px solid rgba(0,0,0,0.4); /* inset feel */
+}
+
+.dash-table-wrapper::-webkit-scrollbar-thumb:hover{
+  background: linear-gradient(
+    180deg,
+    rgba(255, 193, 71, 0.9),
+    rgba(255, 193, 71, 0.6)
+  );
+}
+
+.dash-table-wrapper::-webkit-scrollbar-thumb{
+  opacity: 0.6;
+}
+
+.dash-table-wrapper:hover::-webkit-scrollbar-thumb{
+  opacity: 1;
+}
+
+.dash-table-wrapper{
+  position: relative;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 12px,
+    black calc(100% - 12px),
+    transparent
+  );
+}
 
 
 
