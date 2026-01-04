@@ -902,7 +902,7 @@
         if (!data || !data.length) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="4">
+              <td colspan="5">
                 <div class="empty-state">
                   <div class="empty-state-title">No contractors yet</div>
                   <p class="empty-state-text">
@@ -964,10 +964,6 @@
         `;
       }
     }
-
-
-
-
     
     function populateContractorSelect() {
       const select = document.getElementById('payout-contractor');
@@ -1259,17 +1255,18 @@
       });
     }
 
-        // === ADD CONTRACTOR ===
+        // === ADD CONTRACTOR (FIXED to match your HTML input names) ===
     async function addContractor(event) {
       event.preventDefault();
     
       const form = event.target;
       const formData = new FormData(form);
     
-      const name = (formData.get('contractor_name') || '').toString().trim();
-      const role = (formData.get('contractor_role') || '').toString().trim();
-      const wallet = (formData.get('wallet_address') || '').toString().trim();
-      const country = (formData.get('contractor_country') || '').toString().trim();
+      // ✅ MATCH HTML NAMES
+      const name    = (formData.get('name') || '').toString().trim();
+      const role    = (formData.get('role') || '').toString().trim();
+      const wallet  = (formData.get('wallet_address') || '').toString().trim();
+      const country = (formData.get('country') || '').toString().trim();
     
       // Basic validation
       if (!name || !wallet) {
@@ -1278,7 +1275,7 @@
       }
     
       try {
-        // Make sure user is signed in (for RLS)
+        // Must be signed in (RLS)
         const { data: userData, error: userErr } = await sb.auth.getUser();
         if (userErr || !userData?.user) {
           console.error('AUTH ERROR', userErr);
@@ -1288,20 +1285,15 @@
     
         const userId = userData.user.id;
     
-        // Insert into "contractors" table
-        const { data, error } = await sb
+        const { error } = await sb
           .from('contractors')
-          .insert([
-            {
-              name,
-              role,
-              wallet_address: wallet,
-              country,
-              user_id: userId,
-            },
-          ])
-          .select('id')
-          .single();
+          .insert([{
+            name,
+            role: role || null,
+            wallet_address: wallet,
+            country: country || null,
+            user_id: userId,
+          }]);
     
         if (error) {
           console.error('ADD CONTRACTOR ERROR', error);
@@ -1309,14 +1301,14 @@
           return;
         }
     
-        // Clear form
         form.reset();
     
-        // Reload contractors list
+        // Refresh lists
         await loadContractors();
+        if (typeof loadContractorOptions === 'function') {
+          await loadContractorOptions();
+        }
     
-        // (Optional) small toast instead of alert
-        // showToast('Contractor added');
       } catch (err) {
         console.error('UNEXPECTED ADD CONTRACTOR ERROR', err);
         alert('Something went wrong adding the contractor.');
