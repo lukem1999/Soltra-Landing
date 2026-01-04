@@ -1064,106 +1064,6 @@
       }
     }
 
-    // Wire everything on DOM ready
-    document.addEventListener('DOMContentLoaded', () => {
-      // Close button
-      if (contractorModalClose) {
-        contractorModalClose.addEventListener('click', closeContractorModal);
-      }
-    
-      // Click on backdrop closes modal
-      if (contractorModal) {
-        contractorModal.addEventListener('click', (e) => {
-          if (e.target === contractorModal) {
-            closeContractorModal();
-          }
-        });
-      }
-    
-      // Esc closes modal
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && contractorModal && !contractorModal.classList.contains('hidden')) {
-          closeContractorModal();
-        }
-      });
-    
-      // Save changes (UPDATE)
-      if (contractorModalForm) {
-        contractorModalForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-    
-          const id = contractorModalId.value;
-          if (!id) {
-            alert('Missing contractor id – cannot update.');
-            return;
-          }
-    
-          const payload = {
-            name: contractorModalName.value.trim(),
-            role: contractorModalRole.value.trim() || null,
-            wallet_address: contractorModalWallet.value.trim() || null,
-            country: contractorModalCountry.value.trim() || null,
-          };
-    
-          try {
-            const { error } = await sb
-              .from('contractors')
-              .update(payload)
-              .eq('id', id);
-    
-            if (error) {
-              console.error('UPDATE CONTRACTOR ERROR', error);
-              alert('Error saving contractor changes: ' + error.message);
-              return;
-            }
-    
-            closeContractorModal();
-            await loadContractors();
-            if (typeof loadContractorOptions === 'function') {
-              await loadContractorOptions(); // keep payout dropdown in sync
-            }
-          } catch (err) {
-            console.error('UNEXPECTED UPDATE CONTRACTOR ERROR', err);
-            alert('Something went wrong saving this contractor.');
-          }
-        });
-      }
-    
-      // Delete contractor
-      if (contractorModalDelete) {
-        contractorModalDelete.addEventListener('click', async () => {
-          const id = contractorModalId.value;
-          if (!id) {
-            alert('Missing contractor id – cannot delete.');
-            return;
-          }
-      
-          const ok = confirm('Delete this contractor? This cannot be undone.');
-          if (!ok) return;
-      
-          try {
-            const { error } = await sb
-              .from('contractors')
-              .delete()
-              .eq('id', id);
-      
-            if (error) {
-              console.error('DELETE CONTRACTOR ERROR', error);
-              alert('Error deleting contractor: ' + error.message);
-              return;
-            }
-      
-            closeContractorModal();
-            await loadContractors();
-            await loadPayoutContractorOptions(); // keep payout dropdown in sync
-          } catch (err) {
-            console.error('UNEXPECTED DELETE CONTRACTOR ERROR', err);
-            alert('Something went wrong deleting this contractor.');
-          }
-        });
-      }
-
-    });
     
     function exportPayoutsToCsv() {
       const payouts = dashboardPayoutsCache || [];
@@ -1862,10 +1762,6 @@
         selectEl.disabled = true;
       }
     }
-
-
-
-
     
   function openPayoutModal(data) {
     const modal = document.getElementById('payout-detail-modal');
@@ -2556,356 +2452,388 @@
       });
     }
 
-      
-    // === INIT ===
+        // ✅ ONE AND ONLY DOMContentLoaded
     document.addEventListener('DOMContentLoaded', () => {
-      initTabs();
-      initPayoutRowClicks();
-      initWalletSelector();
-      bindExportButton();
-
-        // =========================
-      // Wallet selector (open/close)
-      // =========================
-      document.addEventListener('click', (event) => {
-        const selector = document.querySelector('.wallet-selector');
-        if (!selector) return;
+      console.log('✅ DOMContentLoaded: Soltra init starting...');
     
-        const clickedInside = selector.contains(event.target);
+      // ======================================================
+      // 0) Small helper to prevent double-binding
+      // ======================================================
+      const bindOnce = (el, key, fn) => {
+        if (!el) return;
+        const k = `bound_${key}`;
+        if (el.dataset[k] === '1') return;
+        el.dataset[k] = '1';
+        fn();
+      };
     
-        if (event.target.closest('.wallet-selector-toggle')) {
-          selector.classList.toggle('is-open');
-        } else if (!clickedInside) {
-          selector.classList.remove('is-open');
-        }
-      });
-
-
-      console.log('DOM Loaded: wiring forms...');
-
+      // ======================================================
+      // 1) Core UI init
+      // ======================================================
+      if (typeof initTabs === 'function') initTabs();
+      if (typeof initWalletSelector === 'function') initWalletSelector();
+      if (typeof bindExportButton === 'function') bindExportButton();
+    
+      // If you still have a "wallet selector open/close" click handler elsewhere,
+      // REMOVE it. initWalletSelector() should own that.
+      // (Leaving this out avoids duplicate click listeners.)
+    
+      // ======================================================
+      // 2) Forms: payouts + contractors
+      // ======================================================
       // --- PAYOUT FORM ---
       const payoutForm = document.getElementById('payout-form');
-      if (payoutForm) {
-        console.log('Found payout-form, wiring submit → addPayout');
+      bindOnce(payoutForm, 'payout_form_submit', () => {
         payoutForm.addEventListener('submit', addPayout);
-      } else {
-        console.warn('❌ payout-form NOT FOUND');
-      }
-      
-      // Also wire button → requestSubmit (safest + works in GH Pages)
+      });
+    
       const savePayoutBtn = document.getElementById('save-payout-btn');
-      if (savePayoutBtn && payoutForm) {
-        console.log('Found save-payout-btn, wiring click → requestSubmit()');
+      bindOnce(savePayoutBtn, 'save_payout_btn', () => {
+        if (!payoutForm) return;
         savePayoutBtn.addEventListener('click', (e) => {
           e.preventDefault();
           payoutForm.requestSubmit();
         });
-      } else {
-        console.warn('⚠️ save-payout-btn or payout-form missing');
-      }
-
-
+      });
+    
+      // --- CONTRACTOR ADD FORM ---
+      // Your HTML currently uses onsubmit="addContractor(event)" which works,
+      // but we also wire it here (safe) so you can remove inline HTML later.
+      const contractorAddForm = document.getElementById('add-contractor-form');
+      bindOnce(contractorAddForm, 'add_contractor_form', () => {
+        contractorAddForm.addEventListener('submit', addContractor);
+      });
+    
+      // ======================================================
+      // 3) Dashboard filters (range + chain)
+      // ======================================================
       const rangeSelect = document.getElementById('dash-range');
-      const chainSelect = document.getElementById('dash-chain');
-
-      if (rangeSelect) {
+      bindOnce(rangeSelect, 'dash_range', () => {
         rangeSelect.addEventListener('change', () => {
           filterRange = rangeSelect.value;
           loadDashboard();
           loadPayouts();
-          highlightDashboard();
+          if (typeof highlightDashboard === 'function') highlightDashboard();
         });
-      }
-
-      if (chainSelect) {
+      });
+    
+      const chainSelect = document.getElementById('dash-chain');
+      bindOnce(chainSelect, 'dash_chain', () => {
         chainSelect.addEventListener('change', () => {
           filterChain = chainSelect.value;
           loadDashboard();
           loadPayouts();
-          highlightDashboard();
+          if (typeof highlightDashboard === 'function') highlightDashboard();
         });
-      }
-
+      });
+    
+      // ======================================================
+      // 4) Auth wiring
+      // ======================================================
       const authForm = document.getElementById('auth-form');
+      bindOnce(authForm, 'auth_form', () => {
+        authForm.addEventListener('submit', handleAuthSubmit);
+      });
+    
       const toggle = document.getElementById('auth-toggle-mode');
+      bindOnce(toggle, 'auth_toggle', () => {
+        toggle.addEventListener('click', () => {
+          setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+        });
+      });
+    
       const signoutBtn = document.getElementById('signout-btn');
-
-      if (authForm) authForm.addEventListener('submit', handleAuthSubmit);
-      if (toggle) {
-        toggle.addEventListener('click', () =>
-          setAuthMode(authMode === 'signin' ? 'signup' : 'signin')
-        );
-      }
-      if (signoutBtn) signoutBtn.addEventListener('click', handleSignOut);
-
-      setAuthMode('signin');
-      sb.auth.onAuthStateChange((_event, _session) => onAuthChanged());
-      onAuthChanged();
-      // === Onboarding banner logic ===
+      bindOnce(signoutBtn, 'signout', () => {
+        signoutBtn.addEventListener('click', handleSignOut);
+      });
+    
+      // Keep a single auth state subscription
+      bindOnce(document.body, 'auth_state_change', () => {
+        setAuthMode('signin');
+        sb.auth.onAuthStateChange((_event, _session) => onAuthChanged());
+        onAuthChanged();
+      });
+    
+      // ======================================================
+      // 5) Onboarding buttons
+      // ======================================================
       const dismissBtn = document.getElementById('onboarding-dismiss');
-      if (dismissBtn) {
-          dismissBtn.addEventListener('click', () => {
-              const banner = document.getElementById('onboarding-banner');
-              if (banner) banner.classList.add('hidden');
-              try {
-                  localStorage.setItem('soltra-onboarding-dismissed', '1');
-              } catch (e) {}
-          });
-      }
-
-        // --- Payout detail panel wiring ---
-      const payoutsBody = document.getElementById('payouts-body');
-      if (payoutsBody) {
-        payoutsBody.addEventListener('click', (e) => {
-          const tr = e.target.closest('.payout-row');
-          if (!tr) return;
-          openPayoutDetailFromRow(tr);
+      bindOnce(dismissBtn, 'onboarding_dismiss', () => {
+        dismissBtn.addEventListener('click', () => {
+          const banner = document.getElementById('onboarding-banner');
+          if (banner) banner.classList.add('hidden');
+          try {
+            localStorage.setItem('soltra-onboarding-dismissed', '1');
+          } catch (e) {}
         });
-      }
+      });
     
-      const pdClose = document.getElementById('pd-close');
-      const pdBackdrop = document.getElementById('payout-detail-backdrop');
-    
-      if (pdClose) {
-        pdClose.addEventListener('click', () => {
-          closePayoutDetail();
-        });
-      }
-    
-      if (pdBackdrop) {
-        pdBackdrop.addEventListener('click', () => {
-          closePayoutDetail();
-        });
-      }
-
-      
       const goContractorsBtn = document.getElementById('onboarding-go-contractors');
-      if (goContractorsBtn) {
-          goContractorsBtn.addEventListener('click', () => {
-              const btn = document.querySelector('.tab-button[data-target="contractors"]');
-              if (btn) btn.click();
-          });
-      }
-      
+      bindOnce(goContractorsBtn, 'go_contractors', () => {
+        goContractorsBtn.addEventListener('click', () => {
+          const btn = document.querySelector('.tab-button[data-target="contractors"]');
+          btn?.click();
+        });
+      });
+    
       const goPayoutsBtn = document.getElementById('onboarding-go-payouts');
-      if (goPayoutsBtn) {
-          goPayoutsBtn.addEventListener('click', () => {
-              const btn = document.querySelector('.tab-button[data-target="payouts"]');
-              if (btn) btn.click();
-          });
-      }
-
+      bindOnce(goPayoutsBtn, 'go_payouts', () => {
+        goPayoutsBtn.addEventListener('click', () => {
+          const btn = document.querySelector('.tab-button[data-target="payouts"]');
+          btn?.click();
+        });
+      });
+    
       const reportsGoPayoutsBtn = document.getElementById('reports-go-payouts');
-      if (reportsGoPayoutsBtn) {
+      bindOnce(reportsGoPayoutsBtn, 'reports_go_payouts', () => {
         reportsGoPayoutsBtn.addEventListener('click', () => {
           const btn = document.querySelector('.tab-button[data-target="payouts"]');
-          if (btn) btn.click();
+          btn?.click();
         });
-      }
-
-      const exportBtn = document.getElementById('export-btn');
-      if (exportBtn) {
-        exportBtn.addEventListener('click', () => {
-          exportPayoutsToCsv(); // or whatever your export function is called
+      });
+    
+      // ======================================================
+      // 6) Export CSV button
+      // ======================================================
+      // You have TWO possible ids floating around:
+      // - reports-export-btn (your bindExportButton uses this)
+      // - export-btn (older wiring)
+      //
+      // We support either, but avoid double-binding.
+      const exportBtnA = document.getElementById('reports-export-btn');
+      bindOnce(exportBtnA, 'export_reports', () => {
+        exportBtnA.addEventListener('click', (e) => {
+          e.preventDefault();
+          exportPayoutsToCsv();
         });
-      }
-
-      const deleteBtn = document.getElementById('payout-modal-delete');
-        if (deleteBtn) {
-          deleteBtn.addEventListener('click', handleDeletePayout);
-        }
-
-      // ==== COPY HASH BUTTON ====
-      const copyBtn = document.getElementById('payout-modal-copy');
-      const hashEl  = document.getElementById('payout-modal-txhash');
-      const toast   = document.getElementById('copy-toast'); // optional if you're using toast
-      
-      async function handleCopyTxHash() {
-        const text = hashEl?.textContent?.trim();
-        if (!text || text === '—') return;
-      
-        try {
-          await navigator.clipboard.writeText(text);
-          showToast('TX hash copied!'); // if using toast system
-        } catch (err) {
-          console.error('Failed to copy:', err);
-          showToast('Clipboard error');
-        }
-      }
-      
-      if (copyBtn) {
-        copyBtn.addEventListener('click', handleCopyTxHash);
-      }
-
-
-      const modalCloseBtn = document.getElementById('payout-modal-close');
-      // ===== PAYOUT MODAL ELEMENTS =====
+      });
+    
+      const exportBtnB = document.getElementById('export-btn');
+      bindOnce(exportBtnB, 'export_legacy', () => {
+        exportBtnB.addEventListener('click', (e) => {
+          e.preventDefault();
+          exportPayoutsToCsv();
+        });
+      });
+    
+      // ======================================================
+      // 7) Payout modal: close, copy, save note, delete
+      // ======================================================
       const payoutModal = document.getElementById('payout-modal');
-      const payoutModalClose = document.getElementById('payout-modal-close');
+      const payoutModalCloseBtn = document.getElementById('payout-modal-close');
       const payoutModalForm = document.getElementById('payout-modal-form');
       const payoutDeleteBtn = document.getElementById('payout-modal-delete');
-      
-      const payoutIdInput = document.getElementById('payout-modal-id');
-      const payoutDateEl = document.getElementById('payout-modal-date');
-      const payoutContractorEl = document.getElementById('payout-modal-contractor');
-      const payoutAmountEl = document.getElementById('payout-modal-amount');
-      const payoutChainEl = document.getElementById('payout-modal-chain');
-      const payoutTxhashEl = document.getElementById('payout-modal-txhash');
       const payoutNoteInput = document.getElementById('payout-modal-note');
-
-            // ===== PAYOUT MODAL BEHAVIOUR =====
-      document.addEventListener('DOMContentLoaded', () => {
-        // Close helpers
-        function closePayoutModal() {
-          payoutModal?.classList.remove('is-open');
-        }
-      
-        if (payoutModalClose) {
-          payoutModalClose.addEventListener('click', closePayoutModal);
-        }
-      
-        if (payoutModal) {
-          payoutModal.addEventListener('click', (e) => {
-            if (e.target === payoutModal) closePayoutModal();
-          });
-        }
-      
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && payoutModal?.classList.contains('is-open')) {
-            closePayoutModal();
+      const payoutIdInput = document.getElementById('payout-modal-id');
+    
+      const closePayoutModalSafe = () => {
+        if (!payoutModal) return;
+    
+        // support both styles you used:
+        payoutModal.classList.remove('is-open');
+        payoutModal.classList.remove('payout-modal--open');
+        payoutModal.classList.add('hidden');
+      };
+    
+      bindOnce(payoutModalCloseBtn, 'payout_modal_close', () => {
+        payoutModalCloseBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          closePayoutModalSafe();
+        });
+      });
+    
+      bindOnce(payoutModal, 'payout_modal_backdrop', () => {
+        payoutModal.addEventListener('click', (e) => {
+          // Your HTML structure includes: <div class="payout-modal-backdrop"></div>
+          // Clicking that backdrop should close.
+          if (e.target.classList.contains('payout-modal-backdrop')) {
+            closePayoutModalSafe();
           }
         });
-      
-        // SAVE CHANGES (update note only)
-        if (payoutModalForm) {
-          payoutModalForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-      
-            const id = payoutIdInput.value;
-            if (!id) {
-              alert('Missing payout id – cannot update.');
+      });
+    
+      bindOnce(document, 'payout_modal_esc', () => {
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && payoutModal && !payoutModal.classList.contains('hidden')) {
+            closePayoutModalSafe();
+          }
+        });
+      });
+    
+      // Save note changes
+      bindOnce(payoutModalForm, 'payout_modal_save', () => {
+        payoutModalForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+    
+          const id = payoutIdInput?.value;
+          if (!id) {
+            alert('Missing payout id – cannot update.');
+            return;
+          }
+    
+          const note = payoutNoteInput?.value?.trim() || null;
+    
+          try {
+            const { error } = await sb.from('payout').update({ note }).eq('id', id);
+            if (error) {
+              console.error('UPDATE PAYOUT ERROR', error);
+              alert('Error saving payout: ' + error.message);
               return;
             }
-      
-            const note = payoutNoteInput.value.trim() || null;
-      
-            try {
-              const { error } = await sb
-                .from('payout')        // singular table name
-                .update({ note })
-                .eq('id', id);
-      
-              if (error) {
-                console.error('UPDATE PAYOUT ERROR', error);
-                alert('Error saving payout: ' + error.message);
-                return;
-              }
-      
-              closePayoutModal();
-      
-              // refresh payouts tab
-              if (typeof loadPayouts === 'function') {
-                await loadPayouts();
-              }
-              // refresh dashboard recent payouts if you have that function
-              if (typeof loadDashboard === 'function') {
-                await loadDashboard();
-              }
-            } catch (err) {
-              console.error('UNEXPECTED UPDATE PAYOUT ERROR', err);
-              alert('Something went wrong saving this payout.');
-            }
-          });
-        }
-
-  // DELETE PAYOUT
-  if (payoutDeleteBtn) {
-    payoutDeleteBtn.addEventListener('click', async () => {
-      const id = payoutIdInput.value;
-      if (!id) {
-        alert('Missing payout id – cannot delete.');
-        return;
-      }
-
-      const ok = confirm('Delete this payout? This cannot be undone.');
-      if (!ok) return;
-
-      try {
-        const { error } = await sb
-          .from('payout')        // singular table name
-          .delete()
-          .eq('id', id);
-
-        if (error) {
-          console.error('DELETE PAYOUT ERROR', error);
-          alert('Error deleting payout: ' + error.message);
-          return;
-        }
-
-        closePayoutModal();
-
-        if (typeof loadPayouts === 'function') {
-          await loadPayouts();
-        }
-        if (typeof loadDashboard === 'function') {
-          await loadDashboard();
-        }
-      } catch (err) {
-        console.error('UNEXPECTED DELETE PAYOUT ERROR', err);
-        alert('Something went wrong deleting this payout.');
-      }
-    });
-  }
-});
-
-
-
-      
-      if (modalCloseBtn) {
-        modalCloseBtn.addEventListener('click', closePayoutModal);
-      }
-      
-      if (payoutModal) {
-        payoutModal.addEventListener('click', (e) => {
-          if (e.target.classList.contains('payout-modal-backdrop')) {
-            closePayoutModal();
+    
+            closePayoutModalSafe();
+            if (typeof loadPayouts === 'function') await loadPayouts();
+            if (typeof loadDashboard === 'function') await loadDashboard();
+          } catch (err) {
+            console.error('UNEXPECTED UPDATE PAYOUT ERROR', err);
+            alert('Something went wrong saving this payout.');
           }
         });
-      }
-      
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closePayoutModal();
       });
+    
+      // Delete payout
+      bindOnce(payoutDeleteBtn, 'payout_modal_delete', () => {
+        payoutDeleteBtn.addEventListener('click', handleDeletePayout);
+      });
+    
+      // Copy TX hash
+      const copyBtn = document.getElementById('payout-modal-copy');
+      const hashEl = document.getElementById('payout-modal-txhash');
+      bindOnce(copyBtn, 'payout_modal_copy', () => {
+        copyBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const text = hashEl?.textContent?.trim();
+          if (!text || text === '—') return;
+    
+          try {
+            await navigator.clipboard.writeText(text);
+            if (typeof showToast === 'function') showToast('TX hash copied!');
+          } catch (err) {
+            console.error('Failed to copy:', err);
+            if (typeof showToast === 'function') showToast('Clipboard error');
+          }
+        });
+      });
+    
+      // ======================================================
+      // 8) Contractor modal wiring (close, esc, save, delete)
+      // ======================================================
+      const contractorModal = document.getElementById('contractor-modal');
+      const contractorModalClose = document.getElementById('contractor-modal-close');
+      const contractorModalForm = document.getElementById('contractor-modal-form');
+      const contractorModalDelete = document.getElementById('contractor-modal-delete');
+    
+      const contractorModalId = document.getElementById('contractor-modal-id');
+      const contractorModalName = document.getElementById('contractor-modal-name');
+      const contractorModalRole = document.getElementById('contractor-modal-role');
+      const contractorModalWallet = document.getElementById('contractor-modal-wallet');
+      const contractorModalCountry = document.getElementById('contractor-modal-country');
+    
+      const closeContractorModalSafe = () => {
+        if (!contractorModal) return;
+        contractorModal.classList.add('hidden');
+        contractorModalForm?.reset();
+        if (contractorModalId) contractorModalId.value = '';
+      };
+    
+      bindOnce(contractorModalClose, 'contractor_modal_close', () => {
+        contractorModalClose.addEventListener('click', (e) => {
+          e.preventDefault();
+          closeContractorModalSafe();
+        });
+      });
+    
+      bindOnce(contractorModal, 'contractor_modal_backdrop', () => {
+        contractorModal.addEventListener('click', (e) => {
+          // Close on clicking the backdrop layer inside the modal
+          if (e.target.classList.contains('payout-modal-backdrop')) {
+            closeContractorModalSafe();
+          }
+        });
+      });
+    
+      bindOnce(document, 'contractor_modal_esc', () => {
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && contractorModal && !contractorModal.classList.contains('hidden')) {
+            closeContractorModalSafe();
+          }
+        });
+      });
+    
+      // Save contractor changes
+      bindOnce(contractorModalForm, 'contractor_modal_save', () => {
+        contractorModalForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+    
+          const id = contractorModalId?.value;
+          if (!id) {
+            alert('Missing contractor id – cannot update.');
+            return;
+          }
+    
+          const payload = {
+            name: contractorModalName?.value?.trim() || '',
+            role: contractorModalRole?.value?.trim() || null,
+            wallet_address: contractorModalWallet?.value?.trim() || null,
+            country: contractorModalCountry?.value?.trim() || null,
+          };
+    
+          try {
+            const { error } = await sb.from('contractors').update(payload).eq('id', id);
+            if (error) {
+              console.error('UPDATE CONTRACTOR ERROR', error);
+              alert('Error saving contractor changes: ' + error.message);
+              return;
+            }
+    
+            closeContractorModalSafe();
+            if (typeof loadContractors === 'function') await loadContractors();
+            if (typeof loadPayoutContractorOptions === 'function') await loadPayoutContractorOptions();
+          } catch (err) {
+            console.error('UNEXPECTED UPDATE CONTRACTOR ERROR', err);
+            alert('Something went wrong saving this contractor.');
+          }
+        });
+      });
+    
+      // Delete contractor
+      bindOnce(contractorModalDelete, 'contractor_modal_delete', () => {
+        contractorModalDelete.addEventListener('click', async (e) => {
+          e.preventDefault();
+    
+          const id = contractorModalId?.value;
+          if (!id) {
+            alert('Missing contractor id – cannot delete.');
+            return;
+          }
+    
+          const ok = confirm('Delete this contractor? This cannot be undone.');
+          if (!ok) return;
+    
+          try {
+            const { error } = await sb.from('contractors').delete().eq('id', id);
+            if (error) {
+              console.error('DELETE CONTRACTOR ERROR', error);
+              alert('Error deleting contractor: ' + error.message);
+              return;
+            }
+    
+            closeContractorModalSafe();
+            if (typeof loadContractors === 'function') await loadContractors();
+            if (typeof loadPayoutContractorOptions === 'function') await loadPayoutContractorOptions();
+          } catch (err) {
+            console.error('UNEXPECTED DELETE CONTRACTOR ERROR', err);
+            alert('Something went wrong deleting this contractor.');
+          }
+        });
+      });
+    
+      console.log('✅ DOMContentLoaded: Soltra init complete.');
+    });
+
 
       
-      }); // <-- this closes document.addEventListener('DOMContentLoaded', ...)
-          // ==== STRIPE BILLING ====
-      const stripePublicKey = "pk_live_REPLACE_ME"; // Your publishable key
-      const stripe = Stripe(stripePublicKey);
-      
-      // Price IDs (from Stripe)
-      const PRICE_PRO = "price_1Qabc123Pro29"; 
-      const PRICE_ORG = "price_1Qabc123Org99"; 
-      
-      async function startCheckout(priceId) {
-        const { data: { email } } = await sb.auth.getUser();
-        if (!email) {
-          alert("Please sign in first.");
-          return;
-        }
-      
-        const session = await fetch("https://YOUR-SUPABASE-FUNCTION-ENDPOINT/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ priceId, email }),
-        }).then(r => r.json());
-      
-        if (session.url) {
-          window.location.href = session.url; // Redirect to Stripe Checkout
-        } else {
-          alert("Error starting checkout. Please try again.");
-        }
-      }
+    
 
   </script>
       <div id="payout-detail-modal" class="modal hidden">
