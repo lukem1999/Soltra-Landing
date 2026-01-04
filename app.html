@@ -793,6 +793,39 @@
     });
   }
 
+  function bindExportButton() {
+    const btn = document.getElementById('reports-export-btn'); // ✅ matches your HTML
+  
+    if (!btn) {
+      console.warn('❌ Export button not found (#reports-export-btn).');
+      return;
+    }
+  
+    // Avoid double-binding
+    if (btn.dataset.bound === '1') return;
+    btn.dataset.bound = '1';
+  
+    console.log('✅ Export button bound.');
+  
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+  
+      console.log(
+        '📦 Export clicked. payouts in cache:',
+        (dashboardPayoutsCache || []).length
+      );
+  
+      try {
+        exportPayoutsToCsv(); // ✅ your real export function name
+        console.log('✅ exportPayoutsToCsv() ran');
+      } catch (err) {
+        console.error('❌ exportPayoutsToCsv crashed:', err);
+        alert('Export failed — check console for error.');
+      }
+    });
+  }
+
+
 
    // === TAB NAVIGATION ===
   function initTabs() {
@@ -830,10 +863,11 @@
       }
   
       if (target === 'reports') {
-      loadDashboard().then(() => {
-        loadReportsFromCache();
-      });
-    }
+        loadDashboard().then(() => {
+          loadReportsFromCache();
+          bindExportButton(); // 👈 RIGHT HERE
+        });
+      }
   
       // 4) Persist tab (optional)
       try {
@@ -2531,6 +2565,7 @@
       initTabs();
       initPayoutRowClicks();
       initWalletSelector();
+      bindExportButton();
 
         // =========================
       // Wallet selector (open/close)
