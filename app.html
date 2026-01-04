@@ -1759,35 +1759,30 @@
       const selectEl = document.getElementById('payout-contractor');
       if (!selectEl) return;
     
-      // Reset UI
       selectEl.innerHTML = `<option value="">Loading contractors…</option>`;
       selectEl.disabled = true;
     
       try {
-        // ✅ Use the same client you use everywhere else
-        const { data: userData, error: userErr } = await sb.auth.getUser();
-        if (userErr) throw userErr;
+        // ✅ Memory-only friendly: getSession() won't throw "Auth session missing"
+        const { data: sessionData, error: sessErr } = await sb.auth.getSession();
+        if (sessErr) throw sessErr;
     
-        const user = userData?.user;
+        const session = sessionData?.session;
+        const user = session?.user;
+    
         if (!user) {
           selectEl.innerHTML = `<option value="">Sign in to select contractor</option>`;
           selectEl.disabled = true;
           return;
         }
     
-        // ✅ Query contractors (adjust filter depending on your schema/RLS)
-        let q = sb
+        // If you *do* have user_id column, keep the .eq('user_id', user.id)
+        // If you don't, remove that line.
+        const { data, error } = await sb
           .from('contractors')
           .select('id, name, wallet_address')
+          .eq('user_id', user.id)
           .order('name', { ascending: true });
-    
-        // If your contractors table HAS user_id, keep this line.
-        // If it DOES NOT, this will throw "column contractors.user_id does not exist"
-        q = q.eq('user_id', user.id);
-    
-        const { data, error } = await q;
-    
-        console.log('PAYOUT CONTRACTOR OPTIONS:', { data, error });
     
         if (error) throw error;
     
@@ -1798,27 +1793,23 @@
         }
     
         selectEl.innerHTML = `<option value="">Select contractor</option>`;
-    
         data.forEach((c) => {
-          const opt = document.createElement('option');
-          opt.value = c.id;
-    
           const w = c.wallet_address || '';
           const short = w ? `${w.slice(0, 6)}…${w.slice(-4)}` : '';
+          const opt = document.createElement('option');
+          opt.value = c.id;
           opt.textContent = short ? `${c.name} • ${short}` : (c.name || 'Unnamed');
-    
           selectEl.appendChild(opt);
         });
     
         selectEl.disabled = false;
       } catch (err) {
         console.error('loadPayoutContractorOptions() failed:', err);
-    
-        // Show error in UI
         selectEl.innerHTML = `<option value="">Error loading contractors</option>`;
         selectEl.disabled = true;
       }
     }
+
 
 
 
@@ -2379,6 +2370,7 @@
     
         // load everything AFTER auth is definitely live
         await loadContractors();
+        await loadPayoutContractorOptions();
         await loadPayouts();
         await loadDashboard();
         renderDashboardChartsFromCache();
