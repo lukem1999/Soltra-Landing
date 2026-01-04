@@ -5160,7 +5160,59 @@ textarea:focus {
   );
 }
 
+/* ====== DENSITY TUNING (desktop) ====== */
+@media (min-width: 1100px) {
+  .shell.dashboard-shell {
+    width: min(1200px, calc(100% - 64px));
+  }
 
+  .section-title { font-size: 28px; }
+  .section-subtitle { font-size: 13px; line-height: 1.4; }
+
+  .dash-card, .chart-card, .form-card, .table-card {
+    padding: 16px;     /* was probably ~20-24 */
+    border-radius: 18px;
+  }
+
+  .dash-table th, .dash-table td {
+    padding: 10px 12px;  /* tighter rows */
+    font-size: 13px;
+  }
+
+  .btn, .mini-btn, .input-control {
+    height: 40px;        /* tighten controls */
+  }
+
+  .input-control {
+    font-size: 13px;
+  }
+}
+
+/* Reduce top header vertical footprint */
+.section-header {
+  padding-top: 12px;
+  padding-bottom: 10px;
+}
+
+.section-header .section-title {
+  margin-bottom: 6px;
+}
+
+.section-header .section-subtitle {
+  margin-top: 0;
+}
+
+/* Optional: subtle desktop scale */
+@media (min-width: 1200px) {
+  .app-shell {
+    transform: scale(0.95);
+    transform-origin: top center;
+  }
+}
+
+@media (min-width: 1200px) {
+  body { overflow-x: hidden; }
+}
 
 
 
