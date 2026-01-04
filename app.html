@@ -1357,11 +1357,9 @@
 
     function openPayoutModalFromRow(tr) {
       const modal = document.getElementById('payout-modal');
-      if (!modal) return;
+      if (!modal || !tr) return;
     
-      activePayoutRow = tr;
-    
-      // ---- Fill modal from dataset (same as before) ----
+      // Fill modal fields
       const dateEl       = document.getElementById('payout-modal-date');
       const contractorEl = document.getElementById('payout-modal-contractor');
       const amountEl     = document.getElementById('payout-modal-amount');
@@ -1369,22 +1367,21 @@
       const hashEl       = document.getElementById('payout-modal-txhash');
       const noteEl       = document.getElementById('payout-modal-note');
     
-      if (dateEl)       dateEl.textContent       = row.dataset.date || '—';
-      if (contractorEl) contractorEl.textContent = row.dataset.contractor || '—';
-      if (amountEl)     amountEl.textContent     = row.dataset.amount || '—';
-      if (chainEl)      chainEl.textContent      = row.dataset.chain || '—';
-      if (hashEl)       hashEl.textContent       = row.dataset.txhash || '—';
-      if (noteEl)       noteEl.textContent       = row.dataset.note || '—';
+      if (dateEl)       dateEl.textContent       = tr.dataset.date || '—';
+      if (contractorEl) contractorEl.textContent = tr.dataset.contractor || '—';
+      if (amountEl)     amountEl.textContent     = tr.dataset.amount || '—';
+      if (chainEl)      chainEl.textContent      = tr.dataset.chain || '—';
+      if (hashEl)       hashEl.textContent       = tr.dataset.txhash || '—';
+      if (noteEl)       noteEl.textContent       = tr.dataset.note || '—';
     
-      // ---- Animate open ----
+      // IMPORTANT: store payout id for delete/edit
+      modal.dataset.payoutId = tr.dataset.id || '';
+    
+      // Open modal (matches your existing CSS approach)
       modal.classList.remove('hidden');
-      // wait one frame so transitions fire
       requestAnimationFrame(() => {
         modal.classList.add('payout-modal--open');
       });
-    
-      const closeBtn = document.getElementById('payout-modal-close');
-      closeBtn?.focus();
     }
 
     async function handleDeletePayout() {
