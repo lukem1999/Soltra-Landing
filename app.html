@@ -1323,38 +1323,35 @@
       }
     }
 
-
-
-
-    // === CHAIN ICON RENDERING ===
     function renderChainPill(chain) {
       if (!chain) return '';
-
+    
       const c = chain.toLowerCase();
-      let logo = '';
+      let img = '';
       let label = '';
-
+    
       if (c.includes('base')) {
-        logo = 'https://assets.coingecko.com/coins/images/31069/small/base-logo.png';
+        img = 'images/base-square.svg';
         label = 'Base';
       } else if (c.includes('eth')) {
-        logo = 'https://cryptocurrencyicons.s3.amazonaws.com/blockchains/ethereum.png';
+        img = 'images/ethereum.svg';
         label = 'Ethereum';
       } else if (c.includes('poly') || c.includes('matic')) {
-        logo = 'https://cryptocurrencyicons.s3.amazonaws.com/blockchains/polygon.png';
+        img = 'images/polygon.svg';
         label = 'Polygon';
       } else {
-        logo = 'https://cryptocurrencyicons.s3.amazonaws.com/blockchains/generic.png';
+        img = 'images/generic-chain.svg'; // optional fallback
         label = chain;
       }
-
+    
       return `
-        <span class="chain-pill">
-          <img src="${logo}" alt="${label} logo">
-          <span>${label}</span>
+        <span class="chain-cell">
+          <img src="${img}" alt="${label} logo" />
+          <span class="chain-name">${label}</span>
         </span>
       `;
     }
+
 
     function getExplorerUrl(chain, txHash) {
       if (!txHash) return '#';
