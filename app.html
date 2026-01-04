@@ -1406,7 +1406,7 @@
       const modal = document.getElementById('payout-modal');
       if (!modal) return;
     
-      activePayoutRow = row;
+      activePayoutRow = tr;
     
       // ---- Fill modal from dataset (same as before) ----
       const dateEl       = document.getElementById('payout-modal-date');
@@ -1764,7 +1764,7 @@
       selectEl.disabled = true;
     
       try {
-        const { data: { user }, error: userErr } = await supabase.auth.getUser();
+        const { data: { user }, error: userErr } = await sb.auth.getUser();
         if (userErr) throw userErr;
         if (!user) {
           // Not signed in
@@ -1772,7 +1772,7 @@
         }
     
         // IMPORTANT: adjust column names here if your table differs
-        const { data, error } = await supabase
+        const { data, error } = await sb
           .from('contractors')
           .select('id, name, wallet_address')
           .eq('user_id', user.id)
