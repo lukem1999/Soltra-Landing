@@ -1911,7 +1911,7 @@
         }
     
         const payouts = data || [];
-        dashboardPayoutsCache = payouts; // used by Reports + CSV export
+        renderDashboardChartsFromCache();
     
         // --- "Last updated" timestamp ---
         const updatedEl = document.getElementById('dash-updated');
@@ -2085,98 +2085,83 @@
       }
     }
 
-
-   
     // ----- Dashboard charts -----
     let payoutVolumeChart = null;
     let chainSplitChart = null;
 
-    async function loadDashboardCharts() {
-      const canvas1 = document.getElementById('payoutVolumeChart');
-      const canvas2 = document.getElementById('chainSplitChart');
-      if (!canvas1 || !canvas2) return;
-
-      try {
-        const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/payouts?select=amount,chain,tx_timestamp&order=tx_timestamp.asc`,
-          {
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            },
-          }
-        );
-
-        if (!res.ok) {
-          console.error('Error loading payouts for charts', await res.text());
-          buildChartsWithMockData();
-          return;
-        }
-
-        const payouts = await res.json();
-        if (!payouts.length) {
-          buildChartsWithMockData();
-          return;
-        }
-
-        const { monthlyLabels, monthlyTotals, chainLabels, chainTotals } =
-          aggregatePayoutData(payouts);
-
-        renderPayoutVolumeChart(canvas1, monthlyLabels, monthlyTotals);
-        renderChainSplitChart(canvas2, chainLabels, chainTotals);
-      } catch (err) {
-        console.error(err);
-        buildChartsWithMockData();
-      }
+        // ==============================
+    // DASHBOARD CHARTS (REAL DATA)
+    // Uses dashboardPayoutsCache (already filtered by range + chain)
+    // ==============================
+    
+    let payoutVolumeChart = null;
+    let chainSplitChart = null;
+    
+    function monthKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      return `${y}-${m}`; // YYYY-MM
     }
-
-    function aggregatePayoutData(payouts) {
+    
+    function monthLabelFromKey(key) {
+      // key: "2025-12"
+      const [y, m] = key.split('-').map(Number);
+      const d = new Date(y, m - 1, 1);
+      return d.toLocaleString('en-US', { month: 'short' }); // "Dec"
+    }
+    
+    function computeChartDataFromPayouts(payouts) {
       const monthlyMap = new Map();
       const chainMap = new Map();
-
-      payouts.forEach((p) => {
+    
+      (payouts || []).forEach((p) => {
         const amount = Number(p.amount) || 0;
         const chain = (p.chain || 'OTHER').toUpperCase();
-
-        const date = p.tx_timestamp ? new Date(p.tx_timestamp) : new Date();
-        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-          2,
-          '0'
-        )}`; // YYYY-MM
-
-        monthlyMap.set(key, (monthlyMap.get(key) || 0) + amount);
+    
+        const d = p.tx_timestamp ? new Date(p.tx_timestamp) : null;
+        if (d && !isNaN(d.getTime())) {
+          const key = monthKey(d);
+          monthlyMap.set(key, (monthlyMap.get(key) || 0) + amount);
+        }
+    
         chainMap.set(chain, (chainMap.get(chain) || 0) + amount);
       });
-
-      const monthlyLabels = Array.from(monthlyMap.keys()).sort();
-      const trimmedLabels = monthlyLabels.slice(-6);
-      const monthlyTotals = trimmedLabels.map((k) => monthlyMap.get(k));
-
-      const chainLabels = Array.from(chainMap.keys());
-      const chainTotals = chainLabels.map((k) => chainMap.get(k));
-
-      return {
-        monthlyLabels: trimmedLabels,
-        monthlyTotals,
-        chainLabels,
-        chainTotals,
-      };
+    
+      // Monthly: sort keys, take last 6 months with data
+      const monthKeys = Array.from(monthlyMap.keys()).sort();
+      const last6Keys = monthKeys.slice(-6);
+    
+      const monthlyLabels = last6Keys.map(monthLabelFromKey);
+      const monthlyTotals = last6Keys.map((k) => Math.round((monthlyMap.get(k) || 0) * 100) / 100);
+    
+      // Chain: show in descending order, remove zeroes
+      const chainPairs = Array.from(chainMap.entries())
+        .filter(([, v]) => (Number(v) || 0) > 0)
+        .sort((a, b) => (b[1] || 0) - (a[1] || 0));
+    
+      const chainLabels = chainPairs.map(([k]) => k);
+      const chainTotals = chainPairs.map(([, v]) => Math.round((Number(v) || 0) * 100) / 100);
+    
+      return { monthlyLabels, monthlyTotals, chainLabels, chainTotals };
     }
-
-    function buildChartsWithMockData() {
+    
+    function renderDashboardChartsFromCache() {
       const canvas1 = document.getElementById('payoutVolumeChart');
       const canvas2 = document.getElementById('chainSplitChart');
       if (!canvas1 || !canvas2) return;
-
-      const monthlyLabels = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
-      const monthlyTotals = [800, 1200, 950, 2100, 1750, 2300];
-
-      const chainLabels = ['BASE', 'POLYGON', 'ETH', 'OTHER'];
-      const chainTotals = [3400, 2100, 900, 300];
-
-      renderPayoutVolumeChart(canvas1, monthlyLabels, monthlyTotals);
-      renderChainSplitChart(canvas2, chainLabels, chainTotals);
+    
+      const payouts = dashboardPayoutsCache || [];
+      const { monthlyLabels, monthlyTotals, chainLabels, chainTotals } =
+        computeChartDataFromPayouts(payouts);
+    
+      // If empty, render "no data" charts instead of mock data
+      const hasMonthly = monthlyLabels.length && monthlyTotals.some(v => v > 0);
+      const hasChain = chainLabels.length && chainTotals.some(v => v > 0);
+    
+      renderPayoutVolumeChart(canvas1, hasMonthly ? monthlyLabels : ['—'], hasMonthly ? monthlyTotals : [0]);
+      renderChainSplitChart(canvas2, hasChain ? chainLabels : ['—'], hasChain ? chainTotals : [1]);
     }
+
 
     function renderPayoutVolumeChart(canvas, labels, data) {
       if (payoutVolumeChart) payoutVolumeChart.destroy();
@@ -2351,7 +2336,7 @@
         await loadContractors();
         await loadPayouts();
         await loadDashboard();
-        await loadDashboardCharts();
+        renderDashboardChartsFromCache();
     
       } else {
         if (authWrapper) authWrapper.style.display = 'flex';
