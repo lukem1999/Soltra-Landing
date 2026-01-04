@@ -1082,7 +1082,7 @@
     
       // Esc closes modal
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && contractorModal?.classList.contains('is-open')) {
+        if (e.key === 'Escape' && contractorModal && !contractorModal.classList.contains('hidden')) {
           closeContractorModal();
         }
       });
@@ -1092,17 +1092,17 @@
         contractorModalForm.addEventListener('submit', async (e) => {
           e.preventDefault();
     
-          const id = contractorIdInput.value;
+          const id = contractorModalId.value;
           if (!id) {
             alert('Missing contractor id – cannot update.');
             return;
           }
     
           const payload = {
-            name: contractorNameInput.value.trim(),
-            role: contractorRoleInput.value.trim() || null,
-            wallet_address: contractorWalletInput.value.trim() || null,
-            country: contractorCountryInput.value.trim() || null,
+            name: contractorModalName.value.trim(),
+            role: contractorModalRole.value.trim() || null,
+            wallet_address: contractorModalWallet.value.trim() || null,
+            country: contractorModalCountry.value.trim() || null,
           };
     
           try {
@@ -1130,42 +1130,38 @@
       }
     
       // Delete contractor
-      if (contractorDeleteBtn) {
-        contractorDeleteBtn.addEventListener('click', async () => {
-          const id = contractorIdInput.value;
+      if (contractorModalDelete) {
+        contractorModalDelete.addEventListener('click', async () => {
+          const id = contractorModalId.value;
           if (!id) {
             alert('Missing contractor id – cannot delete.');
             return;
           }
-    
+      
           const ok = confirm('Delete this contractor? This cannot be undone.');
           if (!ok) return;
-    
+      
           try {
             const { error } = await sb
               .from('contractors')
               .delete()
               .eq('id', id);
-    
+      
             if (error) {
               console.error('DELETE CONTRACTOR ERROR', error);
               alert('Error deleting contractor: ' + error.message);
               return;
             }
-    
+      
             closeContractorModal();
             await loadContractors();
-            if (typeof loadContractorOptions === 'function') {
-              await loadContractorOptions();
-            }
+            await loadPayoutContractorOptions(); // keep payout dropdown in sync
           } catch (err) {
             console.error('UNEXPECTED DELETE CONTRACTOR ERROR', err);
             alert('Something went wrong deleting this contractor.');
           }
         });
       }
-    });
-
 
     
     function exportPayoutsToCsv() {
