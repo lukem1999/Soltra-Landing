@@ -807,65 +807,37 @@
     
       if (!tabButtons.length) return;
     
-        function showTab(target) {
-        // activate the matching button
-        tabButtons.forEach((btn) => {
-          const isActive = btn.dataset.target === target;
-          btn.classList.toggle('active', isActive);
-        });
-    
-        // show/hide corresponding views
-        Object.entries(views).forEach(([key, el]) => {
-          if (!el) return;
-          if (key === target) el.classList.remove('hidden');
-          else el.classList.add('hidden');
-        });
-    
-        // persist selection (best-effort)
-        try {
-          localStorage.setItem('soltra-active-tab', target);
-        } catch (e) {}
-    
-        if (target === 'dashboard') {
-          requestAnimationFrame(() => highlightDashboard());
-        }
-    
-        if (target === 'reports') {
-          loadReportsFromCache();
-        }
-      }
-
-
-      // click handlers
-      tabButtons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const target = btn.dataset.target;
-          if (target) showTab(target);
-        });
+    function showTab(target) {
+      // 1. Activate the correct sidebar button
+      tabButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.target === target);
       });
     
-      // Decide initial tab:
-      // 1) URL hash (e.g. app.html#payouts)
-      // 2) localStorage
-      // 3) default "dashboard"
-      let initial = 'dashboard';
+      // 2. Show / hide views
+      Object.entries(views).forEach(([key, el]) => {
+        if (!el) return;
+        el.classList.toggle('hidden', key !== target);
+      });
     
-      // 1) hash
-      const hash = window.location.hash.replace('#', '');
-      if (hash && views[hash]) {
-        initial = hash;
-      } else {
-        // 2) localStorage
-        try {
-          const saved = localStorage.getItem('soltra-active-tab');
-          if (saved && views[saved]) initial = saved;
-        } catch (e) {
-          // ignore
-        }
+      // 3. Tab-specific side effects
+      if (target === 'dashboard') {
+        requestAnimationFrame(() => highlightDashboard());
       }
     
-      showTab(initial);
+      if (target === 'payouts') {
+        loadPayoutContractorOptions();
+      }
+    
+      if (target === 'reports') {
+        loadReportsFromCache();
+      }
+    
+      // 4. Persist active tab (optional, but you already had this)
+      try {
+        localStorage.setItem('soltra-active-tab', target);
+      } catch (e) {}
     }
+    
 
     function shortenWallet(addr) {
       if (!addr || typeof addr !== 'string') return '';
@@ -1764,6 +1736,52 @@
       }
     }
 
+    async function loadPayoutContractorOptions() {
+      const selectEl = document.getElementById('payout-contractor');
+      if (!selectEl) return;
+    
+      // Reset UI
+      selectEl.innerHTML = `<option value="">Select contractor</option>`;
+      selectEl.disabled = true;
+    
+      try {
+        const { data: { user }, error: userErr } = await supabase.auth.getUser();
+        if (userErr) throw userErr;
+        if (!user) {
+          // Not signed in
+          return;
+        }
+    
+        // IMPORTANT: adjust column names here if your table differs
+        const { data, error } = await supabase
+          .from('contractors')
+          .select('id, name, wallet_address')
+          .eq('user_id', user.id)
+          .order('name', { ascending: true });
+    
+        if (error) throw error;
+    
+        if (!data || data.length === 0) {
+          selectEl.innerHTML = `<option value="">No contractors yet</option>`;
+          selectEl.disabled = true;
+          return;
+        }
+    
+        const optionsHtml = data.map(c => {
+          const walletShort = (c.wallet_address || '').slice(0, 6) + '...' + (c.wallet_address || '').slice(-4);
+          const label = c.wallet_address ? `${c.name} • ${walletShort}` : c.name;
+          return `<option value="${c.id}">${label}</option>`;
+        }).join('');
+    
+        selectEl.insertAdjacentHTML('beforeend', optionsHtml);
+        selectEl.disabled = false;
+    
+      } catch (err) {
+        console.error('loadPayoutContractorOptions() failed:', err);
+        selectEl.innerHTML = `<option value="">Error loading contractors</option>`;
+        selectEl.disabled = true;
+      }
+    }
 
 
     
