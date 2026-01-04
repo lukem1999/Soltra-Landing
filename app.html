@@ -830,8 +830,10 @@
       }
   
       if (target === 'reports') {
+      loadDashboard().then(() => {
         loadReportsFromCache();
-      }
+      });
+    }
   
       // 4) Persist tab (optional)
       try {
@@ -1950,6 +1952,10 @@
         }
     
         const payouts = data || [];
+
+        // ✅ THIS is the missing link (Reports + Charts depend on it)
+        dashboardPayoutsCache = payouts;
+        
         renderDashboardChartsFromCache();
     
         // --- "Last updated" timestamp ---
