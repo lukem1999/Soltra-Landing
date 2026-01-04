@@ -1760,23 +1760,34 @@
       if (!selectEl) return;
     
       // Reset UI
-      selectEl.innerHTML = `<option value="">Select contractor</option>`;
+      selectEl.innerHTML = `<option value="">Loading contractors…</option>`;
       selectEl.disabled = true;
     
       try {
-        const { data: { user }, error: userErr } = await sb.auth.getUser();
+        // ✅ Use the same client you use everywhere else
+        const { data: userData, error: userErr } = await sb.auth.getUser();
         if (userErr) throw userErr;
+    
+        const user = userData?.user;
         if (!user) {
-          // Not signed in
+          selectEl.innerHTML = `<option value="">Sign in to select contractor</option>`;
+          selectEl.disabled = true;
           return;
         }
     
-        // IMPORTANT: adjust column names here if your table differs
-        const { data, error } = await sb
+        // ✅ Query contractors (adjust filter depending on your schema/RLS)
+        let q = sb
           .from('contractors')
           .select('id, name, wallet_address')
-          .eq('user_id', user.id)
           .order('name', { ascending: true });
+    
+        // If your contractors table HAS user_id, keep this line.
+        // If it DOES NOT, this will throw "column contractors.user_id does not exist"
+        q = q.eq('user_id', user.id);
+    
+        const { data, error } = await q;
+    
+        console.log('PAYOUT CONTRACTOR OPTIONS:', { data, error });
     
         if (error) throw error;
     
@@ -1786,21 +1797,29 @@
           return;
         }
     
-        const optionsHtml = data.map(c => {
-          const walletShort = (c.wallet_address || '').slice(0, 6) + '...' + (c.wallet_address || '').slice(-4);
-          const label = c.wallet_address ? `${c.name} • ${walletShort}` : c.name;
-          return `<option value="${c.id}">${label}</option>`;
-        }).join('');
+        selectEl.innerHTML = `<option value="">Select contractor</option>`;
     
-        selectEl.insertAdjacentHTML('beforeend', optionsHtml);
+        data.forEach((c) => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+    
+          const w = c.wallet_address || '';
+          const short = w ? `${w.slice(0, 6)}…${w.slice(-4)}` : '';
+          opt.textContent = short ? `${c.name} • ${short}` : (c.name || 'Unnamed');
+    
+          selectEl.appendChild(opt);
+        });
+    
         selectEl.disabled = false;
-    
       } catch (err) {
         console.error('loadPayoutContractorOptions() failed:', err);
+    
+        // Show error in UI
         selectEl.innerHTML = `<option value="">Error loading contractors</option>`;
         selectEl.disabled = true;
       }
     }
+
 
 
     
