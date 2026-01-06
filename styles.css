@@ -5456,6 +5456,64 @@ select:-webkit-autofill {
   display: block;
 }
 
+/* =========================================
+   HOTFIX: Payouts tab form alignment (app)
+   Paste at VERY BOTTOM of styles.css
+   ========================================= */
+
+#view-payouts #payout-form.form-grid{
+  display:grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 14px !important;
+  align-items: start !important;
+}
+
+/* Force each field to behave like a stacked label + input */
+#view-payouts #payout-form.form-grid .field{
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+}
+
+/* Make sure "full-row" items truly span */
+#view-payouts #payout-form.form-grid .field.full-row{
+  grid-column: 1 / -1 !important;
+}
+
+/* Controls should fill their grid cell (selects are the usual culprit) */
+#view-payouts #payout-form.form-grid .input-control,
+#view-payouts #payout-form.form-grid .textarea-control,
+#view-payouts #payout-form.form-grid select,
+#view-payouts #payout-form.form-grid input,
+#view-payouts #payout-form.form-grid textarea{
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+
+/* Normalize heights so select/input/date line up */
+#view-payouts #payout-form.form-grid select,
+#view-payouts #payout-form.form-grid input{
+  height: 44px !important;
+  min-height: 44px !important;
+}
+
+/* Date inputs are special in some browsers */
+#view-payouts #payout-form.form-grid input[type="date"]{
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Textarea should be taller, not forced to 44px */
+#view-payouts #payout-form.form-grid textarea{
+  height: auto !important;
+  min-height: 120px !important;
+}
+
+/* If any existing rule is shrinking the left column controls */
+#view-payouts #payout-form.form-grid .field *{
+  min-width: 0 !important;
+}
 
 
 
