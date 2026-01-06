@@ -5401,6 +5401,56 @@ select:-webkit-autofill {
 }
 
 
+/* ================================
+   PAYOUT FORM: FIX ALIGNMENT ONLY
+   ================================ */
+
+/* Make the form a strict 2-col grid */
+#payout-form.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 14px; /* row gap, col gap */
+  align-items: start;
+}
+
+/* Every field should fill its grid cell */
+#payout-form.form-grid .field {
+  width: 100%;
+  min-width: 0; /* prevents weird overflow/shrink issues */
+}
+
+/* Full-row fields span both columns */
+#payout-form.form-grid .field.full-row {
+  grid-column: 1 / -1;
+}
+
+/* Force controls to be identical sizing */
+#payout-form.form-grid .input-control,
+#payout-form.form-grid .textarea-control,
+#payout-form.form-grid select,
+#payout-form.form-grid input,
+#payout-form.form-grid textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+}
+
+/* Make select + date match height/padding */
+#payout-form.form-grid select,
+#payout-form.form-grid input[type="date"] {
+  height: 44px;
+  line-height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Textarea should not be forced to the same height */
+#payout-form.form-grid textarea {
+  min-height: 110px;
+  line-height: 1.35;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
 
 
 
