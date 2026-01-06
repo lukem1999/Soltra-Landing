@@ -5247,6 +5247,158 @@ textarea:focus {
   width:100% !important;
   height:100% !important;
 }
+/* ============================
+   Payouts tab — Premium Inputs
+   (no HTML changes required)
+   ============================ */
+
+:root{
+  /* tweak if you already have variables */
+  --field-bg: rgba(255,255,255,0.035);
+  --field-bg-2: rgba(255,255,255,0.055);
+  --field-border: rgba(255,255,255,0.10);
+  --field-border-2: rgba(255,255,255,0.18);
+  --field-text: rgba(255,255,255,0.92);
+  --field-muted: rgba(255,255,255,0.55);
+  --focus-ring: rgba(240, 185, 75, 0.25); /* soft gold */
+}
+
+/* Normalize all inputs used in your forms */
+.input-control,
+.textarea-control,
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  width: 100%;
+  color: var(--field-text);
+  background: linear-gradient(180deg, var(--field-bg-2), var(--field-bg));
+  border: 1px solid var(--field-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  min-height: 44px;
+
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.2;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 10px 30px rgba(0,0,0,0.35);
+  outline: none;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+/* Make textareas feel intentional */
+.textarea-control,
+.form-grid textarea {
+  min-height: 92px;
+  resize: vertical;
+  line-height: 1.35;
+  padding-top: 12px;
+}
+
+/* Placeholders */
+.input-control::placeholder,
+.textarea-control::placeholder,
+.form-grid input::placeholder,
+.form-grid textarea::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+
+/* Focus state (premium ring) */
+.input-control:focus,
+.textarea-control:focus,
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+  border-color: var(--field-border-2);
+  box-shadow:
+    0 0 0 4px var(--focus-ring),
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 14px 40px rgba(0,0,0,0.45);
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04));
+}
+
+/* Subtle hover lift */
+.input-control:hover,
+.textarea-control:hover,
+.form-grid input:hover,
+.form-grid select:hover,
+.form-grid textarea:hover {
+  border-color: rgba(255,255,255,0.16);
+}
+
+/* Disabled */
+.input-control:disabled,
+.form-grid input:disabled,
+.form-grid select:disabled,
+.form-grid textarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Select styling consistency */
+.form-grid select,
+.input-control[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+/* Add a dropdown chevron for selects (no markup changes) */
+.form-grid select {
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.55)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat;
+  background-position: 0 0, right 14px center;
+  background-size: auto, 16px 16px;
+  padding-right: 42px;
+}
+
+/* Date input: ensure text doesn't look tiny/washed */
+.input-control[type="date"],
+.form-grid input[type="date"] {
+  color-scheme: dark; /* helps native picker match dark UI */
+  letter-spacing: 0.2px;
+}
+
+/* Improve labels spacing so fields breathe */
+.field-label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+  color: rgba(255,255,255,0.78);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Small help text under fields */
+.field-help {
+  margin-top: 8px;
+  color: rgba(255,255,255,0.42);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+/* Chrome autofill fix (prevents bright yellow) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--field-text);
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px rgba(18, 24, 38, 0.9) inset !important;
+  border: 1px solid rgba(255,255,255,0.14);
+}
 
 
 
