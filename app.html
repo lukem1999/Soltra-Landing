@@ -1341,6 +1341,7 @@
         if (el) el.textContent = value;
       };
     
+      // NOTE: Your HTML has id="pd-contractor" (not "pd-contractor" in your screenshot?)
       setText('pd-date', date);
       setText('pd-contractor', contractor);
       setText('pd-amount', amount);
@@ -1350,12 +1351,34 @@
     
       root.classList.add('payout-detail-open');
     }
+
     
     function closePayoutDetail() {
       const root = document.getElementById('payout-detail-root');
       if (!root) return;
       root.classList.remove('payout-detail-open');
     }
+
+    
+    function wirePayoutDetailPanel() {
+      const closeBtn = document.getElementById('pd-close');
+      const backdrop = document.getElementById('payout-detail-backdrop');
+    
+      if (closeBtn) closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        closePayoutDetail();
+      });
+    
+      if (backdrop) backdrop.addEventListener('click', (e) => {
+        e.preventDefault();
+        closePayoutDetail();
+      });
+    
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePayoutDetail();
+      });
+    }
+
     function fillPayoutModalFromRow(tr) {
       if (!tr) return;
       document.getElementById('payout-modal-date').textContent = tr.dataset.date || '';
@@ -1368,34 +1391,60 @@
     
     let activePayoutRow = null;
 
-    function openPayoutModalFromRow(tr) {
-      const modal = document.getElementById('payout-modal');
-      if (!modal || !tr) return;
+    function wirePayoutRowClicks() {
+      const bindTable = (tbodyId) => {
+        const tbody = document.getElementById(tbodyId);
+        if (!tbody) return;
     
-      // Fill modal fields
-      const dateEl       = document.getElementById('payout-modal-date');
-      const contractorEl = document.getElementById('payout-modal-contractor');
-      const amountEl     = document.getElementById('payout-modal-amount');
-      const chainEl      = document.getElementById('payout-modal-chain');
-      const hashEl       = document.getElementById('payout-modal-txhash');
-      const noteEl       = document.getElementById('payout-modal-note');
+        // ✅ Prevent double binding on same tbody
+        if (tbody.dataset.bound_payout_rows === '1') return;
+        tbody.dataset.bound_payout_rows = '1';
     
-      if (dateEl)       dateEl.textContent       = tr.dataset.date || '—';
-      if (contractorEl) contractorEl.textContent = tr.dataset.contractor || '—';
-      if (amountEl)     amountEl.textContent     = tr.dataset.amount || '—';
-      if (chainEl)      chainEl.textContent      = tr.dataset.chain || '—';
-      if (hashEl)       hashEl.textContent       = tr.dataset.txhash || '—';
-      if (noteEl)       noteEl.textContent       = tr.dataset.note || '—';
+        const openFromEvent = (e) => {
+          // Don’t hijack clicks on real interactive elements
+          const interactive = e.target.closest('a, button, input, textarea, select, label');
+          if (interactive) return;
     
-      // IMPORTANT: store payout id for delete/edit
-      modal.dataset.payoutId = tr.dataset.id || '';
+          const tr = e.target.closest('tr');
+          if (!tr) return;
+          if (!tbody.contains(tr)) return;
     
-      // Open modal (matches your existing CSS approach)
-      modal.classList.remove('hidden');
-      requestAnimationFrame(() => {
-        modal.classList.add('payout-modal--open');
-      });
+          // Don’t open for empty/loading rows (they won’t have an id)
+          if (!tr.dataset || !tr.dataset.id) return;
+    
+          // ✅ Use your side panel opener (not the old modal)
+          openPayoutDetailFromRow(tr);
+        };
+    
+        tbody.addEventListener('click', (e) => {
+          openFromEvent(e);
+        });
+    
+        tbody.addEventListener('keydown', (e) => {
+          // Only when the focused element is a row (or inside it)
+          const tr = e.target.closest('tr');
+          if (!tr || !tbody.contains(tr)) return;
+          if (!tr.dataset || !tr.dataset.id) return;
+    
+          // Enter or Space opens (Space is ' ' OR 'Spacebar' in some older browsers)
+          const isEnter = e.key === 'Enter';
+          const isSpace = e.key === ' ' || e.key === 'Spacebar';
+    
+          if (!isEnter && !isSpace) return;
+    
+          // If focus is on a link/button/input inside the row, let it behave normally
+          const interactive = e.target.closest('a, button, input, textarea, select, label');
+          if (interactive) return;
+    
+          e.preventDefault();
+          openPayoutDetailFromRow(tr);
+        });
+      };
+    
+      bindTable('payouts-body');
+      bindTable('dash-payouts-table');
     }
+
 
     async function handleDeletePayout() {
       const modal = document.getElementById('payout-modal');
@@ -1494,10 +1543,7 @@
     }
 
 
-
-
-    // === PAYOUTS ===
-    // === PAYOUTS ===
+        // === PAYOUTS ===
     async function loadPayouts(highlightId = null) {
       const tbody = document.getElementById('payouts-body');
       if (!tbody) return;
@@ -1515,7 +1561,7 @@
       }
     
       let query = sb
-        .from('payout') // 👈 singular table name
+        .from('payout') // singular table name
         .select(`
           id,
           amount,
@@ -1529,12 +1575,8 @@
         .order('tx_timestamp', { ascending: false })
         .limit(50);
     
-      if (sinceISO) {
-        query = query.gte('tx_timestamp', sinceISO);
-      }
-      if (filterChain !== 'all') {
-        query = query.eq('chain', filterChain);
-      }
+      if (sinceISO) query = query.gte('tx_timestamp', sinceISO);
+      if (filterChain !== 'all') query = query.eq('chain', filterChain);
     
       const { data, error } = await query;
     
@@ -1581,7 +1623,8 @@
         tbody.insertAdjacentHTML(
           'beforeend',
           `
-          <tr class="payout-row">
+          <tr class="payout-row"
+              data-payout-id="${p.id}">
             <td>${date}</td>
             <td>${contractor}</td>
             <td>${amountText}</td>
@@ -1600,42 +1643,61 @@
               }
             </td>
           </tr>
-        `
+          `
         );
     
-        // 🔑 get the row we just added
         const tr = tbody.lastElementChild;
     
-        // Make row focusable + button-like for keyboard users
+        // Accessibility (kept)
         tr.tabIndex = 0;
         tr.setAttribute('role', 'button');
     
-        // Attach dataset for modal
+        // Keep your datasets if you want (used by side panel / modal)
         tr.dataset.date = date;
         tr.dataset.contractor = contractor;
         tr.dataset.amount = amountText;
         tr.dataset.chain = chainUpper;
         tr.dataset.txhash = p.tx_hash || '';
         tr.dataset.note = p.note || '';
-        tr.dataset.id = p.id; // in case we need it later
+        tr.dataset.id = p.id;
     
-        // ⭐ Highlight newly-added payout (for animation)
+        // Highlight newly-added payout (kept)
         if (highlightId && p.id === highlightId) {
           tr.classList.add('payout-row--new');
         }
-    
-        // Mouse click opens modal
-        tr.addEventListener('click', () => openPayoutModalFromRow(tr));
-    
-        // Keyboard: Enter / Space also open modal
-        tr.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            openPayoutModalFromRow(tr);
-          }
-        });
       });
     }
+
+    function wirePayoutRowClicks() {
+      const tbody = document.getElementById('payouts-body');
+      if (!tbody) return;
+    
+      // CLICK opens detail (ignore clicks on the tx link so it still opens explorer)
+      tbody.addEventListener('click', (e) => {
+        if (e.target.closest('a')) return; // let tx hash links work
+    
+        const tr = e.target.closest('tr.payout-row');
+        if (!tr) return;
+    
+        // Choose ONE:
+        // openPayoutModalFromRow(tr);
+        openPayoutDetailFromRow(tr);
+      });
+    
+      // KEYBOARD opens detail
+      tbody.addEventListener('keydown', (e) => {
+        const tr = e.target.closest('tr.payout-row');
+        if (!tr) return;
+    
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          // Choose ONE:
+          // openPayoutModalFromRow(tr);
+          openPayoutDetailFromRow(tr);
+        }
+      });
+    }
+
 
         // === PAYOUTS ===
        // === PAYOUTS: add a new payout ===
@@ -1999,35 +2061,37 @@
             const date = p.tx_timestamp
               ? new Date(p.tx_timestamp).toLocaleDateString()
               : '—';
-    
+          
             const contractor = p.contractors?.name || 'Unknown';
             const amountText = `${p.amount} ${p.asset_symbol || 'USDC'}`;
             const chain = (p.chain || '').toUpperCase();
             const explorerUrl = getExplorerUrl(p.chain, p.tx_hash);
             const shortHash = shortenHash(p.tx_hash);
-    
+          
             const tr = document.createElement('tr');
             tr.className = 'payout-row';
-    
+          
             if (highlightId && p.id === highlightId) {
               tr.classList.add('payout-row--new');
             }
-    
+          
             tr.innerHTML = `
               <td>${date}</td>
               <td>${contractor}</td>
               <td>${amountText}</td>
-              <td>${chain}</td>
+              <td>${renderChainPill(p.chain)}</td>
               <td>
                 ${
                   p.tx_hash
-                    ? `<a href="${explorerUrl}" target="_blank" class="tx-link">${shortHash}</a>`
+                    ? `<a href="${explorerUrl}" target="_blank" rel="noopener" class="tx-link">${shortHash}</a>`
                     : '—'
                 }
               </td>
             `;
-    
+          
             tr.tabIndex = 0;
+            tr.setAttribute('role', 'button');
+          
             tr.dataset.date = date;
             tr.dataset.contractor = contractor;
             tr.dataset.amount = amountText;
@@ -2035,17 +2099,11 @@
             tr.dataset.txhash = p.tx_hash || '';
             tr.dataset.note = p.note || '';
             tr.dataset.id = p.id;
-    
-            tr.addEventListener('click', () => openPayoutModalFromRow(tr));
-            tr.addEventListener('keydown', e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                openPayoutModalFromRow(tr);
-              }
-            });
-    
+          
+            // ✅ NO addEventListener here — delegation handles it
             tableBody.appendChild(tr);
           });
+
         }
     
         // -----------------------------
@@ -2364,7 +2422,33 @@
       if (typeof initTabs === 'function') initTabs();
       if (typeof initWalletSelector === 'function') initWalletSelector();
       if (typeof bindExportButton === 'function') bindExportButton();
+
+      // ✅ Add these (bind once)
+      if (typeof wirePayoutRowClicks === 'function') wirePayoutRowClicks();
+      if (typeof wirePayoutDetailPanel === 'function') wirePayoutDetailPanel();
+
+      bindOnce(document.body, 'wire_payout_rows', () => wirePayoutRowClicks());
+      bindOnce(document.body, 'wire_payout_detail_panel', () => wirePayoutDetailPanel());
+
+      bindOnce(document.body, 'wire_payout_detail', () => {
+      const closeBtn = document.getElementById('pd-close');
+      const backdrop = document.getElementById('payout-detail-backdrop');
     
+      closeBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        closePayoutDetail();
+      });
+    
+      backdrop?.addEventListener('click', (e) => {
+        e.preventDefault();
+        closePayoutDetail();
+      });
+    
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePayoutDetail();
+      });
+    });
+
       // If you still have a "wallet selector open/close" click handler elsewhere,
       // REMOVE it. initWalletSelector() should own that.
       // (Leaving this out avoids duplicate click listeners.)
