@@ -5515,6 +5515,56 @@ select:-webkit-autofill {
   min-width: 0 !important;
 }
 
+/* =========================================
+   HOTFIX: Contractors tab form alignment
+   Paste at VERY BOTTOM of styles.css
+   ========================================= */
+
+#view-contractors .two-column-layout{
+  align-items: start !important;
+}
+
+/* Make the contractors form a predictable grid */
+#view-contractors #add-contractor-form.form-grid{
+  display:grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 14px !important;
+  align-items: start !important;
+}
+
+/* Each field stacks label + control cleanly */
+#view-contractors #add-contractor-form.form-grid .field{
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+}
+
+/* Full-row fields span both columns */
+#view-contractors #add-contractor-form.form-grid .field.full-row{
+  grid-column: 1 / -1 !important;
+}
+
+/* Controls should fill the cell */
+#view-contractors #add-contractor-form.form-grid .input-control,
+#view-contractors #add-contractor-form.form-grid select,
+#view-contractors #add-contractor-form.form-grid input,
+#view-contractors #add-contractor-form.form-grid textarea{
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+
+/* Normalize input heights so NAME/ROLE line up */
+#view-contractors #add-contractor-form.form-grid input,
+#view-contractors #add-contractor-form.form-grid select{
+  height: 44px !important;
+  min-height: 44px !important;
+}
+
+/* If some old rule is forcing weird flex behavior inside fields */
+#view-contractors #add-contractor-form.form-grid .field *{
+  min-width:0 !important;
+}
 
 
 
