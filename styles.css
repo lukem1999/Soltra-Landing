@@ -5452,6 +5452,9 @@ select:-webkit-autofill {
   padding-bottom: 12px;
 }
 
+#payout-form.form-grid .field {
+  display: block;
+}
 
 
 
