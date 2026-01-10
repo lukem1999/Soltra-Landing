@@ -5566,6 +5566,26 @@ select:-webkit-autofill {
   min-width:0 !important;
 }
 
+/* --- Chart polish --- */
+.chart-canvas-wrap {
+  position: relative;
+  height: 260px;          /* consistent height */
+  width: 100%;
+}
+
+.chart-card canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Optional: improves perceived quality at 100% zoom */
+.chart-card {
+  overflow: hidden;
+}
+
+.chart-card-header p {
+  opacity: 0.85;
+}
 
 
 
