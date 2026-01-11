@@ -2191,18 +2191,16 @@
       gradient.addColorStop(1, 'rgba(246,196,83,0)');
     
       window.payoutVolumeChart = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
           labels,
           datasets: [{
-            data: values,
-            borderColor: '#f6c453',
-            backgroundColor: gradient,
-            fill: true,
-            tension: 0.35,
-            pointRadius: 0,
-            borderWidth: 2
-          }]
+          data: values,
+          backgroundColor: '#f6c453',
+          borderRadius: 6,
+          barThickness: 22,
+          maxBarThickness: 26
+        }]
         },
         options: {
           responsive: true,
@@ -2216,15 +2214,19 @@
             }
           },
           scales: {
-            x: { grid: { display: false } },
+            x: {
+              grid: { display: false },
+              ticks: { color: 'rgba(255,255,255,0.65)' }
+            },
             y: {
+              beginAtZero: true,
               ticks: {
-                callback: v => formatUSDCompact(v)
+                callback: (v) => formatUSDCompact(v),
+                color: 'rgba(255,255,255,0.65)'
               },
-              grid: {
-                color: 'rgba(255,255,255,0.06)'
-              }
+              grid: { color: 'rgba(255,255,255,0.06)' }
             }
+           }
           }
         }
       });
