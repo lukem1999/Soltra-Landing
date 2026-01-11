@@ -2132,22 +2132,32 @@
     function buildMonthlyPayoutSeries(payouts) {
       const byMonth = {};
     
-      payouts.forEach(p => {
-        if (!p.date || !p.amount) return;
+      (payouts || []).forEach((p) => {
+        const ts = p.tx_timestamp ? new Date(p.tx_timestamp) : null;
+        if (!ts || isNaN(ts.getTime())) return;
     
-        const month = p.date.slice(0, 7);
-        byMonth[month] = (byMonth[month] || 0) + Number(p.amount);
+        const key = `${ts.getFullYear()}-${String(ts.getMonth() + 1).padStart(2, '0')}`;
+        byMonth[key] = (byMonth[key] || 0) + (Number(p.amount) || 0);
       });
     
-      const months = Object.keys(byMonth).sort();
+      // Always show last 6 months (even if zero)
+      const end = new Date();
+      end.setDate(1);
+    
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(end);
+        d.setMonth(d.getMonth() - i);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        months.push(key);
+      }
     
       return {
-        labels: months.map(m =>
-          new Date(m + '-01').toLocaleString('default', { month: 'short' })
-        ),
-        values: months.map(m => byMonth[m])
+        labels: months.map((m) => new Date(m + '-01').toLocaleString('en-US', { month: 'short' })),
+        values: months.map((m) => byMonth[m] || 0),
       };
     }
+
 
     function buildMonthlyPayoutChart() {
       const canvas = document.getElementById('payoutVolumeChart');
@@ -2157,6 +2167,10 @@
     
       const { labels, values } =
         buildMonthlyPayoutSeries(dashboardPayoutsCache);
+
+      const total = values.reduce((a, b) => a + b, 0);
+      const totalEl = document.getElementById('payoutVolumeTotal');
+      if (totalEl) totalEl.textContent = formatUSD(total);
     
       if (window.payoutVolumeChart && typeof window.payoutVolumeChart.destroy === 'function') {
         window.payoutVolumeChart.destroy();
@@ -2205,6 +2219,31 @@
         }
       });
     }
+
+    function buildChainSplitChart(payouts) {
+      const canvas = document.getElementById('chainSplitChart');
+      if (!canvas) return;
+    
+      const counts = {};
+      (payouts || []).forEach((p) => {
+        const chain = (p.chain || 'UNKNOWN').toUpperCase();
+        counts[chain] = (counts[chain] || 0) + 1;
+      });
+    
+      const labels = Object.keys(counts);
+      const values = labels.map((k) => counts[k]);
+    
+      if (window.chainSplitChart && typeof window.chainSplitChart.destroy === 'function') {
+        window.chainSplitChart.destroy();
+      }
+    
+      window.chainSplitChart = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+      });
+    }
+
 
     // === AUTH ===
     async function handleAuthSubmit(e) {
@@ -2423,11 +2462,18 @@
       // ======================================================
       const bindOnce = (el, key, fn) => {
         if (!el) return;
+      
+        // If it's not an element with dataset (e.g., document), store flags on body
+        const host = el.dataset ? el : document.body;
+        if (!host || !host.dataset) return;
+      
         const k = `bound_${key}`;
-        if (el.dataset[k] === '1') return;
-        el.dataset[k] = '1';
+        if (host.dataset[k] === '1') return;
+        host.dataset[k] = '1';
+      
         fn();
       };
+
     
       // ======================================================
       // 1) Core UI init
