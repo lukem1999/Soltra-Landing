@@ -243,44 +243,95 @@
                 </div>
               </div>
 
-              <div class="card card-side">
-                <h3 class="card-title">Treasury wallets</h3>
-                <p class="card-subtitle">
-                  Connect wallets to track balances and payouts across chains.
-                </p>
+              <section class="wallet-card">
+                <div class="wallet-card-header">
+                  <h3 class="wallet-card-title">Treasury wallets</h3>
+                  <p class="wallet-card-subtitle">Connect wallets to track balances and payouts across chains.</p>
+                </div>
               
-                <div class="wallet-connect-list">
-                  <button class="wallet-connect-btn" data-wallet="safe">
-                    <img src="images/safe-logo.svg" alt="Safe" />
-                    <span class="wallet-name">Safe (Gnosis)</span>
-                    <span class="wallet-connect-status">Connect</span>
+                <div class="wallet-list">
+                  <!-- Safe -->
+                  <button class="wallet-row" type="button" data-wallet="safe">
+                    <span class="wallet-left">
+                      <span class="wallet-icon-wrap">
+                        <img class="wallet-icon" src="images/safe-logo.svg" alt="Safe" />
+                      </span>
+                      <span class="wallet-meta">
+                        <span class="wallet-name">Safe (Gnosis)</span>
+                        <span class="wallet-sub">Recommended for DAOs & treasuries</span>
+                      </span>
+                    </span>
+                    <span class="wallet-right">
+                      <span class="wallet-chip">Connect</span>
+                    </span>
                   </button>
               
-                  <button class="wallet-connect-btn" data-wallet="ledger">
-                    <img src="images/ledger.svg" alt="Ledger" />
-                    <span class="wallet-name">Ledger</span>
-                    <span class="wallet-connect-status">Connect</span>
+                  <!-- Ledger -->
+                  <button class="wallet-row" type="button" data-wallet="ledger">
+                    <span class="wallet-left">
+                      <span class="wallet-icon-wrap">
+                        <img class="wallet-icon" src="images/ledger.svg" alt="Ledger" />
+                      </span>
+                      <span class="wallet-meta">
+                        <span class="wallet-name">Ledger</span>
+                        <span class="wallet-sub">Hardware wallet via browser</span>
+                      </span>
+                    </span>
+                    <span class="wallet-right">
+                      <span class="wallet-chip">Connect</span>
+                    </span>
                   </button>
               
-                  <button class="wallet-connect-btn" data-wallet="metamask">
-                    <img src="images/metamask.svg" alt="MetaMask" />
-                    <span class="wallet-name">MetaMask</span>
-                    <span class="wallet-connect-status">Connect</span>
+                  <!-- MetaMask -->
+                  <button class="wallet-row" type="button" data-wallet="metamask">
+                    <span class="wallet-left">
+                      <span class="wallet-icon-wrap">
+                        <img class="wallet-icon" src="images/metamask.svg" alt="MetaMask" />
+                      </span>
+                      <span class="wallet-meta">
+                        <span class="wallet-name">MetaMask</span>
+                        <span class="wallet-sub">Most common EVM wallet</span>
+                      </span>
+                    </span>
+                    <span class="wallet-right">
+                      <span class="wallet-chip">Connect</span>
+                    </span>
                   </button>
               
-                  <button class="wallet-connect-btn" data-wallet="coinbase">
-                    <img src="images/base-square.svg" alt="Coinbase Wallet" />
-                    <span class="wallet-name">Coinbase Wallet</span>
-                    <span class="wallet-connect-status">Connect</span>
+                  <!-- Coinbase -->
+                  <button class="wallet-row" type="button" data-wallet="coinbase">
+                    <span class="wallet-left">
+                      <span class="wallet-icon-wrap">
+                        <img class="wallet-icon" src="images/base-square.svg" alt="Coinbase Wallet" />
+                      </span>
+                      <span class="wallet-meta">
+                        <span class="wallet-name">Coinbase Wallet</span>
+                        <span class="wallet-sub">Fast onboarding for new users</span>
+                      </span>
+                    </span>
+                    <span class="wallet-right">
+                      <span class="wallet-chip">Connect</span>
+                    </span>
                   </button>
               
-                  <button class="wallet-connect-btn disabled">
-                    <img src="images/phantom-logo.svg" alt="Phantom" />
-                    <span class="wallet-name">Phantom</span>
-                    <span class="wallet-connect-status muted">Coming soon</span>
+                  <!-- Phantom (disabled) -->
+                  <button class="wallet-row is-disabled" type="button" disabled>
+                    <span class="wallet-left">
+                      <span class="wallet-icon-wrap">
+                        <img class="wallet-icon" src="images/phantom-logo.svg" alt="Phantom" />
+                      </span>
+                      <span class="wallet-meta">
+                        <span class="wallet-name">Phantom</span>
+                        <span class="wallet-sub">Coming soon (Solana)</span>
+                      </span>
+                    </span>
+                    <span class="wallet-right">
+                      <span class="wallet-chip is-muted">Coming soon</span>
+                    </span>
                   </button>
                 </div>
-              </div>
+              </section>
+
 
               <!-- KPI cards -->
               <div class="dash-kpi-row">
