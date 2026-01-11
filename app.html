@@ -2175,9 +2175,8 @@
     
       const ctx = canvas.getContext('2d');
     
-      const { labels, values } =
-        buildMonthlyPayoutSeries(dashboardPayoutsCache);
-
+      const { labels, values } = buildMonthlyPayoutSeries(dashboardPayoutsCache);
+    
       const total = values.reduce((a, b) => a + b, 0);
       const totalEl = document.getElementById('payoutVolumeTotal');
       if (totalEl) totalEl.textContent = formatUSD(total);
@@ -2185,22 +2184,18 @@
       if (window.payoutVolumeChart && typeof window.payoutVolumeChart.destroy === 'function') {
         window.payoutVolumeChart.destroy();
       }
-
-      const gradient = ctx.createLinearGradient(0, 0, 0, 260);
-      gradient.addColorStop(0, 'rgba(246,196,83,0.35)');
-      gradient.addColorStop(1, 'rgba(246,196,83,0)');
     
       window.payoutVolumeChart = new Chart(ctx, {
         type: 'bar',
         data: {
           labels,
           datasets: [{
-          data: values,
-          backgroundColor: '#f6c453',
-          borderRadius: 6,
-          barThickness: 22,
-          maxBarThickness: 26
-        }]
+            data: values,
+            backgroundColor: '#f6c453',
+            borderRadius: 6,
+            barThickness: 22,
+            maxBarThickness: 26
+          }]
         },
         options: {
           responsive: true,
@@ -2209,7 +2204,7 @@
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: ctx => `${formatUSDCompact(ctx.raw)} USDC`
+                label: (ctx) => `${formatUSDCompact(ctx.raw)} USDC`
               }
             }
           },
@@ -2226,11 +2221,11 @@
               },
               grid: { color: 'rgba(255,255,255,0.06)' }
             }
-           }
           }
         }
       });
     }
+
 
     function buildChainSplitChart(payouts) {
       const canvas = document.getElementById('chainSplitChart');
