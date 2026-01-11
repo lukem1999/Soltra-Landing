@@ -2158,10 +2158,10 @@
       const { labels, values } =
         buildMonthlyPayoutSeries(dashboardPayoutsCache);
     
-      if (window.payoutVolumeChart) {
+      if (window.payoutVolumeChart && typeof window.payoutVolumeChart.destroy === 'function') {
         window.payoutVolumeChart.destroy();
       }
-    
+
       const gradient = ctx.createLinearGradient(0, 0, 0, 260);
       gradient.addColorStop(0, 'rgba(246,196,83,0.35)');
       gradient.addColorStop(1, 'rgba(246,196,83,0)');
@@ -2254,6 +2254,19 @@
       await sb.auth.signOut();
       await onAuthChanged();
     }
+
+    function renderDashboardChartsFromCache() {
+      // build the monthly chart from whatever is in the cache
+      if (typeof buildMonthlyPayoutChart === 'function') {
+        buildMonthlyPayoutChart(dashboardPayoutsCache || []);
+      }
+    
+      // build chain split chart if you have it wired
+      if (typeof buildChainSplitChart === 'function') {
+        buildChainSplitChart(dashboardPayoutsCache || []);
+      }
+    }
+
     
     async function onAuthChanged() {
       const { data, error } = await sb.auth.getSession();
