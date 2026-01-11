@@ -5587,6 +5587,19 @@ select:-webkit-autofill {
   opacity: 0.85;
 }
 
+.chart-canvas-wrap {
+  height: 280px;        /* pick 260–320; stable number */
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-canvas-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
 
 
 
