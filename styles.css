@@ -5633,6 +5633,41 @@ select:-webkit-autofill {
   cursor: not-allowed;
 }
 
+.wallet-connect-btn[data-wallet="safe"] img {
+  filter: drop-shadow(0 0 6px rgba(18,255,128,0.45));
+}
+
+.wallet-connect-btn[data-wallet="metamask"] img {
+  filter: drop-shadow(0 0 6px rgba(246,133,27,0.45));
+}
+
+.wallet-connect-btn[data-wallet="coinbase"] img {
+  filter: drop-shadow(0 0 6px rgba(0,82,255,0.45));
+}
+
+.wallet-connect-btn[data-wallet="ledger"] img {
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.25));
+}
+
+.wallet-connect-status {
+  font-weight: 500;
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+}
+
+.wallet-connect-btn:hover .wallet-connect-status {
+  color: var(--soltra-gold, #f6c453);
+}
+
+.wallet-connect-btn.disabled {
+  opacity: 0.35;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+.wallet-connect-btn.disabled img {
+  filter: none;
+}
 
 
 
