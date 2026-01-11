@@ -340,7 +340,10 @@
                     <h3>Chains used</h3>
                     <p>Share of payouts by chain.</p>
                   </div>
-                  <canvas id="chainSplitChart"></canvas>
+                
+                  <div class="chart-canvas-wrap">
+                    <canvas id="chainSplitChart"></canvas>
+                  </div>
                 </div>
               </section>
 
@@ -736,6 +739,7 @@
     let filterChain = 'all';       // 'all' | 'BASE' | 'POLYGON' | 'ETHEREUM'
     let lastDashboardPayoutCount = 0;
     let dashboardPayoutsCache = [];
+    let dashboardLoading = false;
 
 
     // === UTILITIES ===
@@ -1920,6 +1924,10 @@
       const chainsEl      = document.getElementById('dash-chains');
       const chainListEl   = document.getElementById('dash-chain-list');
       const tableBody     = document.getElementById('dash-payouts-table');
+
+      if (dashboardLoading) return;
+      dashboardLoading = true;
+
     
       if (!totalEl || !tableBody) return;
     
@@ -1994,6 +2002,7 @@
           chainListEl.textContent = chains.size
             ? Array.from(chains).join(' · ')
             : '—';
+        dashboardLoading = false;
         }
     
         // Sidebar badge
@@ -2119,6 +2128,7 @@
         payoutCountEl.textContent = 'Error';
         tableBody.innerHTML =
           '<tr><td colspan="5">Error loading dashboard.</td></tr>';
+        dashboardLoading = false;
       }
     }
 
@@ -2327,7 +2337,6 @@
         await loadPayoutContractorOptions();
         await loadPayouts();
         await loadDashboard();
-        renderDashboardChartsFromCache();
     
       } else {
         if (authWrapper) authWrapper.style.display = 'flex';
