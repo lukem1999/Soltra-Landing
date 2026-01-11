@@ -741,6 +741,12 @@
     let dashboardPayoutsCache = [];
     let dashboardLoading = false;
 
+    const CHAIN_COLORS = {
+      ETHEREUM: '#627EEA', // Ethereum blue
+      POLYGON:  '#8247E5', // Polygon purple
+      BASE:     '#0052FF', // Base blue
+      UNKNOWN:  '#6B7280'  // neutral gray
+    };
 
     // === UTILITIES ===
     function formatUSD(amount) {
@@ -2238,18 +2244,40 @@
       });
     
       const labels = Object.keys(counts);
-      const values = labels.map((k) => counts[k]);
     
-      if (window.chainSplitChart && typeof window.chainSplitChart.destroy === 'function') {
-        window.chainSplitChart.destroy();
-      }
+      // Optional: order it nicely (so legend is consistent)
+      const ORDER = ['ETHEREUM', 'POLYGON', 'BASE', 'UNKNOWN'];
+      labels.sort((a, b) => (ORDER.indexOf(a) === -1 ? 999 : ORDER.indexOf(a)) - (ORDER.indexOf(b) === -1 ? 999 : ORDER.indexOf(b)));
+    
+      const values = labels.map((k) => counts[k]);
+      const colors = labels.map((k) => CHAIN_COLORS[k] || CHAIN_COLORS.UNKNOWN);
+    
+      if (window.chainSplitChart?.destroy) window.chainSplitChart.destroy();
     
       window.chainSplitChart = new Chart(canvas.getContext('2d'), {
         type: 'doughnut',
-        data: { labels, datasets: [{ data: values, borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { boxWidth: 14 }
+            }
+          }
+        }
       });
     }
+
 
 
     // === AUTH ===
