@@ -243,26 +243,33 @@
                 </div>
               </div>
 
-              <section class="wallet-card">
-                <div class="wallet-card-header wallet-card-header--row">
-                  <div>
-                    <h3 class="wallet-card-title">Treasury wallets</h3>
-                    <p class="wallet-card-subtitle">Add treasury addresses to track balances and payouts (read-only).</p>
-                  </div>
-              
-                  <button type="button" class="wallet-add-btn" id="wallet-add-open">
-                    + Add wallet
-                  </button>
+              <section class="wallet-card" id="walletCard">
+                <div class="wallet-card-header">
+                  <h3 class="wallet-card-title">Treasury wallets</h3>
+                  <p class="wallet-card-subtitle">Add wallets to track balances and on-chain activity.</p>
                 </div>
               
-                <div class="wallet-list" id="wallet-list">
-                  <div class="wallet-empty" id="wallet-empty">
-                    No wallets yet. Add a treasury wallet to start tracking.
+                <!-- Add wallet form (simple, safe, won't wreck layout) -->
+                <div class="wallet-add">
+                  <input id="walletLabel" class="input-control" placeholder="Label (e.g., Safe Treasury)" />
+                  <input id="walletAddress" class="input-control mono" placeholder="0x..." />
+                  <button id="walletAddBtn" class="btn primary-btn" type="button">Add wallet</button>
+                  <p id="walletAddMsg" class="field-help"></p>
+                </div>
+              
+                <!-- Saved wallets list -->
+                <div class="wallet-saved">
+                  <div class="wallet-saved-header">
+                    <h4>Saved wallets</h4>
+                  </div>
+                  <div id="walletSavedList" class="wallet-saved-list">
+                    <div class="empty-state">
+                      <div class="empty-state-title">No wallets yet</div>
+                      <p class="empty-state-text">Add a treasury wallet address to start your feed.</p>
+                    </div>
                   </div>
                 </div>
               </section>
-
-
 
               <!-- KPI cards -->
               <div class="dash-kpi-row">
@@ -1028,6 +1035,98 @@
     closeWalletModal();
     await loadWallets();
   }
+
+  function isValidEvmAddress(addr) {
+    return /^0x[a-fA-F0-9]{40}$/.test((addr || '').trim());
+  }
+  
+  function normalizeAddress(addr) {
+    return (addr || '').trim().toLowerCase();
+  }
+  
+  async function addWalletToSupabase(label, address) {
+    const { data: sessionData } = await sb.auth.getSession();
+    const user = sessionData?.session?.user;
+    if (!user) throw new Error('You must be signed in.');
+  
+    const payload = {
+      user_id: user.id,
+      label: (label || 'Wallet').trim(),
+      address: normalizeAddress(address),
+    };
+  
+    const { error } = await sb.from('wallets').insert([payload]);
+    if (error) throw error;
+  }
+  
+  async function loadWalletsFromSupabase() {
+    const list = document.getElementById('walletSavedList');
+    if (!list) return;
+  
+    const { data: sessionData } = await sb.auth.getSession();
+    const user = sessionData?.session?.user;
+  
+    if (!user) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-title">Sign in</div>
+          <p class="empty-state-text">Sign in to view and manage wallets.</p>
+        </div>
+      `;
+      return;
+    }
+  
+    const { data, error } = await sb
+      .from('wallets')
+      .select('id,label,address,created_at')
+      .order('created_at', { ascending: false });
+  
+    if (error) {
+      console.error('loadWalletsFromSupabase error', error);
+      list.innerHTML = `<div class="empty-state"><div class="empty-state-title">Error</div><p class="empty-state-text">${error.message}</p></div>`;
+      return;
+    }
+  
+    if (!data || !data.length) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-title">No wallets yet</div>
+          <p class="empty-state-text">Add a treasury wallet address to start your feed.</p>
+        </div>
+      `;
+      return;
+    }
+  
+    list.innerHTML = data.map(w => `
+      <div class="wallet-saved-row" data-wallet-id="${w.id}" data-wallet-address="${w.address}">
+        <div class="wallet-saved-meta">
+          <div class="wallet-saved-label">${w.label}</div>
+          <div class="wallet-saved-address mono">${shortenWallet(w.address)}</div>
+        </div>
+        <button class="mini-btn wallet-remove-btn" type="button" data-remove-id="${w.id}">Remove</button>
+      </div>
+    `).join('');
+  
+    // wire remove buttons
+    list.querySelectorAll('.wallet-remove-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.removeId;
+        if (!id) return;
+        const ok = confirm('Remove this wallet?');
+        if (!ok) return;
+  
+        const { error: delErr } = await sb.from('wallets').delete().eq('id', id);
+        if (delErr) {
+          alert('Error removing wallet: ' + delErr.message);
+          return;
+        }
+        await loadWalletsFromSupabase();
+      });
+    });
+  
+    // optional: click a wallet row to “select” it later for filtering
+  }
+
 
 
 
@@ -2544,6 +2643,7 @@
         await loadPayouts();
         await loadDashboard();
         await loadWallets();
+        await loadWalletsFromSupabase();
     
       } else {
         if (authWrapper) authWrapper.style.display = 'flex';
@@ -2703,6 +2803,38 @@
       cancelBtn?.addEventListener('click', closeWalletModal);
       backdrop?.addEventListener('click', closeWalletModal);
       form?.addEventListener('submit', handleAddWallet);
+
+      // inside DOMContentLoaded:
+      const walletAddBtn = document.getElementById('walletAddBtn');
+      const walletLabelEl = document.getElementById('walletLabel');
+      const walletAddressEl = document.getElementById('walletAddress');
+      const walletAddMsg = document.getElementById('walletAddMsg');
+      
+      if (walletAddBtn) {
+        walletAddBtn.addEventListener('click', async () => {
+          const label = walletLabelEl?.value || '';
+          const address = walletAddressEl?.value || '';
+      
+          walletAddMsg.textContent = '';
+      
+          if (!isValidEvmAddress(address)) {
+            walletAddMsg.textContent = 'Enter a valid EVM address (0x…).';
+            return;
+          }
+      
+          try {
+            await addWalletToSupabase(label, address);
+            if (walletLabelEl) walletLabelEl.value = '';
+            if (walletAddressEl) walletAddressEl.value = '';
+            walletAddMsg.textContent = 'Wallet added.';
+            await loadWalletsFromSupabase();
+          } catch (e) {
+            console.error(e);
+            walletAddMsg.textContent = e?.message || 'Error adding wallet.';
+          }
+        });
+      }
+
 
 
     
