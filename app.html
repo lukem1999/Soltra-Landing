@@ -246,27 +246,52 @@
               <section class="wallet-card">
                 <div class="wallet-card-header">
                   <h3 class="wallet-card-title">Treasury wallets</h3>
-                  <p class="wallet-card-subtitle">Add wallets to track balances and on-chain activity.</p>
+                  <p class="wallet-card-subtitle">
+                    Add wallets to track balances and on-chain activity.
+                  </p>
                 </div>
               
                 <form id="wallet-form" class="wallet-form">
-                  <input
-                    id="wallet-label"
+                  <!-- Wallet type -->
+                  <select
+                    id="walletType"
+                    name="wallet_type"
                     class="input-control"
-                    type="text"
-                    placeholder="Label (e.g., Safe Treasury)"
                     required
+                  >
+                    <option value="safe">Safe (Gnosis)</option>
+                    <option value="ledger">Ledger</option>
+                    <option value="metamask">MetaMask</option>
+                    <option value="coinbase">Coinbase Wallet</option>
+                    <option value="other">Other</option>
+                  </select>
+              
+                  <!-- Custom label (only for "Other") -->
+                  <input
+                    id="walletCustomLabel"
+                    name="label"
+                    class="input-control hidden"
+                    type="text"
+                    placeholder="Custom label (e.g., Ops Multisig)"
                   />
               
+                  <!-- Wallet address -->
                   <input
                     id="wallet-address"
+                    name="address"
                     class="input-control mono"
                     type="text"
                     placeholder="0x…"
+                    autocomplete="off"
+                    spellcheck="false"
                     required
                   />
               
-                  <button id="add-wallet-btn" type="submit" class="btn primary-btn">
+                  <button
+                    id="add-wallet-btn"
+                    type="submit"
+                    class="btn primary-btn"
+                  >
                     Add wallet
                   </button>
               
@@ -278,11 +303,14 @@
                   <div id="wallets-list" class="wallets-list">
                     <div class="empty-state">
                       <div class="empty-state-title">No wallets yet</div>
-                      <p class="empty-state-text">Add a treasury wallet address to start your feed.</p>
+                      <p class="empty-state-text">
+                        Add a treasury wallet address to start your feed.
+                      </p>
                     </div>
                   </div>
                 </div>
               </section>
+
 
 
               <!-- KPI cards -->
@@ -890,6 +918,34 @@
   // Wallets (Option A: Saved addresses) — CLEAN VERSION
   // Table: public.wallets (id, user_id, label, address, created_at)
   // ===============================
+
+  function defaultLabelForType(t) {
+    const map = {
+      safe: 'Safe Treasury',
+      ledger: 'Ledger Treasury',
+      metamask: 'MetaMask Treasury',
+      coinbase: 'Coinbase Wallet',
+      other: 'Wallet',
+    };
+    return map[t] || 'Wallet';
+  }
+  
+  function initWalletLabelToggle() {
+    const typeEl = document.getElementById('walletType');
+    const customEl = document.getElementById('walletCustomLabel');
+  
+    if (!typeEl || !customEl) return;
+  
+    const sync = () => {
+      const isOther = typeEl.value === 'other';
+      customEl.classList.toggle('hidden', !isOther);
+      if (!isOther) customEl.value = '';
+    };
+  
+    typeEl.addEventListener('change', sync);
+    sync(); // run once on load
+  }
+
   
   function isValidEvmAddress(addr) {
     return /^0x[a-fA-F0-9]{40}$/.test((addr || '').trim());
@@ -916,19 +972,29 @@
   async function addWallet(e) {
     e.preventDefault();
   
+    const typeEl = document.getElementById('wallet-type');
     const labelEl = document.getElementById('wallet-label');
     const addressEl = document.getElementById('wallet-address');
   
-    const label = (labelEl?.value || '').trim();
+    const wallet_type = (typeEl?.value || 'other').trim();
+    let label = (labelEl?.value || '').trim();
     const addressRaw = (addressEl?.value || '').trim();
   
+    // Enforce default labels for known wallet types
+    if (wallet_type !== 'other') {
+      label = defaultLabelForType(wallet_type);
+    }
+  
     if (!label || !addressRaw) {
-      setWalletMessage('Label and address are required.', 'error');
+      setWalletMessage('Wallet type and address are required.', 'error');
       return;
     }
   
     if (!isValidEvmAddress(addressRaw)) {
-      setWalletMessage('Invalid EVM address (must be 0x + 40 hex chars).', 'error');
+      setWalletMessage(
+        'Invalid EVM address (must be 0x + 40 hex characters).',
+        'error'
+      );
       return;
     }
   
@@ -949,6 +1015,7 @@
   
     const payload = {
       user_id: user.id,
+      wallet_type,
       label,
       address: normalizeAddress(addressRaw),
     };
@@ -957,7 +1024,6 @@
   
     if (error) {
       console.error('insert wallet error', error);
-      // Most common: unique constraint violation if you added (user_id,address) unique
       const msg = (error.message || '').toLowerCase();
       if (msg.includes('duplicate') || msg.includes('unique')) {
         setWalletMessage('That wallet is already saved.', 'error');
@@ -968,11 +1034,15 @@
     }
   
     setWalletMessage('Wallet saved.', 'success');
+  
+    // Reset form
+    if (typeEl) typeEl.value = 'safe';
     if (labelEl) labelEl.value = '';
     if (addressEl) addressEl.value = '';
   
     await loadWallets();
   }
+
   
   async function loadWallets() {
     const list = document.getElementById('wallets-list');
@@ -2692,6 +2762,7 @@
         // ✅ ONE AND ONLY DOMContentLoaded
     document.addEventListener('DOMContentLoaded', () => {
       console.log('✅ DOMContentLoaded: Soltra init starting...');
+      initWalletLabelToggle();
     
       // ======================================================
       // 0) Small helper to prevent double-binding
