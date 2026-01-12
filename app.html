@@ -243,26 +243,39 @@
                 </div>
               </div>
 
-              <section class="wallet-card" id="walletCard">
+              <section class="wallet-card">
                 <div class="wallet-card-header">
                   <h3 class="wallet-card-title">Treasury wallets</h3>
                   <p class="wallet-card-subtitle">Add wallets to track balances and on-chain activity.</p>
                 </div>
               
-                <!-- Add wallet form (simple, safe, won't wreck layout) -->
-                <div class="wallet-add">
-                  <input id="walletLabel" class="input-control" placeholder="Label (e.g., Safe Treasury)" />
-                  <input id="walletAddress" class="input-control mono" placeholder="0x..." />
-                  <button id="walletAddBtn" class="btn primary-btn" type="button">Add wallet</button>
-                  <p id="walletAddMsg" class="field-help"></p>
-                </div>
+                <form id="wallet-form" class="wallet-form">
+                  <input
+                    id="wallet-label"
+                    class="input-control"
+                    type="text"
+                    placeholder="Label (e.g., Safe Treasury)"
+                    required
+                  />
               
-                <!-- Saved wallets list -->
+                  <input
+                    id="wallet-address"
+                    class="input-control mono"
+                    type="text"
+                    placeholder="0x…"
+                    required
+                  />
+              
+                  <button id="add-wallet-btn" type="submit" class="btn primary-btn">
+                    Add wallet
+                  </button>
+              
+                  <p id="wallet-message" class="form-message"></p>
+                </form>
+              
                 <div class="wallet-saved">
-                  <div class="wallet-saved-header">
-                    <h4>Saved wallets</h4>
-                  </div>
-                  <div id="walletSavedList" class="wallet-saved-list">
+                  <h4>Saved wallets</h4>
+                  <div id="wallets-list" class="wallets-list">
                     <div class="empty-state">
                       <div class="empty-state-title">No wallets yet</div>
                       <p class="empty-state-text">Add a treasury wallet address to start your feed.</p>
@@ -270,6 +283,7 @@
                   </div>
                 </div>
               </section>
+
 
               <!-- KPI cards -->
               <div class="dash-kpi-row">
@@ -872,170 +886,11 @@
   }
 
 
-    // ===============================
-  // Wallets (Option A: Saved addresses)
+     // ===============================
+  // Wallets (Option A: Saved addresses) — CLEAN VERSION
+  // Table: public.wallets (id, user_id, label, address, created_at)
   // ===============================
-  function normalizeEvmAddress(addr) {
-    return (addr || '').trim();
-  }
   
-  function walletTypeLabel(t) {
-    const map = {
-      safe: 'Safe (Gnosis)',
-      ledger: 'Ledger',
-      metamask: 'MetaMask',
-      coinbase: 'Coinbase Wallet',
-      other: 'Wallet',
-    };
-    return map[t] || 'Wallet';
-  }
-  
-  function shortenAddress(addr) {
-    const a = (addr || '').trim();
-    if (a.length <= 12) return a;
-    return a.slice(0, 6) + '…' + a.slice(-4);
-  }
-  
-  function walletIcon(type) {
-    // Use emoji for now (super reliable). You can swap to SVGs later.
-    const map = { safe: '🟩', ledger: '🔒', metamask: '🦊', coinbase: '🟦', other: '👛' };
-    return map[type] || '👛';
-  }
-  
-  async function loadWallets() {
-    const list = document.getElementById('wallet-list');
-    const empty = document.getElementById('wallet-empty');
-    if (!list) return;
-  
-    // auth check
-    const { data: sess } = await sb.auth.getSession();
-    const user = sess?.session?.user;
-    if (!user) return;
-  
-    const { data, error } = await sb
-      .from('treasury_wallets')
-      .select('id, label, wallet_type, address, is_verified, is_active, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-  
-    if (error) {
-      console.error('loadWallets error', error);
-      return;
-    }
-  
-    // Clear existing rendered rows (keep empty node)
-    list.querySelectorAll('.wallet-row').forEach(el => el.remove());
-  
-    const wallets = data || [];
-    if (empty) empty.style.display = wallets.length ? 'none' : 'block';
-  
-    wallets.forEach(w => {
-      const row = document.createElement('div');
-      row.className = 'wallet-row';
-      row.dataset.id = w.id;
-  
-      const badge = walletIcon(w.wallet_type);
-      const name = w.label || walletTypeLabel(w.wallet_type);
-      const sub = `${walletTypeLabel(w.wallet_type)} • ${shortenAddress(w.address)}`;
-      const status = w.is_verified ? 'Verified' : 'Read-only';
-  
-      row.innerHTML = `
-        <div class="wallet-left">
-          <div class="wallet-badge">${badge}</div>
-          <div class="wallet-meta">
-            <div class="wallet-name">${name}</div>
-            <div class="wallet-sub">${sub}</div>
-          </div>
-        </div>
-  
-        <div class="wallet-actions">
-          <span class="wallet-pill">${status}</span>
-          <button class="wallet-delete" type="button" title="Remove">Remove</button>
-        </div>
-      `;
-  
-      // Remove handler
-      row.querySelector('.wallet-delete')?.addEventListener('click', async () => {
-        const ok = confirm('Remove this wallet address from Soltra?');
-        if (!ok) return;
-  
-        const { error: delErr } = await sb
-          .from('treasury_wallets')
-          .delete()
-          .eq('id', w.id);
-  
-        if (delErr) {
-          console.error('delete wallet error', delErr);
-          alert('Could not remove wallet: ' + delErr.message);
-          return;
-        }
-        await loadWallets();
-      });
-  
-      list.appendChild(row);
-    });
-  }
-  
-  function openWalletModal() {
-    document.getElementById('wallet-modal')?.classList.remove('hidden');
-  }
-  
-  function closeWalletModal() {
-    document.getElementById('wallet-modal')?.classList.add('hidden');
-    document.getElementById('wallet-form')?.reset();
-  }
-  
-  async function handleAddWallet(e) {
-    e.preventDefault();
-  
-    const { data: sess } = await sb.auth.getSession();
-    const user = sess?.session?.user;
-    if (!user) {
-      alert('Please sign in first.');
-      return;
-    }
-  
-    const form = e.target;
-    const fd = new FormData(form);
-  
-    const label = (fd.get('label') || '').toString().trim();
-    const wallet_type = (fd.get('wallet_type') || 'other').toString().trim();
-    const address = normalizeEvmAddress(fd.get('address'));
-    const notes = (fd.get('notes') || '').toString().trim();
-  
-    if (!label || !address) {
-      alert('Label and address are required.');
-      return;
-    }
-  
-    // Minimal EVM address validation
-    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      alert('That does not look like a valid EVM address (0x + 40 hex chars).');
-      return;
-    }
-  
-    const payload = {
-      user_id: user.id,
-      label,
-      wallet_type,
-      chain_family: 'evm',
-      address,
-      notes: notes || null,
-      is_active: true,
-      is_verified: false,
-    };
-  
-    const { error } = await sb.from('treasury_wallets').insert([payload]);
-    if (error) {
-      console.error('insert wallet error', error);
-      alert('Could not save wallet: ' + error.message);
-      return;
-    }
-  
-    closeWalletModal();
-    await loadWallets();
-  }
-
   function isValidEvmAddress(addr) {
     return /^0x[a-fA-F0-9]{40}$/.test((addr || '').trim());
   }
@@ -1044,23 +899,83 @@
     return (addr || '').trim().toLowerCase();
   }
   
-  async function addWalletToSupabase(label, address) {
-    const { data: sessionData } = await sb.auth.getSession();
+  function shortenAddress(addr) {
+    const a = (addr || '').trim();
+    if (a.length <= 12) return a;
+    return a.slice(0, 6) + '…' + a.slice(-4);
+  }
+  
+  function setWalletMessage(text, type = '') {
+    const el = document.getElementById('wallet-message');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = 'form-message';
+    if (type) el.classList.add(type);
+  }
+  
+  async function addWallet(e) {
+    e.preventDefault();
+  
+    const labelEl = document.getElementById('wallet-label');
+    const addressEl = document.getElementById('wallet-address');
+  
+    const label = (labelEl?.value || '').trim();
+    const addressRaw = (addressEl?.value || '').trim();
+  
+    if (!label || !addressRaw) {
+      setWalletMessage('Label and address are required.', 'error');
+      return;
+    }
+  
+    if (!isValidEvmAddress(addressRaw)) {
+      setWalletMessage('Invalid EVM address (must be 0x + 40 hex chars).', 'error');
+      return;
+    }
+  
+    const { data: sessionData, error: sessErr } = await sb.auth.getSession();
+    if (sessErr) {
+      console.error('getSession error:', sessErr);
+      setWalletMessage('Auth error. Try signing out and back in.', 'error');
+      return;
+    }
+  
     const user = sessionData?.session?.user;
-    if (!user) throw new Error('You must be signed in.');
+    if (!user) {
+      setWalletMessage('Please sign in first.', 'error');
+      return;
+    }
+  
+    setWalletMessage('Saving…');
   
     const payload = {
       user_id: user.id,
-      label: (label || 'Wallet').trim(),
-      address: normalizeAddress(address),
+      label,
+      address: normalizeAddress(addressRaw),
     };
   
     const { error } = await sb.from('wallets').insert([payload]);
-    if (error) throw error;
+  
+    if (error) {
+      console.error('insert wallet error', error);
+      // Most common: unique constraint violation if you added (user_id,address) unique
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('duplicate') || msg.includes('unique')) {
+        setWalletMessage('That wallet is already saved.', 'error');
+      } else {
+        setWalletMessage('Could not save wallet: ' + error.message, 'error');
+      }
+      return;
+    }
+  
+    setWalletMessage('Wallet saved.', 'success');
+    if (labelEl) labelEl.value = '';
+    if (addressEl) addressEl.value = '';
+  
+    await loadWallets();
   }
   
-  async function loadWalletsFromSupabase() {
-    const list = document.getElementById('walletSavedList');
+  async function loadWallets() {
+    const list = document.getElementById('wallets-list');
     if (!list) return;
   
     const { data: sessionData } = await sb.auth.getSession();
@@ -1079,11 +994,17 @@
     const { data, error } = await sb
       .from('wallets')
       .select('id,label,address,created_at')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
   
     if (error) {
-      console.error('loadWalletsFromSupabase error', error);
-      list.innerHTML = `<div class="empty-state"><div class="empty-state-title">Error</div><p class="empty-state-text">${error.message}</p></div>`;
+      console.error('loadWallets error', error);
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-title">Error loading wallets</div>
+          <p class="empty-state-text">${error.message}</p>
+        </div>
+      `;
       return;
     }
   
@@ -1098,20 +1019,22 @@
     }
   
     list.innerHTML = data.map(w => `
-      <div class="wallet-saved-row" data-wallet-id="${w.id}" data-wallet-address="${w.address}">
+      <div class="wallet-saved-row">
         <div class="wallet-saved-meta">
           <div class="wallet-saved-label">${w.label}</div>
-          <div class="wallet-saved-address mono">${shortenWallet(w.address)}</div>
+          <div class="wallet-saved-address mono">${shortenAddress(w.address)}</div>
         </div>
-        <button class="mini-btn wallet-remove-btn" type="button" data-remove-id="${w.id}">Remove</button>
+        <button class="mini-btn wallet-remove-btn" type="button" data-remove-id="${w.id}">
+          Remove
+        </button>
       </div>
     `).join('');
   
-    // wire remove buttons
     list.querySelectorAll('.wallet-remove-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.removeId;
         if (!id) return;
+  
         const ok = confirm('Remove this wallet?');
         if (!ok) return;
   
@@ -1120,11 +1043,9 @@
           alert('Error removing wallet: ' + delErr.message);
           return;
         }
-        await loadWalletsFromSupabase();
+        await loadWallets();
       });
     });
-  
-    // optional: click a wallet row to “select” it later for filtering
   }
 
 
@@ -2643,7 +2564,6 @@
         await loadPayouts();
         await loadDashboard();
         await loadWallets();
-        await loadWalletsFromSupabase();
     
       } else {
         if (authWrapper) authWrapper.style.display = 'flex';
@@ -2789,54 +2709,11 @@
       
         fn();
       };
-
-      // Wallet modal wiring
-      const openBtn = document.getElementById('wallet-add-open');
-      const modal = document.getElementById('wallet-modal');
-      const closeBtn = document.getElementById('wallet-modal-close');
-      const cancelBtn = document.getElementById('wallet-cancel');
-      const backdrop = document.getElementById('wallet-modal-backdrop');
-      const form = document.getElementById('wallet-form');
       
-      openBtn?.addEventListener('click', openWalletModal);
-      closeBtn?.addEventListener('click', closeWalletModal);
-      cancelBtn?.addEventListener('click', closeWalletModal);
-      backdrop?.addEventListener('click', closeWalletModal);
-      form?.addEventListener('submit', handleAddWallet);
-
-      // inside DOMContentLoaded:
-      const walletAddBtn = document.getElementById('walletAddBtn');
-      const walletLabelEl = document.getElementById('walletLabel');
-      const walletAddressEl = document.getElementById('walletAddress');
-      const walletAddMsg = document.getElementById('walletAddMsg');
-      
-      if (walletAddBtn) {
-        walletAddBtn.addEventListener('click', async () => {
-          const label = walletLabelEl?.value || '';
-          const address = walletAddressEl?.value || '';
-      
-          walletAddMsg.textContent = '';
-      
-          if (!isValidEvmAddress(address)) {
-            walletAddMsg.textContent = 'Enter a valid EVM address (0x…).';
-            return;
-          }
-      
-          try {
-            await addWalletToSupabase(label, address);
-            if (walletLabelEl) walletLabelEl.value = '';
-            if (walletAddressEl) walletAddressEl.value = '';
-            walletAddMsg.textContent = 'Wallet added.';
-            await loadWalletsFromSupabase();
-          } catch (e) {
-            console.error(e);
-            walletAddMsg.textContent = e?.message || 'Error adding wallet.';
-          }
-        });
+      const walletForm = document.getElementById('wallet-form');
+      if (walletForm) {
+        walletForm.addEventListener('submit', addWallet);
       }
-
-
-
     
       // ======================================================
       // 1) Core UI init
