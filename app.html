@@ -260,22 +260,48 @@
                     <div class="dropdown" data-dropdown>
                       <button id="wallet-type-btn" class="select-btn" type="button">
                         <span class="select-left">
-                          <span class="select-icon">🟩</span>
+                          <span class="select-icon">
+                            <img src="images/safe-logo.svg" alt="Safe" />
+                          </span>
                           <span id="wallet-type-text">Safe (Gnosis)</span>
                         </span>
                         <span class="select-caret">▾</span>
                       </button>
                 
-                      <div class="select-menu hidden">
-                        <!-- options -->
+                      <!-- DROPDOWN MENU -->
+                      <div class="select-menu hidden" id="wallet-type-menu">
+                        <button type="button" class="select-option" data-value="safe" data-label="Safe (Gnosis)" data-icon="images/safe-logo.svg">
+                          <img src="images/safe-logo.svg" alt="Safe" />
+                          <span>Safe (Gnosis)</span>
+                        </button>
+                
+                        <button type="button" class="select-option" data-value="ledger" data-label="Ledger" data-icon="images/ledger.svg">
+                          <img src="images/ledger.svg" alt="Ledger" />
+                          <span>Ledger</span>
+                        </button>
+                
+                        <button type="button" class="select-option" data-value="metamask" data-label="MetaMask" data-icon="images/metamask.svg">
+                          <img src="images/metamask.svg" alt="MetaMask" />
+                          <span>MetaMask</span>
+                        </button>
+                
+                        <button type="button" class="select-option" data-value="coinbase" data-label="Coinbase Wallet" data-icon="images/base-square.svg">
+                          <img src="images/base-square.svg" alt="Coinbase Wallet" />
+                          <span>Coinbase Wallet</span>
+                        </button>
+                
+                        <button type="button" class="select-option" data-value="other" data-label="Other wallet" data-icon="images/wallets/wallet.svg">
+                          <img src="images/wallets/wallet.svg" alt="Other" />
+                          <span>Other wallet</span>
+                        </button>
                       </div>
                 
-                      <!-- THIS is what FormData reads -->
+                      <!-- WHAT FormData READS -->
                       <input type="hidden" name="wallet_type" id="wallet_type" value="safe">
                     </div>
                   </div>
                 
-                  <!-- ADDRESS INPUT (unchanged) -->
+                  <!-- ADDRESS INPUT -->
                   <input
                     id="wallet-address"
                     class="input-control mono"
@@ -286,6 +312,7 @@
                 
                   <button type="submit" class="btn primary-btn">Add wallet</button>
                 </form>
+
 
               
                 <div class="wallet-saved">
