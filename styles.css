@@ -5785,7 +5785,28 @@ select:-webkit-autofill {
   box-shadow: none;
 }
 
+select.input-control {
+  color: rgba(255,255,255,.92);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 14px 44px 14px 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
 
+.select-wrap { position: relative; }
+.select-wrap::after{
+  content:"▾";
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform: translateY(-50%);
+  opacity:.75;
+  pointer-events:none;
+  color: rgba(255,255,255,.8);
+}
 
 
 
