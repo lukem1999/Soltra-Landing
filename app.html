@@ -344,6 +344,19 @@
                       <input type="hidden" name="wallet_type" id="wallet_type" value="safe" />
                     </div>
                   </div>
+
+                  <!-- Chain -->
+                  <div class="field">
+                    <label class="field-label" for="wallet-chain">Chain<span>*</span></label>
+                  
+                    <select id="wallet-chain" name="chain" class="input-control" required>
+                      <option value="base" selected>Base</option>
+                      <option value="ethereum">Ethereum</option>
+                      <option value="polygon">Polygon</option>
+                    </select>
+                  
+                    <p class="field-help">Pick the chain where this address is active (for real feeds later).</p>
+                  </div>
               
                   <!-- ADDRESS -->
                   <div class="field">
@@ -1125,33 +1138,32 @@
   }
 
 
+   function chainIdFor(chain) {
+    const c = (chain || '').toLowerCase();
+    if (c === 'base') return 8453;
+    if (c === 'ethereum') return 1;
+    if (c === 'polygon') return 137;
+    return null;
+  }
   
   async function addWallet(e) {
     e.preventDefault();
   
-    const typeEl = document.getElementById('wallet-type');
-    const labelEl = document.getElementById('wallet-label');
+    const labelEl   = document.getElementById('wallet-label');
     const addressEl = document.getElementById('wallet-address');
+    const chainEl   = document.getElementById('wallet-chain'); // ✅ new
   
-    const wallet_type = (typeEl?.value || 'other').trim();
     let label = (labelEl?.value || '').trim();
     const addressRaw = (addressEl?.value || '').trim();
-  
-    // Enforce default labels for known wallet types
-    if (wallet_type !== 'other') {
-      label = defaultLabelForType(wallet_type);
-    }
+    const chain = (chainEl?.value || 'base').toLowerCase();    // ✅ new
   
     if (!label || !addressRaw) {
-      setWalletMessage('Wallet type and address are required.', 'error');
+      setWalletMessage('Label and address are required.', 'error');
       return;
     }
   
     if (!isValidEvmAddress(addressRaw)) {
-      setWalletMessage(
-        'Invalid EVM address (must be 0x + 40 hex characters).',
-        'error'
-      );
+      setWalletMessage('Invalid EVM address (must be 0x + 40 hex chars).', 'error');
       return;
     }
   
@@ -1172,9 +1184,11 @@
   
     const payload = {
       user_id: user.id,
-      wallet_type,
       label,
       address: normalizeAddress(addressRaw),
+      chain,                       // ✅ new (required)
+      chain_id: chainIdFor(chain), // ✅ new (optional but useful)
+      is_active: true              // ✅ new (if you added it)
     };
   
     const { error } = await sb.from('wallets').insert([payload]);
@@ -1183,7 +1197,7 @@
       console.error('insert wallet error', error);
       const msg = (error.message || '').toLowerCase();
       if (msg.includes('duplicate') || msg.includes('unique')) {
-        setWalletMessage('That wallet is already saved.', 'error');
+        setWalletMessage('That wallet is already saved for this chain.', 'error');
       } else {
         setWalletMessage('Could not save wallet: ' + error.message, 'error');
       }
@@ -1192,10 +1206,9 @@
   
     setWalletMessage('Wallet saved.', 'success');
   
-    // Reset form
-    if (typeEl) typeEl.value = 'safe';
     if (labelEl) labelEl.value = '';
     if (addressEl) addressEl.value = '';
+    if (chainEl) chainEl.value = 'base';
   
     await loadWallets();
   }
@@ -1220,7 +1233,7 @@
   
     const { data, error } = await sb
       .from('wallets')
-      .select('id,label,address,created_at')
+      .select('id,label,address,chain,chain_id,created_at') // ✅ added chain
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
   
@@ -1245,17 +1258,27 @@
       return;
     }
   
-    list.innerHTML = data.map(w => `
-      <div class="wallet-saved-row">
-        <div class="wallet-saved-meta">
-          <div class="wallet-saved-label">${w.label}</div>
-          <div class="wallet-saved-address mono">${shortenAddress(w.address)}</div>
+    list.innerHTML = data.map(w => {
+      const chainLabel = (w.chain || 'base').toUpperCase();
+  
+      return `
+        <div class="wallet-saved-row">
+          <div class="wallet-saved-meta">
+            <div class="wallet-saved-label">${w.label}</div>
+            <div class="wallet-saved-address mono">
+              ${chainLabel} • ${shortenAddress(w.address)}
+            </div>
+          </div>
+          <button
+            class="mini-btn wallet-remove-btn"
+            type="button"
+            data-remove-id="${w.id}"
+          >
+            Remove
+          </button>
         </div>
-        <button class="mini-btn wallet-remove-btn" type="button" data-remove-id="${w.id}">
-          Remove
-        </button>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   
     list.querySelectorAll('.wallet-remove-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -1265,16 +1288,20 @@
         const ok = confirm('Remove this wallet?');
         if (!ok) return;
   
-        const { error: delErr } = await sb.from('wallets').delete().eq('id', id);
+        const { error: delErr } = await sb
+          .from('wallets')
+          .delete()
+          .eq('id', id);
+  
         if (delErr) {
           alert('Error removing wallet: ' + delErr.message);
           return;
         }
+  
         await loadWallets();
       });
     });
   }
-
 
 
 
