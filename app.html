@@ -2970,6 +2970,55 @@
       if (walletForm) {
         walletForm.addEventListener('submit', addWallet);
       }
+
+      // ===== Wallet UI wiring =====
+      const addBtn = document.getElementById('wallet-add-btn');     // your "Add Wallet" button id
+      const modal  = document.getElementById('wallet-modal');      // modal wrapper id
+      const close  = document.getElementById('wallet-modal-close');// X button id
+      const form   = document.getElementById('wallet-form');       // form id
+      
+      // 1) Open modal
+      bindOnce(addBtn, 'wallet_open', () => {
+        addBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          modal?.classList.remove('hidden');
+        });
+      });
+      
+      // 2) Close modal (X)
+      bindOnce(close, 'wallet_close', () => {
+        close.addEventListener('click', (e) => {
+          e.preventDefault();
+          modal?.classList.add('hidden');
+          form?.reset();
+        });
+      });
+      
+      // 2b) Close modal (backdrop click)
+      bindOnce(modal, 'wallet_backdrop', () => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal || e.target.classList.contains('modal-backdrop')) {
+            modal.classList.add('hidden');
+            form?.reset();
+          }
+        });
+      });
+      
+      // 2c) Close modal (ESC)
+      bindOnce(document.body, 'wallet_esc', () => {
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+            modal.classList.add('hidden');
+            form?.reset();
+          }
+        });
+      });
+      
+      // 3) Submit form
+      bindOnce(form, 'wallet_submit', () => {
+        form.addEventListener('submit', addWallet);
+      });
+
     
       // ======================================================
       // 1) Core UI init
