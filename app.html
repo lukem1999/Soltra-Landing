@@ -243,90 +243,144 @@
                 </div>
               </div>
 
+              <!-- Treasury wallets (Custom wallet type dropdown + address + submit + saved list) -->
               <section class="wallet-card">
                 <div class="wallet-card-header">
                   <h3 class="wallet-card-title">Treasury wallets</h3>
-                  <p class="wallet-card-subtitle">
-                    Add wallets to track balances and on-chain activity.
-                  </p>
+                  <p class="wallet-card-subtitle">Add wallets to track balances and on-chain activity.</p>
                 </div>
               
                 <form id="wallet-form" class="wallet-form">
-
                   <!-- WALLET TYPE (CUSTOM DROPDOWN) -->
                   <div class="field">
-                    <label class="field-label">Wallet type</label>
-                
-                    <div class="dropdown" data-dropdown>
-                      <button id="wallet-type-btn" class="select-btn" type="button">
+                    <label class="field-label" for="wallet-type-btn">Wallet type</label>
+              
+                    <div class="dropdown" data-dropdown="walletType">
+                      <!-- Trigger button -->
+                      <button
+                        id="wallet-type-btn"
+                        class="select-btn"
+                        type="button"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                      >
                         <span class="select-left">
-                          <span class="select-icon">
-                            <img src="images/safe-logo.svg" alt="Safe" />
-                          </span>
+                          <!-- IMPORTANT: this is an IMG so JS can set .src -->
+                          <img class="select-icon" src="images/safe-logo.svg" alt="Safe" />
                           <span id="wallet-type-text">Safe (Gnosis)</span>
                         </span>
-                        <span class="select-caret">▾</span>
+                        <span class="select-caret" aria-hidden="true"></span>
                       </button>
-                
-                      <!-- DROPDOWN MENU -->
-                      <div class="select-menu hidden" id="wallet-type-menu">
-                        <button type="button" class="select-option" data-value="safe" data-label="Safe (Gnosis)" data-icon="images/safe-logo.svg">
-                          <img src="images/safe-logo.svg" alt="Safe" />
-                          <span>Safe (Gnosis)</span>
-                        </button>
-                
-                        <button type="button" class="select-option" data-value="ledger" data-label="Ledger" data-icon="images/ledger.svg">
-                          <img src="images/ledger.svg" alt="Ledger" />
-                          <span>Ledger</span>
-                        </button>
-                
-                        <button type="button" class="select-option" data-value="metamask" data-label="MetaMask" data-icon="images/metamask.svg">
-                          <img src="images/metamask.svg" alt="MetaMask" />
-                          <span>MetaMask</span>
-                        </button>
-                
-                        <button type="button" class="select-option" data-value="coinbase" data-label="Coinbase Wallet" data-icon="images/base-square.svg">
-                          <img src="images/base-square.svg" alt="Coinbase Wallet" />
-                          <span>Coinbase Wallet</span>
-                        </button>
-                
-                        <button type="button" class="select-option" data-value="other" data-label="Other wallet" data-icon="images/wallets/wallet.svg">
-                          <img src="images/wallets/wallet.svg" alt="Other" />
-                          <span>Other wallet</span>
-                        </button>
+              
+                      <!-- Menu -->
+                      <div class="select-menu hidden" role="listbox" aria-label="Wallet type">
+                        <!-- Safe -->
+                        <div
+                          class="select-option is-selected"
+                          role="option"
+                          tabindex="0"
+                          data-value="safe"
+                          data-label="Safe (Gnosis)"
+                          data-icon="images/safe-logo.svg"
+                        >
+                          <img class="option-icon" src="images/safe-logo.svg" alt="" />
+                          <span class="option-text">Safe (Gnosis)</span>
+                        </div>
+              
+                        <!-- Ledger -->
+                        <div
+                          class="select-option"
+                          role="option"
+                          tabindex="0"
+                          data-value="ledger"
+                          data-label="Ledger"
+                          data-icon="images/ledger.svg"
+                        >
+                          <img class="option-icon" src="images/ledger.svg" alt="" />
+                          <span class="option-text">Ledger</span>
+                        </div>
+              
+                        <!-- MetaMask -->
+                        <div
+                          class="select-option"
+                          role="option"
+                          tabindex="0"
+                          data-value="metamask"
+                          data-label="MetaMask"
+                          data-icon="images/metamask.svg"
+                        >
+                          <img class="option-icon" src="images/metamask.svg" alt="" />
+                          <span class="option-text">MetaMask</span>
+                        </div>
+              
+                        <!-- Coinbase Wallet -->
+                        <div
+                          class="select-option"
+                          role="option"
+                          tabindex="0"
+                          data-value="coinbase"
+                          data-label="Coinbase Wallet"
+                          data-icon="images/coinbase-wallet.svg"
+                        >
+                          <img class="option-icon" src="images/coinbase-wallet.svg" alt="" />
+                          <span class="option-text">Coinbase Wallet</span>
+                        </div>
+              
+                        <!-- Other -->
+                        <div
+                          class="select-option"
+                          role="option"
+                          tabindex="0"
+                          data-value="other"
+                          data-label="Other wallet"
+                          data-icon="images/wallet-generic.svg"
+                        >
+                          <img class="option-icon" src="images/wallet-generic.svg" alt="" />
+                          <span class="option-text">Other wallet</span>
+                        </div>
                       </div>
-                
-                      <!-- WHAT FormData READS -->
-                      <input type="hidden" name="wallet_type" id="wallet_type" value="safe">
+              
+                      <!-- What FormData reads -->
+                      <input type="hidden" name="wallet_type" id="wallet_type" value="safe" />
                     </div>
                   </div>
-                
-                  <!-- ADDRESS INPUT -->
-                  <input
-                    id="wallet-address"
-                    class="input-control mono"
-                    type="text"
-                    placeholder="0x..."
-                    required
-                  />
-                
-                  <button type="submit" class="btn primary-btn">Add wallet</button>
-                </form>
-
-
               
+                  <!-- ADDRESS -->
+                  <div class="field">
+                    <label class="field-label" for="wallet-address">Address</label>
+                    <input
+                      id="wallet-address"
+                      name="address"
+                      class="input-control mono"
+                      type="text"
+                      placeholder="0x…"
+                      required
+                      autocomplete="off"
+                      spellcheck="false"
+                    />
+                  </div>
+              
+                  <!-- SUBMIT -->
+                  <div class="wallet-actions">
+                    <button id="add-wallet-btn" type="submit" class="btn primary-btn">Add wallet</button>
+                    <p id="wallet-message" class="form-message" aria-live="polite"></p>
+                  </div>
+                </form>
+              
+                <!-- SAVED WALLETS -->
                 <div class="wallet-saved">
-                  <h4>Saved wallets</h4>
+                  <h4 class="wallet-saved-title">Saved wallets</h4>
+              
+                  <!-- Your JS can render rows into here -->
                   <div id="wallets-list" class="wallets-list">
-                    <div class="empty-state">
+                    <div class="empty-state" id="wallet-empty">
                       <div class="empty-state-title">No wallets yet</div>
-                      <p class="empty-state-text">
-                        Add a treasury wallet address to start your feed.
-                      </p>
+                      <p class="empty-state-text">Add a treasury wallet address to start your feed.</p>
                     </div>
                   </div>
                 </div>
               </section>
+
 
 
 
@@ -986,15 +1040,27 @@
     if (type) el.classList.add(type);
   }
 
-   function initWalletTypeDropdown() {
-    const root = document.querySelector('[data-dropdown]');
+  function initWalletTypeDropdown() {
+    const root = document.querySelector('[data-dropdown="walletType"]');
     if (!root) return;
   
     const btn = root.querySelector('#wallet-type-btn');
     const menu = root.querySelector('.select-menu');
     const hidden = root.querySelector('#wallet_type');
     const text = root.querySelector('#wallet-type-text');
-    const icon = root.querySelector('.select-icon');
+    const iconEl = root.querySelector('.select-icon'); // can be img OR span
+  
+    if (!btn || !menu || !hidden || !text || !iconEl) return;
+  
+    function setIcon(value) {
+      // If iconEl is <img>, set src. If it’s <span>, set textContent.
+      if (iconEl.tagName === 'IMG') {
+        iconEl.src = value || '';
+        iconEl.alt = text.textContent || 'Wallet';
+      } else {
+        iconEl.textContent = value || '';
+      }
+    }
   
     function open() {
       menu.classList.remove('hidden');
@@ -1006,20 +1072,22 @@
       btn.setAttribute('aria-expanded', 'false');
     }
   
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
       const isOpen = btn.getAttribute('aria-expanded') === 'true';
       isOpen ? close() : open();
     });
   
+    // option click
     menu.querySelectorAll('.select-option').forEach(opt => {
       opt.addEventListener('click', () => {
-        const value = opt.dataset.value;
-        const label = opt.dataset.label;
-        const ico = opt.dataset.icon;
+        const value = opt.dataset.value || 'other';
+        const label = opt.dataset.label || opt.textContent.trim() || 'Wallet';
+        const ico = opt.dataset.icon || '';
   
         hidden.value = value;
         text.textContent = label;
-        icon.textContent = ico;
+        setIcon(ico);
   
         menu.querySelectorAll('.select-option').forEach(o => o.classList.remove('is-selected'));
         opt.classList.add('is-selected');
@@ -1038,10 +1106,24 @@
       if (e.key === 'Escape') close();
     });
   
-    // default selected state
-    const current = menu.querySelector(`.select-option[data-value="${hidden.value}"]`);
-    if (current) current.classList.add('is-selected');
+    // ✅ initialize default selected state + UI
+    const current =
+      menu.querySelector(`.select-option[data-value="${hidden.value}"]`) ||
+      menu.querySelector('.select-option');
+  
+    if (current) {
+      menu.querySelectorAll('.select-option').forEach(o => o.classList.remove('is-selected'));
+      current.classList.add('is-selected');
+  
+      text.textContent = current.dataset.label || current.textContent.trim();
+      setIcon(current.dataset.icon || '');
+      hidden.value = current.dataset.value || hidden.value || 'other';
+    }
+  
+    // Start closed
+    close();
   }
+
 
   
   async function addWallet(e) {
