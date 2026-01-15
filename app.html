@@ -879,6 +879,32 @@
     
     const sb = window.__soltra_sb__;
 
+    // Cache the signed-in user here (single source of truth)
+    let CURRENT_USER = null;
+
+    sb.auth.onAuthStateChange((event, session) => {
+      console.log("AUTH EVENT:", event);
+      CURRENT_USER = session?.user ?? null;
+      onAuthChanged(session);
+    });
+
+    // app.js (or whatever JS is loaded by app.html)
+
+    // 1️⃣ Supabase client init
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // 2️⃣ AUTH BOOTSTRAP (PUT THIS HERE)
+    let authReadyResolve;
+    const authReady = new Promise(res => {
+      authReadyResolve = res;
+    });
+    
+    sb.auth.onAuthStateChange((event, session) => {
+      console.log("AUTH EVENT:", event);
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+        authReadyResolve(session);
+      }
+    });
 
 
     // === GLOBAL STATE ===
@@ -1149,77 +1175,54 @@
   async function addWallet(e) {
     e.preventDefault();
   
-    const labelEl   = document.getElementById('wallet-label');
-    const addressEl = document.getElementById('wallet-address');
-    const chainEl   = document.getElementById('wallet-chain'); // ✅ new
+    // 🔐 WAIT FOR AUTH
+    const session = await authReady;
+    const user = session?.user;
   
-    let label = (labelEl?.value || '').trim();
-    const addressRaw = (addressEl?.value || '').trim();
-    const chain = (chainEl?.value || 'base').toLowerCase();    // ✅ new
-  
-    if (!label || !addressRaw) {
-      setWalletMessage('Label and address are required.', 'error');
-      return;
-    }
-  
-    if (!isValidEvmAddress(addressRaw)) {
-      setWalletMessage('Invalid EVM address (must be 0x + 40 hex chars).', 'error');
-      return;
-    }
-  
-    const { data: sessionData, error: sessErr } = await sb.auth.getSession();
-    if (sessErr) {
-      console.error('getSession error:', sessErr);
-      setWalletMessage('Auth error. Try signing out and back in.', 'error');
-      return;
-    }
-  
-    const user = sessionData?.session?.user;
     if (!user) {
-      setWalletMessage('Please sign in first.', 'error');
+      alert("Please sign in first.");
       return;
     }
   
-    setWalletMessage('Saving…');
+    const addressEl = document.getElementById("wallet-address");
+    const addressRaw = addressEl?.value?.trim();
+  
+    if (!addressRaw) {
+      alert("Address required");
+      return;
+    }
   
     const payload = {
       user_id: user.id,
-      label,
-      address: normalizeAddress(addressRaw),
-      chain,                       // ✅ new (required)
-      chain_id: chainIdFor(chain), // ✅ new (optional but useful)
-      is_active: true              // ✅ new (if you added it)
+      label: "Test Wallet",
+      address: addressRaw,
+      chain: "base"
     };
   
-    const { error } = await sb.from('wallets').insert([payload]);
+    console.log("INSERT PAYLOAD:", payload);
+  
+    const { data, error } = await sb
+      .from("wallets")
+      .insert([payload])
+      .select()
+      .single();
+  
+    console.log("INSERT RESULT:", data, error);
   
     if (error) {
-      console.error('insert wallet error', error);
-      const msg = (error.message || '').toLowerCase();
-      if (msg.includes('duplicate') || msg.includes('unique')) {
-        setWalletMessage('That wallet is already saved for this chain.', 'error');
-      } else {
-        setWalletMessage('Could not save wallet: ' + error.message, 'error');
-      }
+      alert("Insert failed: " + error.message);
       return;
     }
-  
-    setWalletMessage('Wallet saved.', 'success');
-  
-    if (labelEl) labelEl.value = '';
-    if (addressEl) addressEl.value = '';
-    if (chainEl) chainEl.value = 'base';
   
     await loadWallets();
   }
 
-  
+
   async function loadWallets() {
     const list = document.getElementById('wallets-list');
     if (!list) return;
   
-    const { data: sessionData } = await sb.auth.getSession();
-    const user = sessionData?.session?.user;
+    const user = CURRENT_USER;
   
     if (!user) {
       list.innerHTML = `
@@ -1233,7 +1236,7 @@
   
     const { data, error } = await sb
       .from('wallets')
-      .select('id,label,address,chain,chain_id,created_at') // ✅ added chain
+      .select('id,label,address,chain,created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
   
@@ -1258,27 +1261,17 @@
       return;
     }
   
-    list.innerHTML = data.map(w => {
-      const chainLabel = (w.chain || 'base').toUpperCase();
-  
-      return `
-        <div class="wallet-saved-row">
-          <div class="wallet-saved-meta">
-            <div class="wallet-saved-label">${w.label}</div>
-            <div class="wallet-saved-address mono">
-              ${chainLabel} • ${shortenAddress(w.address)}
-            </div>
-          </div>
-          <button
-            class="mini-btn wallet-remove-btn"
-            type="button"
-            data-remove-id="${w.id}"
-          >
-            Remove
-          </button>
+    list.innerHTML = data.map(w => `
+      <div class="wallet-saved-row">
+        <div class="wallet-saved-meta">
+          <div class="wallet-saved-label">${w.label}</div>
+          <div class="wallet-saved-address mono">${shortenAddress(w.address)}</div>
         </div>
-      `;
-    }).join('');
+        <button class="mini-btn wallet-remove-btn" type="button" data-remove-id="${w.id}">
+          Remove
+        </button>
+      </div>
+    `).join('');
   
     list.querySelectorAll('.wallet-remove-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -1288,20 +1281,16 @@
         const ok = confirm('Remove this wallet?');
         if (!ok) return;
   
-        const { error: delErr } = await sb
-          .from('wallets')
-          .delete()
-          .eq('id', id);
-  
+        const { error: delErr } = await sb.from('wallets').delete().eq('id', id);
         if (delErr) {
           alert('Error removing wallet: ' + delErr.message);
           return;
         }
-  
         await loadWallets();
       });
     });
   }
+
 
 
 
@@ -2252,53 +2241,42 @@
       selectEl.innerHTML = `<option value="">Loading contractors…</option>`;
       selectEl.disabled = true;
     
-      try {
-        // ✅ Memory-only friendly: getSession() won't throw "Auth session missing"
-        const { data: sessionData, error: sessErr } = await sb.auth.getSession();
-        if (sessErr) throw sessErr;
+      const user = CURRENT_USER;
     
-        const session = sessionData?.session;
-        const user = session?.user;
-    
-        if (!user) {
-          selectEl.innerHTML = `<option value="">Sign in to select contractor</option>`;
-          selectEl.disabled = true;
-          return;
-        }
-    
-        // If you *do* have user_id column, keep the .eq('user_id', user.id)
-        // If you don't, remove that line.
-        const { data, error } = await sb
-          .from('contractors')
-          .select('id, name, wallet_address')
-          .eq('user_id', user.id)
-          .order('name', { ascending: true });
-    
-        if (error) throw error;
-    
-        if (!data || data.length === 0) {
-          selectEl.innerHTML = `<option value="">No contractors yet</option>`;
-          selectEl.disabled = true;
-          return;
-        }
-    
-        selectEl.innerHTML = `<option value="">Select contractor</option>`;
-        data.forEach((c) => {
-          const w = c.wallet_address || '';
-          const short = w ? `${w.slice(0, 6)}…${w.slice(-4)}` : '';
-          const opt = document.createElement('option');
-          opt.value = c.id;
-          opt.textContent = short ? `${c.name} • ${short}` : (c.name || 'Unnamed');
-          selectEl.appendChild(opt);
-        });
-    
-        selectEl.disabled = false;
-      } catch (err) {
-        console.error('loadPayoutContractorOptions() failed:', err);
-        selectEl.innerHTML = `<option value="">Error loading contractors</option>`;
-        selectEl.disabled = true;
+      if (!user) {
+        selectEl.innerHTML = `<option value="">Sign in to load contractors</option>`;
+        return;
       }
+    
+      const { data, error } = await sb
+        .from('contractors')
+        .select('id,name,wallet_address')
+        .eq('user_id', user.id)
+        .order('name', { ascending: true });
+    
+      if (error) {
+        console.error("loadPayoutContractorOptions error:", error);
+        selectEl.innerHTML = `<option value="">Error loading contractors</option>`;
+        return;
+      }
+    
+      if (!data || data.length === 0) {
+        selectEl.innerHTML = `<option value="">No contractors yet</option>`;
+        return;
+      }
+    
+      selectEl.innerHTML = `
+        <option value="">Select contractor</option>
+        ${data.map(c => `
+          <option value="${c.id}">
+            ${c.name}${c.wallet_address ? ' • ' + shortenAddress(c.wallet_address) : ''}
+          </option>
+        `).join('')}
+      `;
+    
+      selectEl.disabled = false;
     }
+
     
   function openPayoutModal(data) {
     const modal = document.getElementById('payout-detail-modal');
@@ -2797,11 +2775,8 @@
     }
 
     
-    async function onAuthChanged() {
-      const { data, error } = await sb.auth.getSession();
-      console.log('SESSION CHECK:', { session: data?.session, error });
-    
-      const session = data?.session;
+    async function onAuthChanged(session) {
+      console.log("SESSION CHECK:", session);
     
       const authWrapper = document.getElementById('auth-wrapper');
       const appShell = document.querySelector('.app-shell');
@@ -2812,7 +2787,7 @@
         if (appShell) appShell.style.display = 'block';
         if (signoutBtn) signoutBtn.style.display = 'inline-block';
     
-        // load everything AFTER auth is definitely live
+        // Everything below assumes auth is READY
         await loadContractors();
         await loadPayoutContractorOptions();
         await loadPayouts();
@@ -2825,6 +2800,7 @@
         if (signoutBtn) signoutBtn.style.display = 'none';
       }
     }
+
 
 
         // --- Toast helper ---
