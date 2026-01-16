@@ -879,32 +879,48 @@
     
     const sb = window.__soltra_sb__;
 
-    // Cache the signed-in user here (single source of truth)
+    // ===============================
+    // Auth bootstrap (GitHub Pages friendly)
+    // Single source of truth: CURRENT_USER
+    // ===============================
     let CURRENT_USER = null;
-
-    sb.auth.onAuthStateChange((event, session) => {
-      console.log("AUTH EVENT:", event);
-      CURRENT_USER = session?.user ?? null;
-      onAuthChanged(session);
-    });
-
-    // app.js (or whatever JS is loaded by app.html)
-
-    // 1️⃣ Supabase client init
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    // 2️⃣ AUTH BOOTSTRAP (PUT THIS HERE)
+    // helper (avoid getSession() wedges)
+    async function getCurrentUser() {
+      const { data, error } = await sb.auth.getUser();
+      if (error) {
+        console.warn("getUser error:", error);
+        return null;
+      }
+      return data?.user || null;
+    }
+    
+    // Resolve once when auth is ready (initial check or sign-in)
     let authReadyResolve;
-    const authReady = new Promise(res => {
-      authReadyResolve = res;
-    });
+    const authReady = new Promise((res) => (authReadyResolve = res));
     
-    sb.auth.onAuthStateChange((event, session) => {
+    sb.auth.onAuthStateChange(async (event) => {
       console.log("AUTH EVENT:", event);
-      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
-        authReadyResolve(session);
+    
+      // Update cached user
+      CURRENT_USER = await getCurrentUser();
+    
+      // Fire your UI/data refresh
+      await onAuthChanged(event);
+    
+      // Mark auth ready on first real auth event
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        authReadyResolve(true);
       }
     });
+    
+    // Kick once so CURRENT_USER becomes accurate even if events are late
+    (async () => {
+      CURRENT_USER = await getCurrentUser();
+      await onAuthChanged("BOOT");
+      authReadyResolve(true);
+    })();
+
 
 
     // === GLOBAL STATE ===
@@ -2241,41 +2257,49 @@
       selectEl.innerHTML = `<option value="">Loading contractors…</option>`;
       selectEl.disabled = true;
     
-      const user = CURRENT_USER;
+      // ✅ Do NOT use getSession() here
+      const user = CURRENT_USER || await getCurrentUser();
     
       if (!user) {
-        selectEl.innerHTML = `<option value="">Sign in to load contractors</option>`;
+        selectEl.innerHTML = `<option value="">Sign in to select a contractor</option>`;
+        selectEl.disabled = true;
         return;
       }
     
-      const { data, error } = await sb
-        .from('contractors')
-        .select('id,name,wallet_address')
-        .eq('user_id', user.id)
-        .order('name', { ascending: true });
+      try {
+        // Example: pull contractors for this user
+        const { data, error } = await sb
+          .from('contractors')
+          .select('id, name, wallet_address')
+          .eq('user_id', user.id)
+          .order('name', { ascending: true });
     
-      if (error) {
-        console.error("loadPayoutContractorOptions error:", error);
+        if (error) throw error;
+    
+        const rows = data || [];
+        if (!rows.length) {
+          selectEl.innerHTML = `<option value="">No contractors yet</option>`;
+          selectEl.disabled = true;
+          return;
+        }
+    
+        selectEl.innerHTML = [
+          `<option value="">Select contractor</option>`,
+          ...rows.map(c => {
+            const addr = c.wallet_address ? shortenAddress(c.wallet_address) : '';
+            const label = addr ? `${c.name} • ${addr}` : c.name;
+            return `<option value="${c.id}">${label}</option>`;
+          })
+        ].join('');
+    
+        selectEl.disabled = false;
+      } catch (e) {
+        console.error('loadPayoutContractorOptions error:', e);
         selectEl.innerHTML = `<option value="">Error loading contractors</option>`;
-        return;
+        selectEl.disabled = true;
       }
-    
-      if (!data || data.length === 0) {
-        selectEl.innerHTML = `<option value="">No contractors yet</option>`;
-        return;
-      }
-    
-      selectEl.innerHTML = `
-        <option value="">Select contractor</option>
-        ${data.map(c => `
-          <option value="${c.id}">
-            ${c.name}${c.wallet_address ? ' • ' + shortenAddress(c.wallet_address) : ''}
-          </option>
-        `).join('')}
-      `;
-    
-      selectEl.disabled = false;
     }
+
 
     
   function openPayoutModal(data) {
@@ -2775,33 +2799,36 @@
     }
 
     
-    async function onAuthChanged(session) {
-      console.log("SESSION CHECK:", session);
+    async function onAuthChanged(event) {
+      const signedIn = !!CURRENT_USER;
     
-      const authWrapper = document.getElementById('auth-wrapper');
-      const appShell = document.querySelector('.app-shell');
-      const signoutBtn = document.getElementById('signout-btn');
+      const authWrapper = document.getElementById("auth-wrapper");
+      const appShell = document.querySelector(".app-shell");
+      const signoutBtn = document.getElementById("signout-btn");
     
-      if (session) {
-        if (authWrapper) authWrapper.style.display = 'none';
-        if (appShell) appShell.style.display = 'block';
-        if (signoutBtn) signoutBtn.style.display = 'inline-block';
+      // Toggle UI
+      if (authWrapper) authWrapper.style.display = signedIn ? "none" : "flex";
+      if (appShell) appShell.style.display = signedIn ? "block" : "none";
+      if (signoutBtn) signoutBtn.style.display = signedIn ? "inline-block" : "none";
     
-        // Everything below assumes auth is READY
-        await loadContractors();
-        await loadPayoutContractorOptions();
-        await loadPayouts();
-        await loadDashboard();
-        await loadWallets();
+      // If signed out, stop here (prevents data calls)
+      if (!signedIn) return;
     
-      } else {
-        if (authWrapper) authWrapper.style.display = 'flex';
-        if (appShell) appShell.style.display = 'none';
-        if (signoutBtn) signoutBtn.style.display = 'none';
+      // Optional: ensure authReady resolves before we load anything
+      // (not required, but harmless)
+      // await authReady;
+    
+      // Load data AFTER we know user exists
+      try {
+        await loadContractors?.();
+        await loadPayoutContractorOptions?.();
+        await loadPayouts?.();
+        await loadDashboard?.();
+        await loadWallets?.();
+      } catch (e) {
+        console.error("onAuthChanged load error:", e);
       }
     }
-
-
 
         // --- Toast helper ---
     let toastTimeoutId = null;
