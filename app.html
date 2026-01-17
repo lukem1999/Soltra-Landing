@@ -879,13 +879,12 @@
     
     const sb = window.__soltra_sb__;
 
-    // ===============================
     // Auth bootstrap (GitHub Pages friendly)
     // Single source of truth: CURRENT_USER
-    // ===============================
+    // =============================
     let CURRENT_USER = null;
     
-    // helper (avoid getSession() wedges)
+    // helper: avoid getSession() wedges
     async function getCurrentUser() {
       const { data, error } = await sb.auth.getUser();
       if (error) {
@@ -895,33 +894,31 @@
       return data?.user || null;
     }
     
-    // Resolve once when auth is ready (initial check or sign-in)
+    // “auth is ready” gate (optional, but helpful)
     let authReadyResolve;
     const authReady = new Promise((res) => (authReadyResolve = res));
     
+    // fire on auth events
     sb.auth.onAuthStateChange(async (event) => {
       console.log("AUTH EVENT:", event);
     
-      // Update cached user
       CURRENT_USER = await getCurrentUser();
     
-      // Fire your UI/data refresh
+      // update UI/data
       await onAuthChanged(event);
     
-      // Mark auth ready on first real auth event
+      // resolve authReady once we’ve seen initial state
       if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "SIGNED_OUT") {
         authReadyResolve(true);
       }
     });
     
-    // Kick once so CURRENT_USER becomes accurate even if events are late
+    // kick once in case events are delayed
     (async () => {
       CURRENT_USER = await getCurrentUser();
       await onAuthChanged("BOOT");
       authReadyResolve(true);
     })();
-
-
 
     // === GLOBAL STATE ===
     let contractorsCache = [];
@@ -2257,9 +2254,7 @@
       selectEl.innerHTML = `<option value="">Loading contractors…</option>`;
       selectEl.disabled = true;
     
-      // ✅ Do NOT use getSession() here
-      const user = CURRENT_USER || await getCurrentUser();
-    
+      const user = CURRENT_USER; // ✅ single source of truth
       if (!user) {
         selectEl.innerHTML = `<option value="">Sign in to select a contractor</option>`;
         selectEl.disabled = true;
@@ -2267,7 +2262,6 @@
       }
     
       try {
-        // Example: pull contractors for this user
         const { data, error } = await sb
           .from('contractors')
           .select('id, name, wallet_address')
@@ -2299,6 +2293,7 @@
         selectEl.disabled = true;
       }
     }
+
 
 
     
@@ -2814,10 +2809,6 @@
       // If signed out, stop here (prevents data calls)
       if (!signedIn) return;
     
-      // Optional: ensure authReady resolves before we load anything
-      // (not required, but harmless)
-      // await authReady;
-    
       // Load data AFTER we know user exists
       try {
         await loadContractors?.();
@@ -2829,6 +2820,97 @@
         console.error("onAuthChanged load error:", e);
       }
     }
+
+
+    // =============================
+    // On-chain helpers (Base)
+    // =============================
+    const BASE = {
+      chainId: 8453,
+      rpc: "https://mainnet.base.org",
+      usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // Base USDC :contentReference[oaicite:2]{index=2}
+      usdcDecimals: 6,
+    };
+    
+    // basic JSON-RPC
+    async function rpc(rpcUrl, method, params = []) {
+      const res = await fetch(rpcUrl, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: Date.now(), method, params }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message || "RPC error");
+      return json.result;
+    }
+    
+    // pad topic (address -> 32-byte topic)
+    function topicAddress(addr) {
+      return "0x" + addr.toLowerCase().replace(/^0x/, "").padStart(64, "0");
+    }
+    
+    // hex -> number
+    function hexToInt(hex) {
+      return parseInt(hex, 16);
+    }
+    
+    // ERC20 balanceOf(address) selector = 0x70a08231
+    async function erc20BalanceOf(rpcUrl, token, holder) {
+      const data =
+        "0x70a08231" + holder.toLowerCase().replace(/^0x/, "").padStart(64, "0");
+      const result = await rpc(rpcUrl, "eth_call", [{ to: token, data }, "latest"]);
+      return BigInt(result);
+    }
+    
+    function formatUnits(amountBigInt, decimals) {
+      const s = amountBigInt.toString().padStart(decimals + 1, "0");
+      const whole = s.slice(0, -decimals);
+      const frac = s.slice(-decimals).replace(/0+$/, "");
+      return frac ? `${whole}.${frac}` : whole;
+    }
+    
+    // Pull recent USDC transfers for a wallet using Transfer topic logs
+    async function getUsdcTransfersBase(wallet, fromBlockHex, toBlockHex = "latest") {
+      const TRANSFER_TOPIC =
+        "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+    
+      // incoming: topics[2] = to
+      const incoming = await rpc(BASE.rpc, "eth_getLogs", [{
+        fromBlock: fromBlockHex,
+        toBlock: toBlockHex,
+        address: BASE.usdc,
+        topics: [TRANSFER_TOPIC, null, topicAddress(wallet)],
+      }]);
+    
+      // outgoing: topics[1] = from
+      const outgoing = await rpc(BASE.rpc, "eth_getLogs", [{
+        fromBlock: fromBlockHex,
+        toBlock: toBlockHex,
+        address: BASE.usdc,
+        topics: [TRANSFER_TOPIC, topicAddress(wallet), null],
+      }]);
+    
+      // normalize
+      const parseLog = (log, direction) => {
+        const from = "0x" + log.topics[1].slice(26);
+        const to = "0x" + log.topics[2].slice(26);
+        const value = BigInt(log.data);
+        return {
+          direction,
+          from,
+          to,
+          value,
+          txHash: log.transactionHash,
+          blockNumber: hexToInt(log.blockNumber),
+        };
+      };
+    
+      return [
+        ...incoming.map(l => parseLog(l, "in")),
+        ...outgoing.map(l => parseLog(l, "out")),
+      ].sort((a, b) => b.blockNumber - a.blockNumber);
+    }
+
 
         // --- Toast helper ---
     let toastTimeoutId = null;
