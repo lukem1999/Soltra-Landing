@@ -6047,7 +6047,47 @@ select.input-control {
   .dashboard-grid { grid-template-columns: 1fr; }
 }
 
+/* Reuse Upgrade/Pricing CTA styling for "+ Add wallet" */
+.upgrade-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 
+  padding: 12px 18px;
+  border-radius: 12px;
+
+  background: linear-gradient(180deg, #f6c55b 0%, #e6a93a 100%);
+  color: #0b0f1a;
+
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+}
+
+.upgrade-btn:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.upgrade-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.upgrade-btn:focus-visible {
+  outline: 2px solid rgba(246, 197, 91, 0.55);
+  outline-offset: 3px;
+}
 
 
 
