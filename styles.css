@@ -6089,6 +6089,34 @@ select.input-control {
   outline-offset: 3px;
 }
 
+.wallet-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 14px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);
+  margin-top:10px;
+}
+.wallet-row-title{ font-weight:700; }
+.wallet-row-sub{ opacity:.75; margin-top:2px; font-size:13px; }
+.wallet-row-actions{ display:flex; gap:10px; }
+.wallet-action-btn{
+  padding:8px 10px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  color:#fff;
+  cursor:pointer;
+}
+.wallet-action-btn.danger{
+  background:rgba(255,80,80,0.12);
+  border-color:rgba(255,80,80,0.22);
+}
+.form-message.ok{ color:#7CFFB2; }
+.form-message.err{ color:#FF8080; }
+.form-message.info{ color:rgba(255,255,255,0.7); }
 
 
 
