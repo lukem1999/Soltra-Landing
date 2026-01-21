@@ -904,6 +904,275 @@
   // Table: public.wallets (id, user_id, label, address, created_at)
   // ===============================
 
+  // ===============================
+// WALLET MODAL + WALLET FUNCTIONS
+// ===============================
+
+  // ---- Helpers
+  function $(id) {
+    return document.getElementById(id);
+  }
+  
+  function showWalletMessage(msg, type = "info") {
+    const el = $("wallet-message");
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove("ok", "err", "info");
+    el.classList.add(type);
+  }
+  
+  function shortenAddress(addr) {
+    if (!addr) return "";
+    const a = String(addr).trim();
+    if (a.length <= 12) return a;
+    return `${a.slice(0, 6)}…${a.slice(-4)}`;
+  }
+  
+  function normalizeEvmAddress(addr) {
+    return String(addr || "").trim();
+  }
+  
+  function isValidEvmAddress(addr) {
+    // basic EVM check (0x + 40 hex chars)
+    return /^0x[a-fA-F0-9]{40}$/.test(addr);
+  }
+  
+  async function requireUser() {
+    // Prefer cached user from your auth bootstrap
+    const user = CURRENT_USER || (typeof getCurrentUser === "function" ? await getCurrentUser() : null);
+    return user || null;
+  }
+  
+  // ---- Modal open/close
+  function openWalletModal() {
+    const modal = $("wallet-modal");
+    if (!modal) return;
+  
+    modal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+  
+    // optional: focus address field
+    const addr = $("wallet-address");
+    if (addr) setTimeout(() => addr.focus(), 0);
+  }
+  
+  function closeWalletModal() {
+    const modal = $("wallet-modal");
+    if (!modal) return;
+  
+    modal.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+  
+    // clear message
+    showWalletMessage("", "info");
+  }
+  
+  // ---- Render wallets list
+  function renderWallets(wallets) {
+    const list = $("wallets-list");
+    if (!list) return;
+  
+    if (!wallets || wallets.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state" id="wallet-empty">
+          <div class="empty-state-title">No wallets yet</div>
+          <p class="empty-state-text">Add a treasury wallet address to start your feed.</p>
+        </div>
+      `;
+      return;
+    }
+  
+    list.innerHTML = wallets
+      .map(w => {
+        const label = w.label || "Wallet";
+        const chain = (w.chain || "").toUpperCase();
+        const addr = shortenAddress(w.address);
+  
+        return `
+          <div class="wallet-row" data-wallet-id="${w.id}">
+            <div class="wallet-row-left">
+              <div class="wallet-row-title">${label}</div>
+              <div class="wallet-row-sub">${chain} • <span class="mono">${addr}</span></div>
+            </div>
+  
+            <div class="wallet-row-actions">
+              <button class="wallet-action-btn" type="button" data-action="copy" data-address="${w.address}">
+                Copy
+              </button>
+              <button class="wallet-action-btn danger" type="button" data-action="delete" data-id="${w.id}">
+                Delete
+              </button>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+  
+  // ---- Load wallets from Supabase
+  async function loadWallets() {
+    const list = $("wallets-list");
+    if (!list) return;
+  
+    const user = await requireUser();
+    if (!user) {
+      renderWallets([]);
+      return;
+    }
+  
+    const { data, error } = await sb
+      .from("wallets")
+      .select("id, label, address, chain, wallet_type, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+  
+    if (error) {
+      console.error("loadWallets error:", error);
+      showWalletMessage("Error loading wallets.", "err");
+      renderWallets([]);
+      return;
+    }
+  
+    renderWallets(data || []);
+  }
+  
+  // ---- Add wallet (form submit)
+  async function addWalletFromForm(e) {
+    e.preventDefault();
+  
+    const user = await requireUser();
+    if (!user) {
+      showWalletMessage("Please sign in first.", "err");
+      return;
+    }
+  
+    // NOTE: your current wallet modal form has label/address
+    // Your dashboard wallet-card form has wallet_type/chain/address and hidden #wallet_type
+    // We'll support BOTH depending on which inputs exist.
+  
+    const labelInput =
+      $("wallet-label") || document.querySelector("#wallet-form input[name='label']");
+  
+    const addressInput =
+      $("wallet-address") || document.querySelector("#wallet-form input[name='address']");
+  
+    const chainSelect =
+      $("wallet-chain") || document.querySelector("#wallet-form select[name='chain']");
+  
+    const walletTypeHidden =
+      $("wallet_type") || document.querySelector("#wallet-form input[name='wallet_type']");
+  
+    const label = (labelInput ? labelInput.value : "Treasury wallet").trim() || "Treasury wallet";
+    const address = normalizeEvmAddress(addressInput ? addressInput.value : "");
+    const chain = (chainSelect ? chainSelect.value : "base").trim() || "base";
+    const wallet_type = (walletTypeHidden ? walletTypeHidden.value : "safe").trim() || "safe";
+  
+    if (!address) {
+      showWalletMessage("Enter a wallet address.", "err");
+      return;
+    }
+  
+    if (!isValidEvmAddress(address)) {
+      showWalletMessage("That doesn’t look like a valid EVM address (0x + 40 hex).", "err");
+      return;
+    }
+  
+    showWalletMessage("Saving wallet…", "info");
+  
+    const payload = {
+      user_id: user.id,
+      label,
+      address,
+      chain,
+      wallet_type,
+    };
+  
+    const { data, error } = await sb
+      .from("wallets")
+      .insert([payload])
+      .select("id, label, address, chain, wallet_type, created_at")
+      .single();
+  
+    if (error) {
+      console.error("addWallet error:", error);
+  
+      // common: duplicate constraint if you have one
+      if (String(error.message || "").toLowerCase().includes("duplicate")) {
+        showWalletMessage("That wallet already exists.", "err");
+      } else {
+        showWalletMessage("Error saving wallet.", "err");
+      }
+      return;
+    }
+  
+    showWalletMessage("Wallet saved.", "ok");
+  
+    // Clear form fields (if present)
+    if (addressInput) addressInput.value = "";
+    if (labelInput) labelInput.value = "";
+  
+    // Refresh list + close modal (if you’re using modal)
+    await loadWallets();
+    closeWalletModal();
+  }
+  
+  // ---- Delete wallet
+  async function deleteWallet(walletId) {
+    const user = await requireUser();
+    if (!user) {
+      showWalletMessage("Please sign in first.", "err");
+      return;
+    }
+  
+    const ok = confirm("Delete this wallet?");
+    if (!ok) return;
+  
+    const { error } = await sb
+      .from("wallets")
+      .delete()
+      .eq("id", walletId)
+      .eq("user_id", user.id);
+  
+    if (error) {
+      console.error("deleteWallet error:", error);
+      showWalletMessage("Error deleting wallet.", "err");
+      return;
+    }
+  
+    showWalletMessage("Wallet deleted.", "ok");
+    await loadWallets();
+  }
+  
+  // ---- Click handling inside wallets list (copy/delete)
+  async function onWalletListClick(e) {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+  
+    const action = btn.dataset.action;
+  
+    if (action === "copy") {
+      const addr = btn.dataset.address || "";
+      try {
+        await navigator.clipboard.writeText(addr);
+        // optional toast you already have
+        const toast = $("toast") || $("copy-toast");
+        if (toast) {
+          toast.classList.remove("hidden");
+          setTimeout(() => toast.classList.add("hidden"), 1200);
+        }
+      } catch (err) {
+        console.warn("Clipboard copy failed:", err);
+        alert("Copy failed. Your browser may block clipboard access.");
+      }
+    }
+  
+    if (action === "delete") {
+      const id = btn.dataset.id;
+      if (id) await deleteWallet(id);
+    }
+  }
+
+
   function defaultLabelForType(t) {
     const map = {
       safe: 'Safe Treasury',
@@ -2896,6 +3165,43 @@
       console.log('✅ DOMContentLoaded: Soltra init starting...');
       initWalletLabelToggle();
       initWalletTypeDropdown();
+
+      // Open modal button
+      const openBtn = $("open-wallet-modal");
+      if (openBtn) {
+        openBtn.addEventListener("click", openWalletModal);
+      } else {
+        console.warn("Missing #open-wallet-modal button");
+      }
+    
+      // Modal close (backdrop + X) using data-close="wallet-modal"
+      const walletModal = $("wallet-modal");
+      if (walletModal) {
+        walletModal.addEventListener("click", (e) => {
+          const closeTarget = e.target.closest('[data-close="wallet-modal"]');
+          if (!closeTarget) return;
+          closeWalletModal();
+        });
+      }
+    
+      // ESC closes modal
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeWalletModal();
+      });
+    
+      // Wallet form submit (works for modal form and wallet-card form if same id)
+      const walletForm = $("wallet-form");
+      if (walletForm) {
+        walletForm.addEventListener("submit", addWalletFromForm);
+      } else {
+        console.warn("Missing #wallet-form");
+      }
+    
+      // Wallet list click handling
+      const walletsList = $("wallets-list");
+      if (walletsList) {
+        walletsList.addEventListener("click", onWalletListClick);
+      }
     
       // ======================================================
       // 0) Small helper to prevent double-binding
