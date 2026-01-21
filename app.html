@@ -243,158 +243,18 @@
                 </div>
               </div>
 
-              <!-- Treasury wallets (Custom wallet type dropdown + address + submit + saved list) -->
-              <section class="wallet-card">
-                <div class="wallet-card-header">
-                  <h3 class="wallet-card-title">Treasury wallets</h3>
-                  <p class="wallet-card-subtitle">Add wallets to track balances and on-chain activity.</p>
+              <!-- WALLET STRIP (ABOVE PAYOUTS) -->
+              <div class="wallet-strip">
+                <div class="wallet-strip-head">
+                  <div class="wallet-strip-title">Wallets</div>
+                  <button id="open-wallet-modal" class="link-btn" type="button">+ Add wallet</button>
                 </div>
               
-                <form id="wallet-form" class="wallet-form">
-                  <!-- WALLET TYPE (CUSTOM DROPDOWN) -->
-                  <div class="field">
-                    <label class="field-label" for="wallet-type-btn">Wallet type</label>
-              
-                    <div class="dropdown" data-dropdown="walletType">
-                      <!-- Trigger button -->
-                      <button
-                        id="wallet-type-btn"
-                        class="select-btn"
-                        type="button"
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                      >
-                        <span class="select-left">
-                          <!-- IMPORTANT: this is an IMG so JS can set .src -->
-                          <img class="select-icon" src="images/safe-logo.svg" alt="Safe" />
-                          <span id="wallet-type-text">Safe (Gnosis)</span>
-                        </span>
-                        <span class="select-caret" aria-hidden="true"></span>
-                      </button>
-              
-                      <!-- Menu -->
-                      <div class="select-menu hidden" role="listbox" aria-label="Wallet type">
-                        <!-- Safe -->
-                        <div
-                          class="select-option is-selected"
-                          role="option"
-                          tabindex="0"
-                          data-value="safe"
-                          data-label="Safe (Gnosis)"
-                          data-icon="images/safe-logo.svg"
-                        >
-                          <img class="option-icon" src="images/safe-logo.svg" alt="" />
-                          <span class="option-text">Safe (Gnosis)</span>
-                        </div>
-              
-                        <!-- Ledger -->
-                        <div
-                          class="select-option"
-                          role="option"
-                          tabindex="0"
-                          data-value="ledger"
-                          data-label="Ledger"
-                          data-icon="images/ledger.svg"
-                        >
-                          <img class="option-icon" src="images/ledger.svg" alt="" />
-                          <span class="option-text">Ledger</span>
-                        </div>
-              
-                        <!-- MetaMask -->
-                        <div
-                          class="select-option"
-                          role="option"
-                          tabindex="0"
-                          data-value="metamask"
-                          data-label="MetaMask"
-                          data-icon="images/metamask.svg"
-                        >
-                          <img class="option-icon" src="images/metamask.svg" alt="" />
-                          <span class="option-text">MetaMask</span>
-                        </div>
-              
-                        <!-- Coinbase Wallet -->
-                        <div
-                          class="select-option"
-                          role="option"
-                          tabindex="0"
-                          data-value="coinbase"
-                          data-label="Coinbase Wallet"
-                          data-icon="images/coinbase-wallet.svg"
-                        >
-                          <img class="option-icon" src="images/coinbase-wallet.svg" alt="" />
-                          <span class="option-text">Coinbase Wallet</span>
-                        </div>
-              
-                        <!-- Other -->
-                        <div
-                          class="select-option"
-                          role="option"
-                          tabindex="0"
-                          data-value="other"
-                          data-label="Other wallet"
-                          data-icon="images/wallet-generic.svg"
-                        >
-                          <img class="option-icon" src="images/wallet-generic.svg" alt="" />
-                          <span class="option-text">Other wallet</span>
-                        </div>
-                      </div>
-              
-                      <!-- What FormData reads -->
-                      <input type="hidden" name="wallet_type" id="wallet_type" value="safe" />
-                    </div>
-                  </div>
-
-                  <!-- Chain -->
-                  <div class="field">
-                    <label class="field-label" for="wallet-chain">Chain<span>*</span></label>
-                  
-                    <select id="wallet-chain" name="chain" class="input-control" required>
-                      <option value="base" selected>Base</option>
-                      <option value="ethereum">Ethereum</option>
-                      <option value="polygon">Polygon</option>
-                    </select>
-                  
-                    <p class="field-help">Pick the chain where this address is active (for real feeds later).</p>
-                  </div>
-              
-                  <!-- ADDRESS -->
-                  <div class="field">
-                    <label class="field-label" for="wallet-address">Address</label>
-                    <input
-                      id="wallet-address"
-                      name="address"
-                      class="input-control mono"
-                      type="text"
-                      placeholder="0x…"
-                      required
-                      autocomplete="off"
-                      spellcheck="false"
-                    />
-                  </div>
-              
-                  <!-- SUBMIT -->
-                  <div class="wallet-actions">
-                    <button id="add-wallet-btn" type="submit" class="btn primary-btn">Add wallet</button>
-                    <p id="wallet-message" class="form-message" aria-live="polite"></p>
-                  </div>
-                </form>
-              
-                <!-- SAVED WALLETS -->
-                <div class="wallet-saved">
-                  <h4 class="wallet-saved-title">Saved wallets</h4>
-              
-                  <!-- Your JS can render rows into here -->
-                  <div id="wallets-list" class="wallets-list">
-                    <div class="empty-state" id="wallet-empty">
-                      <div class="empty-state-title">No wallets yet</div>
-                      <p class="empty-state-text">Add a treasury wallet address to start your feed.</p>
-                    </div>
-                  </div>
+                <div id="wallet-chips" class="wallet-chips">
+                  <!-- injected by JS -->
+                  <div class="chip chip-muted">All wallets</div>
                 </div>
-              </section>
-
-
+              </div>
 
 
               <!-- KPI cards -->
@@ -3692,40 +3552,177 @@
           </form>
         </div>
       </div>
-      <div class="modal hidden" id="wallet-modal">
-        <div class="modal-backdrop" data-close="wallet-modal"></div>
-      
-        <div class="modal-card">
-          <div class="modal-header">
-            <h3>Add treasury wallet</h3>
-            <button class="modal-close" type="button" data-close="wallet-modal">&times;</button>
+
+      <!-- Wallet modal (FULL wallet-card UI inside) -->
+      <div id="wallet-modal" class="modal hidden" aria-hidden="true">
+        <div class="modal-backdrop" data-close-wallet></div>
+
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="wallet-modal-title">
+          <div class="modal-head">
+            <div>
+              <div id="wallet-modal-title" class="modal-title">Add treasury wallet</div>
+              <div class="modal-subtitle">
+                Track balances and on-chain activity across your organization.
+              </div>
+            </div>
+
+            <button class="icon-btn" type="button" aria-label="Close" data-close-wallet>✕</button>
           </div>
-      
-          <form class="modal-body" id="wallet-form">
-            <div class="field">
-              <label class="field-label">Label</label>
-              <input class="input-control" type="text" id="wallet-label" placeholder="e.g., Safe Treasury" required />
+
+          <!-- Treasury wallets (Custom wallet type dropdown + address + submit + saved list) -->
+          <section class="wallet-card">
+            <div class="wallet-card-header">
+              <h3 class="wallet-card-title">Treasury wallets</h3>
+              <p class="wallet-card-subtitle">Add wallets to track balances and on-chain activity.</p>
             </div>
-      
-            <div class="field">
-              <label class="field-label">Address</label>
-              <input class="input-control mono" type="text" id="wallet-address" placeholder="0x..." required />
-              <p class="field-help">EVM address (Ethereum / Base / Polygon). Read-only tracking.</p>
+
+            <form id="wallet-form" class="wallet-form">
+              <!-- WALLET TYPE (CUSTOM DROPDOWN) -->
+              <div class="field">
+                <label class="field-label" for="wallet-type-btn">Wallet type</label>
+
+                <div class="dropdown" data-dropdown="walletType">
+                  <!-- Trigger button -->
+                  <button
+                    id="wallet-type-btn"
+                    class="select-btn"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                  >
+                    <span class="select-left">
+                      <img class="select-icon" src="images/safe-logo.svg" alt="Safe" />
+                      <span id="wallet-type-text">Safe (Gnosis)</span>
+                    </span>
+                    <span class="select-caret" aria-hidden="true"></span>
+                  </button>
+
+                  <!-- Menu -->
+                  <div class="select-menu hidden" role="listbox" aria-label="Wallet type">
+                    <!-- Safe -->
+                    <div
+                      class="select-option is-selected"
+                      role="option"
+                      tabindex="0"
+                      data-value="safe"
+                      data-label="Safe (Gnosis)"
+                      data-icon="images/safe-logo.svg"
+                    >
+                      <img class="option-icon" src="images/safe-logo.svg" alt="" />
+                      <span class="option-text">Safe (Gnosis)</span>
+                    </div>
+
+                    <!-- Ledger -->
+                    <div
+                      class="select-option"
+                      role="option"
+                      tabindex="0"
+                      data-value="ledger"
+                      data-label="Ledger"
+                      data-icon="images/ledger.svg"
+                    >
+                      <img class="option-icon" src="images/ledger.svg" alt="" />
+                      <span class="option-text">Ledger</span>
+                    </div>
+
+                    <!-- MetaMask -->
+                    <div
+                      class="select-option"
+                      role="option"
+                      tabindex="0"
+                      data-value="metamask"
+                      data-label="MetaMask"
+                      data-icon="images/metamask.svg"
+                    >
+                      <img class="option-icon" src="images/metamask.svg" alt="" />
+                      <span class="option-text">MetaMask</span>
+                    </div>
+
+                    <!-- Coinbase Wallet -->
+                    <div
+                      class="select-option"
+                      role="option"
+                      tabindex="0"
+                      data-value="coinbase"
+                      data-label="Coinbase Wallet"
+                      data-icon="images/coinbase-wallet.svg"
+                    >
+                      <img class="option-icon" src="images/coinbase-wallet.svg" alt="" />
+                      <span class="option-text">Coinbase Wallet</span>
+                    </div>
+
+                    <!-- Other -->
+                    <div
+                      class="select-option"
+                      role="option"
+                      tabindex="0"
+                      data-value="other"
+                      data-label="Other wallet"
+                      data-icon="images/wallet-generic.svg"
+                    >
+                      <img class="option-icon" src="images/wallet-generic.svg" alt="" />
+                      <span class="option-text">Other wallet</span>
+                    </div>
+                  </div>
+
+                  <!-- What FormData reads -->
+                  <input type="hidden" name="wallet_type" id="wallet_type" value="safe" />
+                </div>
+              </div>
+
+              <!-- Chain -->
+              <div class="field">
+                <label class="field-label" for="wallet-chain">Chain<span>*</span></label>
+
+                <select id="wallet-chain" name="chain" class="input-control" required>
+                  <option value="base" selected>Base</option>
+                  <option value="ethereum">Ethereum</option>
+                  <option value="polygon">Polygon</option>
+                </select>
+
+                <p class="field-help">Pick the chain where this address is active (for real feeds later).</p>
+              </div>
+
+              <!-- ADDRESS -->
+              <div class="field">
+                <label class="field-label" for="wallet-address">Address</label>
+                <input
+                  id="wallet-address"
+                  name="address"
+                  class="input-control mono"
+                  type="text"
+                  placeholder="0x…"
+                  required
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+
+              <!-- SUBMIT -->
+              <div class="wallet-actions">
+                <button id="add-wallet-btn" type="submit" class="btn primary-btn">Add wallet</button>
+                <p id="wallet-message" class="form-message" aria-live="polite"></p>
+              </div>
+            </form>
+
+            <!-- SAVED WALLETS -->
+            <div class="wallet-saved">
+              <h4 class="wallet-saved-title">Saved wallets</h4>
+
+              <div id="wallets-list" class="wallets-list">
+                <div class="empty-state" id="wallet-empty">
+                  <div class="empty-state-title">No wallets yet</div>
+                  <p class="empty-state-text">Add a treasury wallet address to start your feed.</p>
+                </div>
+              </div>
             </div>
-      
-            <div class="modal-footer">
-              <button class="btn" type="button" data-close="wallet-modal">Cancel</button>
-              <button class="btn primary-btn" type="submit">Save wallet</button>
-            </div>
-          </form>
+          </section>
         </div>
       </div>
-
-  
-
 
   <div id="toast" class="toast hidden">Copied!</div>
   <div id="copy-toast" class="copy-toast">Copied!</div>
 </body>
 </html>
+
 
