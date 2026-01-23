@@ -6118,6 +6118,28 @@ select.input-control {
 .form-message.err{ color:#FF8080; }
 .form-message.info{ color:rgba(255,255,255,0.7); }
 
+.modal-backdrop {
+  background: rgba(5, 8, 20, 0.55); /* NOT opaque */
+  backdrop-filter: blur(4px);
+}
+
+.modal-card {
+  background: linear-gradient(
+    180deg,
+    rgba(18, 22, 40, 0.92),
+    rgba(10, 14, 30, 0.88)
+  );
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+body.modal-open .dashboard {
+  filter: blur(2px) brightness(0.9);
+}
+
 
 
 
