@@ -990,7 +990,6 @@
     renderWallets(data || []);
   }
   
-  // ---- Add wallet (form submit)
   async function addWalletFromForm(e) {
     e.preventDefault();
   
@@ -1000,10 +999,7 @@
       return;
     }
   
-    // NOTE: your current wallet modal form has label/address
-    // Your dashboard wallet-card form has wallet_type/chain/address and hidden #wallet_type
-    // We'll support BOTH depending on which inputs exist.
-  
+    // Supports BOTH modal form (label/address) and dashboard wallet-card form (wallet_type/chain/address)
     const labelInput =
       $("wallet-label") || document.querySelector("#wallet-form input[name='label']");
   
@@ -1050,7 +1046,6 @@
     if (error) {
       console.error("addWallet error:", error);
   
-      // common: duplicate constraint if you have one
       if (String(error.message || "").toLowerCase().includes("duplicate")) {
         showWalletMessage("That wallet already exists.", "err");
       } else {
@@ -1061,41 +1056,39 @@
   
     showWalletMessage("Wallet saved.", "ok");
   
-    // Clear form fields (if present)
+    // Clear fields
     if (addressInput) addressInput.value = "";
     if (labelInput) labelInput.value = "";
   
-    // Refresh list + close modal (if you’re using modal)
+    // Refresh list
     await loadWallets();
+  
+    // ✅ SUCCESS ACTIONS (toast + animate newly-added wallet row)
+    try {
+      // If you added toastSuccess(), this will work. If not, swap to showToast('Wallet added')
+      if (typeof toastSuccess === "function") toastSuccess("Wallet added");
+      else if (typeof showToast === "function") showToast("Wallet added");
+  
+      const list = document.getElementById("wallets-list");
+      // If your renderWallets() renders newest first, this is the new row:
+      const newRow =
+        list?.querySelector(".wallet-row") || list?.querySelector(".wallet-saved-row");
+  
+      if (typeof animateOnce === "function") {
+        animateOnce(newRow, "anim-slide-row", 700);
+      } else if (newRow) {
+        // fallback if you didn't add animateOnce yet
+        newRow.classList.add("anim-slide-row");
+        setTimeout(() => newRow.classList.remove("anim-slide-row"), 700);
+      }
+    } catch (err) {
+      console.warn("wallet success animation failed:", err);
+    }
+  
+    // Close modal (if using modal)
     closeWalletModal();
   }
-  
-  // ---- Delete wallet
-  async function deleteWallet(walletId) {
-    const user = await requireUser();
-    if (!user) {
-      showWalletMessage("Please sign in first.", "err");
-      return;
-    }
-  
-    const ok = confirm("Delete this wallet?");
-    if (!ok) return;
-  
-    const { error } = await sb
-      .from("wallets")
-      .delete()
-      .eq("id", walletId)
-      .eq("user_id", user.id);
-  
-    if (error) {
-      console.error("deleteWallet error:", error);
-      showWalletMessage("Error deleting wallet.", "err");
-      return;
-    }
-  
-    showWalletMessage("Wallet deleted.", "ok");
-    await loadWallets();
-  }
+
   
   // ---- Click handling inside wallets list (copy/delete)
   async function onWalletListClick(e) {
@@ -1509,7 +1502,6 @@
       }
     }
 
-    
     function exportPayoutsToCsv() {
       const payouts = dashboardPayoutsCache || [];
     
@@ -1521,14 +1513,15 @@
       // Helper
       const safe = (v) => (v == null ? '' : String(v));
     
-      // Add a couple derived fields that make CSV “finance usable”
+      // Build rows (finance-friendly)
       const rows = payouts.map((p) => {
         const ts = p.tx_timestamp ? new Date(p.tx_timestamp) : null;
         const iso = ts && !isNaN(ts.getTime()) ? ts.toISOString() : '';
         const dateLocal = ts && !isNaN(ts.getTime()) ? ts.toLocaleDateString() : '';
-        const month = ts && !isNaN(ts.getTime())
-          ? `${ts.getFullYear()}-${String(ts.getMonth() + 1).padStart(2, '0')}`
-          : '';
+        const month =
+          ts && !isNaN(ts.getTime())
+            ? `${ts.getFullYear()}-${String(ts.getMonth() + 1).padStart(2, '0')}`
+            : '';
     
         const contractorName = p.contractors?.name || '';
         const chain = (p.chain || '').toUpperCase();
@@ -1536,7 +1529,14 @@
         const amount = Number(p.amount || 0);
     
         const txHash = p.tx_hash || '';
-        const explorerUrl = txHash ? getExplorerUrl(chain, txHash) : '';
+        let explorerUrl = '';
+        try {
+          explorerUrl = txHash
+            ? (typeof getExplorerUrl === 'function' ? getExplorerUrl(chain, txHash) : '')
+            : '';
+        } catch (e) {
+          explorerUrl = '';
+        }
     
         return {
           month,                         // YYYY-MM
@@ -1560,13 +1560,15 @@
       lines.push(headers.join(','));
     
       for (const r of rows) {
-        const line = headers.map((h) => {
-          const v = safe(r[h]);
+        const line = headers
+          .map((h) => {
+            const v = safe(r[h]);
     
-          // escape commas/quotes/newlines
-          if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
-          return v;
-        }).join(',');
+            // escape commas/quotes/newlines
+            if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+            return v;
+          })
+          .join(',');
     
         lines.push(line);
       }
@@ -1595,6 +1597,8 @@
     
       URL.revokeObjectURL(url);
     }
+
+    
 
 
 
@@ -1644,7 +1648,7 @@
       });
     }
 
-        // === ADD CONTRACTOR (FIXED to match your HTML input names) ===
+    // === ADD CONTRACTOR (with success animation + toast) ===
     async function addContractor(event) {
       event.preventDefault();
     
@@ -1652,9 +1656,9 @@
       const formData = new FormData(form);
     
       // ✅ MATCH HTML NAMES
-      const name    = (formData.get('name') || '').toString().trim();
-      const role    = (formData.get('role') || '').toString().trim();
-      const wallet  = (formData.get('wallet_address') || '').toString().trim();
+      const name = (formData.get('name') || '').toString().trim();
+      const role = (formData.get('role') || '').toString().trim();
+      const wallet = (formData.get('wallet_address') || '').toString().trim();
       const country = (formData.get('country') || '').toString().trim();
     
       // Basic validation
@@ -1674,7 +1678,8 @@
     
         const userId = userData.user.id;
     
-        const { error } = await sb
+        // ✅ Insert + return new row (so we can highlight it reliably)
+        const { data: inserted, error } = await sb
           .from('contractors')
           .insert([{
             name,
@@ -1682,7 +1687,9 @@
             wallet_address: wallet,
             country: country || null,
             user_id: userId,
-          }]);
+          }])
+          .select('id, name, role, wallet_address, country')
+          .single();
     
         if (error) {
           console.error('ADD CONTRACTOR ERROR', error);
@@ -1690,12 +1697,35 @@
           return;
         }
     
+        // Reset form first (feels snappier)
         form.reset();
     
         // Refresh lists
         await loadContractors();
         if (typeof loadContractorOptions === 'function') {
           await loadContractorOptions();
+        } else if (typeof loadPayoutContractorOptions === 'function') {
+          // your newer function name
+          await loadPayoutContractorOptions();
+        }
+    
+        // ✅ SUCCESS ACTIONS (toast + animate the new contractor row)
+        try {
+          if (typeof toastSuccess === 'function') toastSuccess('Contractor added');
+          else if (typeof showToast === 'function') showToast('Contractor added');
+    
+          // Find the newly inserted row by data-id (your loadContractors sets data-id)
+          const tbody = document.getElementById('contractors-body');
+          const row = tbody?.querySelector(`tr[data-id="${inserted?.id}"]`);
+    
+          if (typeof animateOnce === 'function') {
+            animateOnce(row, 'anim-slide-row', 700);
+          } else if (row) {
+            row.classList.add('anim-slide-row');
+            setTimeout(() => row.classList.remove('anim-slide-row'), 700);
+          }
+        } catch (err) {
+          console.warn('contractor success animation failed:', err);
         }
     
       } catch (err) {
@@ -1704,34 +1734,6 @@
       }
     }
 
-    function renderChainPill(chain) {
-      if (!chain) return '';
-    
-      const c = chain.toLowerCase();
-      let img = '';
-      let label = '';
-    
-      if (c.includes('base')) {
-        img = 'images/base-square.svg';
-        label = 'Base';
-      } else if (c.includes('eth')) {
-        img = 'images/ethereum.svg';
-        label = 'Ethereum';
-      } else if (c.includes('poly') || c.includes('matic')) {
-        img = 'images/polygon.svg';
-        label = 'Polygon';
-      } else {
-        img = 'images/generic-chain.svg'; // optional fallback
-        label = chain;
-      }
-    
-      return `
-        <span class="chain-cell">
-          <img src="${img}" alt="${label} logo" />
-          <span class="chain-name">${label}</span>
-        </span>
-      `;
-    }
 
 
     function getExplorerUrl(chain, txHash) {
@@ -2102,6 +2104,7 @@
 
         // === PAYOUTS ===
        // === PAYOUTS: add a new payout ===
+    // === PAYOUTS: add a new payout (with success animation + toast) ===
     async function addPayout(event) {
       event.preventDefault();
     
@@ -2145,18 +2148,16 @@
     
         // Insert payout and return the new id
         const { data: inserted, error } = await sb
-          .from('payout')   // 👈 singular table name
-          .insert([
-            {
-              contractor_id,
-              amount,
-              asset_symbol: 'USDC',
-              chain,
-              tx_hash,
-              tx_timestamp,
-              note,
-            }
-          ])
+          .from('payout') // 👈 singular table name
+          .insert([{
+            contractor_id,
+            amount,
+            asset_symbol: 'USDC',
+            chain,
+            tx_hash,
+            tx_timestamp,
+            note,
+          }])
           .select('id')
           .single();
     
@@ -2168,18 +2169,66 @@
     
         const newId = inserted?.id;
     
-        // Reset form + refresh UI with highlight
+        // Reset form (snappy)
         form.reset();
     
+        // Refresh UI (your existing highlight behavior)
         await loadPayouts(newId);     // highlights row in Payouts tab
         await loadDashboard(newId);   // highlights row in Dashboard table
-        highlightDashboard();         // pulse KPIs / charts
+        if (typeof highlightDashboard === 'function') highlightDashboard(); // pulse KPIs / charts
+    
+        // ✅ SUCCESS ACTIONS (toast + animate the new payout row + optional confetti burst)
+        try {
+          const chainUpper = String(chain || '').toUpperCase();
+    
+          if (typeof toastSuccess === 'function') {
+            toastSuccess(`Payout added • ${amount} USDC • ${chainUpper}`);
+          } else if (typeof showToast === 'function') {
+            showToast(`Payout added • ${amount} USDC • ${chainUpper}`);
+          }
+    
+          // Animate the new row (delegation already wired; we just add a class)
+          const payoutsRow =
+            document.querySelector(`#payouts-body tr[data-id="${newId}"]`) ||
+            document.querySelector(`#payouts-body tr[data-payout-id="${newId}"]`);
+    
+          const dashRow =
+            document.querySelector(`#dash-payouts-table tr[data-id="${newId}"]`) ||
+            document.querySelector(`#dash-payouts-table tr[data-payout-id="${newId}"]`);
+    
+          if (typeof animateOnce === 'function') {
+            animateOnce(payoutsRow, 'anim-slide-row', 750);
+            animateOnce(dashRow,   'anim-slide-row', 750);
+          } else {
+            if (payoutsRow) {
+              payoutsRow.classList.add('anim-slide-row');
+              setTimeout(() => payoutsRow.classList.remove('anim-slide-row'), 750);
+            }
+            if (dashRow) {
+              dashRow.classList.add('anim-slide-row');
+              setTimeout(() => dashRow.classList.remove('anim-slide-row'), 750);
+            }
+          }
+    
+          // Optional: tiny “success pop” on the Save button
+          const saveBtn = document.getElementById('save-payout-btn');
+          if (saveBtn) {
+            saveBtn.classList.remove('anim-pop');
+            void saveBtn.offsetWidth;
+            saveBtn.classList.add('anim-pop');
+            setTimeout(() => saveBtn.classList.remove('anim-pop'), 450);
+          }
+    
+        } catch (err) {
+          console.warn('payout success animation failed:', err);
+        }
     
       } catch (err) {
         console.error('Network / unexpected error saving payout:', err);
         alert('Network error saving payout.');
       }
     }
+
 
     async function loadPayoutContractorOptions() {
       const selectEl = document.getElementById('payout-contractor');
@@ -2842,6 +2891,25 @@
         // loadDashboard(); loadPayouts(); highlightDashboard();
       });
     }
+
+    function animateOnce(el, className, ms = 600) {
+      if (!el) return;
+      el.classList.remove(className);
+      void el.offsetWidth; // force reflow so it restarts
+      el.classList.add(className);
+      setTimeout(() => el.classList.remove(className), ms);
+    }
+    
+    // Use your existing showToast() if you want.
+    // If you already have showToast(message) keep it and ignore this.
+    function toastSuccess(msg) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.classList.add('toast-success');
+      showToast(msg);
+      setTimeout(() => toast.classList.remove('toast-success'), 800);
+    }
+
 
     document.addEventListener('DOMContentLoaded', () => {
       console.log('✅ DOMContentLoaded: Soltra init starting...');
