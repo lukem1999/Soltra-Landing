@@ -6183,6 +6183,38 @@ body.modal-open .dashboard {
   border: 1px solid rgba(246,196,83,.25);
 }
 
+/* the dark overlay */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 9999;
+}
+
+/* the actual card */
+.modal-card {
+  width: min(560px, 92vw);
+  max-height: 80vh;      /* ✅ allow tall forms */
+  overflow: auto;        /* ✅ scroll if needed */
+  padding: 18px;
+  border-radius: 16px;
+}
+
+/* make form stack correctly */
+.modal-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-card input,
+.modal-card select {
+  display: block;
+  width: 100%;
+}
 
 
 
