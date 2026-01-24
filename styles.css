@@ -6216,6 +6216,49 @@ body.modal-open .dashboard {
   width: 100%;
 }
 
+/* ===== WIDEN DASHBOARD / APP SHELL ===== */
+
+/* Outer section */
+.app-shell{
+  width: 100%;
+}
+
+/* This is likely your main constraint currently */
+.app-layout{
+  width: min(96vw, 1680px);   /* 👈 big, but still capped on ultrawide monitors */
+  margin: 0 auto;
+  padding: 28px;             /* space from viewport edge */
+  display: grid;
+  grid-template-columns: 260px 1fr; /* sidebar + main */
+  gap: 28px;
+  align-items: start;
+}
+
+/* Sidebar stays fixed + doesn’t stretch */
+.app-sidebar{
+  width: 260px;
+}
+
+/* Main expands */
+.app-main{
+  min-width: 0; /* prevents tables/charts from forcing overflow */
+}
+
+/* Optional: let inner main use full width */
+.app-main-inner{
+  width: 100%;
+}
+
+/* If .shell is currently limiting width, remove it inside the app */
+.app-main .shell{
+  max-width: none !important;
+  width: 100%;
+}
+
+.dashboard-shell{
+  width: 100%;
+}
+
 
 
 
