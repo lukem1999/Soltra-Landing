@@ -6259,7 +6259,15 @@ body.modal-open .dashboard {
   width: 100%;
 }
 
+/* Chart sizing polish */
+.chart-canvas-wrap{
+  height: 240px;     /* pick a number you like */
+  width: 100%;
+}
 
+@media (max-width: 900px){
+  .chart-canvas-wrap{ height: 220px; }
+}
 
 
 
