@@ -6316,6 +6316,10 @@ body.modal-open .dashboard {
   opacity: .65;
 }
 
+.chart-canvas-wrap {
+  height: 260px; /* try 260–300 */
+  position: relative;
+}
 
 
 
