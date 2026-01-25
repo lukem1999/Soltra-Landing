@@ -53,24 +53,21 @@
             <div id="waitlist-message" class="waitlist-message"></div>
           </form>
     
-          <!-- Eyebrow label -->
-          <div class="hero-eyebrow">Stablecoin payments for global teams</div>
-    
-          <!-- Main headline -->
+          <div class="hero-eyebrow">System of record for stablecoin payments</div>
+
           <h1 class="hero-title">
-            Global stablecoin payments.<br />
-            <span class="highlight">Clean records.</span> 
+            Your stablecoin ledger.<br />
+            <span class="highlight">One source of truth.</span>
           </h1>
-    
-          <!-- Subcopy -->
+          
           <p class="hero-sub">
-            Track USDC payments to contractors, vendors, and partners — with an audit-ready log,
-            exports, and chain-level clarity built for crypto-native finance.
+            Soltra turns on-chain USDC activity into a reliable, auditable payment history — searchable, filterable,
+            and export-ready for finance, ops, and audits.
           </p>
-    
+          
           <p class="hero-sub" style="font-size: 0.8rem; margin-top: 0.3rem;">
             <span style="color: var(--gold); font-weight: 600;">Early access.</span>
-            No KYC required to join. Built for DAOs, Web3 teams, and on-chain ops.
+            No KYC required to join. Non-custodial by design.
           </p>
           <div class="scroll-hint" aria-hidden="true">
             <div class="scroll-hint-mouse">
@@ -462,6 +459,16 @@
         </div>
       </div>
     </section>
+
+    <section class="trust-strip">
+      <div class="shell trust-inner reveal" data-delay="2">
+        <div class="trust-eyebrow">The ledger layer</div>
+        <p class="trust-copy">
+          Wallets → Soltra (canonical history) → Exports to accounting, ops, and reporting.
+          You don’t reconcile. You reference truth.
+        </p>
+      </div>
+    </section>
     
     <!-- HOW IT WORKS SECTION -->
     <section class="how-it-works" id="how-it-works">
@@ -484,9 +491,9 @@
               Their wallets are ready whenever you log a payout.
             </p>
             <ul>
-              <li>Store EVM-compatible payout addresses.</li>
-              <li>Keep basic KYC details in one place.</li>
-              <li>See when each contractor was last paid.</li>
+              <li>Store wallet addresses and payee labels once.</li>
+              <li>Attach roles, notes, and internal tags for reporting.</li>
+              <li>See payee history across chains and time.</li>
             </ul>
           </div>
 
@@ -806,19 +813,26 @@
       e.preventDefault();
       const form = e.target;
       const msgEl = document.getElementById('waitlist-message');
-      const email = form.email.value.trim();
-
+      const btn = form.querySelector('button[type="submit"]');
+      const email = form.email.value.trim().toLowerCase();
+    
       if (!msgEl) return;
-
+    
       if (!email || !email.includes('@')) {
         msgEl.textContent = 'Please enter a valid email.';
         msgEl.className = 'waitlist-message error';
         return;
       }
-
+    
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.75';
+        btn.style.cursor = 'not-allowed';
+      }
+    
       msgEl.textContent = 'Joining waitlist...';
       msgEl.className = 'waitlist-message';
-
+    
       fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
         method: 'POST',
         headers: {
@@ -830,12 +844,22 @@
         body: JSON.stringify({ email, source: 'landing' }),
       })
         .then(async (res) => {
+          const text = await res.text();
+    
+          // Duplicate / already exists (common with unique constraint)
+          if (res.status === 409) {
+            msgEl.textContent = 'You’re already on the list ✅';
+            msgEl.className = 'waitlist-message success';
+            return;
+          }
+    
           if (!res.ok) {
-            console.error('Waitlist error', await res.text());
+            console.error('Waitlist error', text);
             msgEl.textContent = 'Error joining waitlist. Please try again.';
             msgEl.className = 'waitlist-message error';
             return;
           }
+    
           form.reset();
           msgEl.textContent = 'You’re in. We’ll reach out soon.';
           msgEl.className = 'waitlist-message success';
@@ -844,8 +868,16 @@
           console.error(err);
           msgEl.textContent = 'Network error. Please try again.';
           msgEl.className = 'waitlist-message error';
+        })
+        .finally(() => {
+          if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.cursor = '';
+          }
         });
     }
+
 
     document.addEventListener('DOMContentLoaded', () => {
       // Footer year
