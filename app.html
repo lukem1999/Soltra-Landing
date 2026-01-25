@@ -2655,54 +2655,107 @@
       const canvas = document.getElementById('chainSplitChart');
       if (!canvas) return;
     
+      const ctx = canvas.getContext('2d');
+    
+      // Count payouts per chain
       const counts = {};
       (payouts || []).forEach((p) => {
         const chain = (p.chain || 'UNKNOWN').toUpperCase();
         counts[chain] = (counts[chain] || 0) + 1;
       });
     
-      // Consistent ordering for legend + chart segments
+      // Nice ordering
       const ORDER = ['ETHEREUM', 'POLYGON', 'BASE', 'UNKNOWN'];
       const labels = Object.keys(counts).sort((a, b) => {
-        const ai = ORDER.includes(a) ? ORDER.indexOf(a) : 999;
-        const bi = ORDER.includes(b) ? ORDER.indexOf(b) : 999;
+        const ai = ORDER.indexOf(a) === -1 ? 999 : ORDER.indexOf(a);
+        const bi = ORDER.indexOf(b) === -1 ? 999 : ORDER.indexOf(b);
         return ai - bi;
       });
     
       const values = labels.map((k) => counts[k]);
+      const total = values.reduce((a, b) => a + b, 0);
+    
+      // Friendly names for UI
+      const LABEL_MAP = {
+        ETHEREUM: 'Ethereum',
+        POLYGON: 'Polygon',
+        BASE: 'Base',
+        UNKNOWN: 'Unknown',
+      };
+    
+      const prettyLabels = labels.map((k) => LABEL_MAP[k] || k);
+    
       const colors = labels.map((k) => CHAIN_COLORS?.[k] || CHAIN_COLORS?.UNKNOWN || '#6b7280');
     
-      if (window.chainSplitChart && typeof window.chainSplitChart.destroy === 'function') {
-        window.chainSplitChart.destroy();
-      }
+      // Destroy previous chart
+      if (window.chainSplitChart?.destroy) window.chainSplitChart.destroy();
     
-      const ctx = canvas.getContext('2d');
+      // Plugin: draw center label + % for hovered slice (or total if none hovered)
+      const centerLabelPlugin = {
+        id: 'centerLabelPlugin',
+        afterDraw(chart, args, opts) {
+          const { ctx, chartArea } = chart;
+          if (!chartArea) return;
+    
+          const meta = chart.getDatasetMeta(0);
+          if (!meta?.data?.length) return;
+    
+          // Determine active slice
+          const active = chart.getActiveElements?.() || [];
+          const activeIndex = active.length ? active[0].index : -1;
+    
+          const centerX = (chartArea.left + chartArea.right) / 2;
+          const centerY = (chartArea.top + chartArea.bottom) / 2;
+    
+          // Values to show
+          const label = activeIndex >= 0 ? prettyLabels[activeIndex] : 'Total payouts';
+          const value = activeIndex >= 0 ? values[activeIndex] : total;
+          const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+    
+          ctx.save();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+    
+          // Small label
+          ctx.fillStyle = 'rgba(255,255,255,0.70)';
+          ctx.font = '600 12px "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, Arial';
+          ctx.fillText(label.toUpperCase(), centerX, centerY - 18);
+    
+          // Big percent
+          ctx.fillStyle = 'rgba(255,255,255,0.92)';
+          ctx.font = '700 34px "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, Arial';
+          ctx.fillText(total > 0 ? `${pct}%` : '—', centerX, centerY + 6);
+    
+          // Subtext
+          ctx.fillStyle = 'rgba(255,255,255,0.55)';
+          ctx.font = '600 12px "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, Arial';
+          ctx.fillText(total > 0 ? `${value} payout${value === 1 ? '' : 's'}` : 'No payouts yet', centerX, centerY + 34);
+    
+          ctx.restore();
+        }
+      };
     
       window.chainSplitChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels,
+          labels: prettyLabels,
           datasets: [{
             data: values,
             backgroundColor: colors,
             borderWidth: 0,
-            hoverOffset: 8
+            hoverOffset: 10,
+            spacing: 2,
+            borderRadius: 10
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '72%',
-    
-          layout: {
-            padding: { top: 6, right: 8, bottom: 0, left: 8 }
-          },
-    
+          cutout: '76%',
           animation: {
             duration: 700,
             easing: 'easeOutQuart'
           },
-    
           plugins: {
             legend: {
               position: 'top',
@@ -2711,35 +2764,35 @@
                 boxWidth: 10,
                 boxHeight: 10,
                 usePointStyle: true,
-                pointStyle: 'rectRounded',
+                pointStyle: 'circle',
                 padding: 14,
-                color: 'rgba(255,255,255,0.70)',
-                font: { size: 12 }
+                color: 'rgba(255,255,255,0.72)',
+                font: { size: 12, weight: '600' }
               }
             },
-    
             tooltip: {
-              displayColors: false,
-              backgroundColor: 'rgba(10, 14, 22, 0.92)',
+              backgroundColor: 'rgba(10, 15, 25, 0.92)',
               borderColor: 'rgba(255,255,255,0.10)',
               borderWidth: 1,
-              titleColor: 'rgba(255,255,255,0.85)',
-              bodyColor: 'rgba(255,255,255,0.90)',
               padding: 10,
-              cornerRadius: 10,
+              titleColor: 'rgba(255,255,255,0.90)',
+              bodyColor: 'rgba(255,255,255,0.72)',
+              displayColors: true,
               callbacks: {
-                title: () => '',
-                label: (ctx) => {
-                  const label = ctx.label || 'UNKNOWN';
-                  const value = Number(ctx.raw || 0);
-                  const total = (ctx.dataset.data || []).reduce((a, b) => a + Number(b || 0), 0);
-                  const pct = total ? Math.round((value / total) * 100) : 0;
-                  return `${label}: ${value} payout${value === 1 ? '' : 's'} (${pct}%)`;
+                label: (c) => {
+                  const v = c.raw || 0;
+                  const p = total > 0 ? Math.round((v / total) * 100) : 0;
+                  return ` ${v} payout${v === 1 ? '' : 's'} • ${p}%`;
                 }
               }
             }
+          },
+          onHover: (evt, elements, chart) => {
+            // Make center label react immediately on hover
+            chart.draw();
           }
-        }
+        },
+        plugins: [centerLabelPlugin]
       });
     }
 
