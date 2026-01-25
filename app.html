@@ -280,18 +280,18 @@
               <section class="dash-charts">
                 <div class="chart-card">
                   <div class="chart-card-header chart-card-header--split">
-                    <div>
+                    <div class="chart-titleblock">
                       <h3>Monthly payout volume</h3>
                       <p>USDC paid out over the last few months.</p>
                     </div>
-                
-                    <!-- premium KPI headline for the chart -->
-                    <div class="chart-kpi">
-                      <div class="chart-kpi-label">Total paid</div>
-                      <div id="payoutVolumeTotal" class="chart-kpi-value">$0</div>
-                      <div class="chart-kpi-sub">Last 6 months</div>
+                  
+                    <div class="chart-kpi-pill" aria-label="Total paid in selected range">
+                      <div class="chart-kpi-top">Total paid</div>
+                      <div id="payoutVolumeTotal" class="chart-kpi-amount">$0</div>
+                      <div class="chart-kpi-bottom">Last 6 months</div>
                     </div>
                   </div>
+
                 
                   <!-- important: keep chart height consistent -->
                   <div class="chart-canvas-wrap">
