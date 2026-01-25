@@ -753,12 +753,22 @@
     };
 
     // === UTILITIES ===
-    function formatUSD(amount) {
-      if (!amount || isNaN(amount)) return '$0';
-      return `$${amount.toLocaleString('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      })}`;
+    function formatUSD(amount, opts = {}) {
+      const {
+        minimumFractionDigits = 0,
+        maximumFractionDigits = 0,
+      } = opts;
+    
+      const num = Number(amount);
+    
+      if (!Number.isFinite(num)) return '$0';
+    
+      return num.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits,
+        maximumFractionDigits,
+      });
     }
 
     function showToast(message = 'Copied!') {
@@ -2549,55 +2559,97 @@
     
       const { labels, values } = buildMonthlyPayoutSeries(dashboardPayoutsCache);
     
+      // Update KPI total
       const total = values.reduce((a, b) => a + b, 0);
       const totalEl = document.getElementById('payoutVolumeTotal');
       if (totalEl) totalEl.textContent = formatUSD(total);
     
+      // Destroy existing chart if present
       if (window.payoutVolumeChart && typeof window.payoutVolumeChart.destroy === 'function') {
         window.payoutVolumeChart.destroy();
       }
     
       window.payoutVolumeChart = new Chart(ctx, {
         type: 'bar',
+    
         data: {
           labels,
           datasets: [{
             data: values,
             backgroundColor: '#f6c453',
-            borderRadius: 6,
+            hoverBackgroundColor: '#ffd36a',
+            borderRadius: 8,
             barThickness: 22,
             maxBarThickness: 26
           }]
         },
+    
         options: {
           responsive: true,
           maintainAspectRatio: false,
+    
+          layout: {
+            padding: { top: 6, right: 8, bottom: 0, left: 4 }
+          },
+    
+          animation: {
+            duration: 700,
+            easing: 'easeOutQuart'
+          },
+    
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+    
           plugins: {
             legend: { display: false },
+    
             tooltip: {
+              displayColors: false,
+              backgroundColor: 'rgba(10, 14, 22, 0.92)',
+              borderColor: 'rgba(255,255,255,0.10)',
+              borderWidth: 1,
+              titleColor: 'rgba(255,255,255,0.85)',
+              bodyColor: 'rgba(255,255,255,0.90)',
+              padding: 10,
+              cornerRadius: 10,
               callbacks: {
+                title: () => '',
                 label: (ctx) => `${formatUSDCompact(ctx.raw)} USDC`
               }
             }
           },
+    
           scales: {
             x: {
               grid: { display: false },
-              ticks: { color: 'rgba(255,255,255,0.65)' }
+              border: { display: false },
+              ticks: {
+                color: 'rgba(255,255,255,0.55)',
+                font: { size: 12 }
+              }
             },
+    
             y: {
               beginAtZero: true,
+              border: { display: false },
+              grid: {
+                color: 'rgba(255,255,255,0.06)',
+                drawTicks: false
+              },
               ticks: {
                 callback: (v) => formatUSDCompact(v),
-                color: 'rgba(255,255,255,0.65)'
-              },
-              grid: { color: 'rgba(255,255,255,0.06)' }
+                color: 'rgba(255,255,255,0.55)',
+                font: { size: 12 },
+                padding: 8,
+                maxTicksLimit: 5
+              }
             }
           }
         }
       });
     }
-
 
     function buildChainSplitChart(payouts) {
       const canvas = document.getElementById('chainSplitChart');
@@ -2609,40 +2661,88 @@
         counts[chain] = (counts[chain] || 0) + 1;
       });
     
-      const labels = Object.keys(counts);
-    
-      // Optional: order it nicely (so legend is consistent)
+      // Consistent ordering for legend + chart segments
       const ORDER = ['ETHEREUM', 'POLYGON', 'BASE', 'UNKNOWN'];
-      labels.sort((a, b) => (ORDER.indexOf(a) === -1 ? 999 : ORDER.indexOf(a)) - (ORDER.indexOf(b) === -1 ? 999 : ORDER.indexOf(b)));
+      const labels = Object.keys(counts).sort((a, b) => {
+        const ai = ORDER.includes(a) ? ORDER.indexOf(a) : 999;
+        const bi = ORDER.includes(b) ? ORDER.indexOf(b) : 999;
+        return ai - bi;
+      });
     
       const values = labels.map((k) => counts[k]);
-      const colors = labels.map((k) => CHAIN_COLORS[k] || CHAIN_COLORS.UNKNOWN);
+      const colors = labels.map((k) => CHAIN_COLORS?.[k] || CHAIN_COLORS?.UNKNOWN || '#6b7280');
     
-      if (window.chainSplitChart?.destroy) window.chainSplitChart.destroy();
+      if (window.chainSplitChart && typeof window.chainSplitChart.destroy === 'function') {
+        window.chainSplitChart.destroy();
+      }
     
-      window.chainSplitChart = new Chart(canvas.getContext('2d'), {
+      const ctx = canvas.getContext('2d');
+    
+      window.chainSplitChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
           labels,
           datasets: [{
             data: values,
             backgroundColor: colors,
-            borderWidth: 0
+            borderWidth: 0,
+            hoverOffset: 8
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '70%',
+          cutout: '72%',
+    
+          layout: {
+            padding: { top: 6, right: 8, bottom: 0, left: 8 }
+          },
+    
+          animation: {
+            duration: 700,
+            easing: 'easeOutQuart'
+          },
+    
           plugins: {
             legend: {
               position: 'top',
-              labels: { boxWidth: 14 }
+              align: 'start',
+              labels: {
+                boxWidth: 10,
+                boxHeight: 10,
+                usePointStyle: true,
+                pointStyle: 'rectRounded',
+                padding: 14,
+                color: 'rgba(255,255,255,0.70)',
+                font: { size: 12 }
+              }
+            },
+    
+            tooltip: {
+              displayColors: false,
+              backgroundColor: 'rgba(10, 14, 22, 0.92)',
+              borderColor: 'rgba(255,255,255,0.10)',
+              borderWidth: 1,
+              titleColor: 'rgba(255,255,255,0.85)',
+              bodyColor: 'rgba(255,255,255,0.90)',
+              padding: 10,
+              cornerRadius: 10,
+              callbacks: {
+                title: () => '',
+                label: (ctx) => {
+                  const label = ctx.label || 'UNKNOWN';
+                  const value = Number(ctx.raw || 0);
+                  const total = (ctx.dataset.data || []).reduce((a, b) => a + Number(b || 0), 0);
+                  const pct = total ? Math.round((value / total) * 100) : 0;
+                  return `${label}: ${value} payout${value === 1 ? '' : 's'} (${pct}%)`;
+                }
+              }
             }
           }
         }
       });
     }
+
 
 
 
