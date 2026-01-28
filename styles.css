@@ -6577,6 +6577,71 @@ body.modal-open .dashboard {
   background: rgba(0,0,0,0.16);
 }
 
+/* Modal overlay */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+/* Backdrop */
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+/* Panel */
+.modal-panel {
+  position: relative;
+  width: min(920px, calc(100% - 32px));
+  margin: 64px auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;      /* ✅ key */
+  justify-content: flex-start;
+
+  max-height: calc(100vh - 128px);
+  overflow: auto;            /* ✅ key: prevents clipping */
+}
+
+.wallet-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.wallet-form {
+  display: grid;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative; /* helps dropdown overlays */
+}
+
+.dropdown {
+  position: relative;
+}
+
+/* Menu should overlay BELOW the button */
+.select-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+}
+
+/* Your existing .hidden class should do this */
+.hidden {
+  display: none !important;
+}
+
 
 
 
