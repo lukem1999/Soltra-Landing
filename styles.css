@@ -6610,6 +6610,7 @@ body.modal-open .dashboard {
   flex-direction: column;
   align-items: stretch;
   gap: 16px;
+  padding: 16px 20px 20px;
 }
 
 .wallet-form {
@@ -6715,6 +6716,16 @@ body.modal-open .dashboard {
   transform: translateY(1px);
 }
 
+.modal-panel {
+  max-height: 86vh;
+  overflow: auto;
+}
+
+.modal-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
 
 
 
