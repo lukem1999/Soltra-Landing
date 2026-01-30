@@ -6727,8 +6727,43 @@ body.modal-open .dashboard {
   z-index: 5;
 }
 
+.wallets-table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
+.wallets-table th,
+.wallets-table td {
+  text-align: left;
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  vertical-align: middle;
+}
 
+.wallet-name {
+  font-weight: 600;
+}
+
+.wallet-address {
+  opacity: 0.75;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.actions {
+  text-align: right;
+}
 
 
 
