@@ -3402,17 +3402,14 @@
       <div id="wallet-modal" class="modal hidden" aria-hidden="true">
         <div class="modal-backdrop" data-close-wallet></div>
 
-        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="wallet-modal-title">
-          <div class="modal-head">
-            <div>
-              <div id="wallet-modal-title" class="modal-title">Add treasury wallet</div>
-              <div class="modal-subtitle">
-                Track balances and on-chain activity across your organization.
-              </div>
-            </div>
-
-            <button class="icon-btn" type="button" aria-label="Close" data-close-wallet>✕</button>
+        <div class="modal-head">
+          <div class="modal-head-left">
+            <div id="wallet-modal-title" class="modal-title">Add treasury wallet</div>
+            <div class="modal-subtitle">Track balances and on-chain activity across your organization.</div>
           </div>
+        
+          <button class="modal-close" type="button" aria-label="Close" data-close-wallet>✕</button>
+        </div>
 
           <!-- Treasury wallets (Custom wallet type dropdown + address + submit + saved list) -->
           <section class="wallet-card">
