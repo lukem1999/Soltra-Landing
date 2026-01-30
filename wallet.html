@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Soltra — Wallets</title>
+
+  <!-- Your repo uses styles.css in root -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <!-- TOP BAR (matches your app vibe) -->
+  <header class="app-topbar">
+    <a href="index.html" class="topbar-link">← Back to site</a>
+    <div class="topbar-title">Soltra</div>
+    <a href="app.html" class="topbar-link">Back to app</a>
+  </header>
+
+  <main class="main">
+    <header class="page-header">
+      <div>
+        <h1>Treasury wallets</h1>
+        <p class="page-subtitle">Wallets tracked as sources of on-chain truth.</p>
+      </div>
+
+      <button class="btn primary-btn" id="open-wallet-modal">+ Add wallet</button>
+    </header>
+
+    <!-- Wallets Table -->
+    <section class="card">
+      <table class="wallets-table">
+        <thead>
+          <tr>
+            <th>Wallet</th>
+            <th>Chain</th>
+            <th>Asset</th>
+            <th>Balance</th>
+            <th>Last activity</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody id="wallets-table-body">
+          <!-- injected by JS -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- WALLET MODAL (basic placeholder so button does something) -->
+  <div id="wallet-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" id="close-wallet-modal"></div>
+
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="wallet-modal-title">
+      <div class="modal-head">
+        <div>
+          <div id="wallet-modal-title" class="modal-title">Add treasury wallet</div>
+          <div class="modal-subtitle">Manual entry for now. Sync coming soon.</div>
+        </div>
+
+        <button class="icon-btn" id="close-wallet-btn" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <div style="padding: 1rem;">
+        <p style="opacity: 0.8; margin: 0;">
+          This modal will reuse your existing wallet modal UI from <code>app.html</code>.
+          For now, this placeholder just confirms wiring.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ JS INLINE so you don't fight paths -->
+  <script>
+    // ---------------------------
+    // Mock wallet data (manual for now)
+    // ---------------------------
+    const wallets = [
+      {
+        id: 1,
+        label: "Main Treasury",
+        address: "0xA9pE...91F3",
+        chain: "Base",
+        asset: "USDC",
+        balance: 48250,
+        lastActivity: "2 hours ago",
+        status: "Manual"
+      },
+      {
+        id: 2,
+        label: "Payroll Safe",
+        address: "0x37B1...C102",
+        chain: "Ethereum",
+        asset: "USDC",
+        balance: 12680,
+        lastActivity: "Yesterday",
+        status: "Manual"
+      }
+    ];
+
+    function renderWallets() {
+      const tbody = document.getElementById("wallets-table-body");
+      tbody.innerHTML = "";
+
+      if (!wallets.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="padding: 1.25rem; opacity: 0.8;">
+              No wallets added yet.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      wallets.forEach((w) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            <div class="wallet-name">${w.label}</div>
+            <div class="wallet-address mono">${w.address}</div>
+          </td>
+          <td>${w.chain}</td>
+          <td>${w.asset}</td>
+          <td class="mono">$${w.balance.toLocaleString()}</td>
+          <td>${w.lastActivity}</td>
+          <td><span class="status-pill active">${w.status}</span></td>
+          <td class="actions"><button class="icon-btn" type="button">⋯</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Modal wiring
+    const modal = document.getElementById("wallet-modal");
+    const openBtn = document.getElementById("open-wallet-modal");
+    const closeBtn = document.getElementById("close-wallet-btn");
+    const closeBackdrop = document.getElementById("close-wallet-modal");
+
+    function openModal() {
+      modal.classList.remove("hidden");
+      modal.setAttribute("aria-hidden", "false");
+    }
+    function closeModal() {
+      modal.classList.add("hidden");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    openBtn.addEventListener("click", openModal);
+    closeBtn.addEventListener("click", closeModal);
+    closeBackdrop.addEventListener("click", closeModal);
+
+    // Init
+    renderWallets();
+  </script>
+</body>
+</html>
