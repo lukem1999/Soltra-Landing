@@ -58,7 +58,11 @@
           <button class="tab-button" data-target="dashboard">
             <span>Overview</span>
           </button>
-        
+
+          <button class="tab-button" data-target="wallets">
+            <span>Wallets</span>
+          </button>
+          
           <button class="tab-button" data-target="contractors">
             <span>Payees</span>
             <span class="tab-pill" id="sidebar-contractors-count"></span>
@@ -334,6 +338,49 @@
               </div>
             </div>
           </div>
+
+          <!-- ========================= -->
+          <!-- WALLETS VIEW -->
+          <!-- ========================= -->
+          <section id="view-wallets" class="view hidden" data-view="wallets">
+            <header class="page-header">
+              <div>
+                <h1>Treasury wallets</h1>
+                <p class="page-subtitle">Track wallet sources of truth — balances, activity, and status.</p>
+              </div>
+          
+              <!-- This reuses your existing modal open button id -->
+              <button class="btn primary-btn" id="open-wallet-modal" type="button">
+                + Add wallet
+              </button>
+            </header>
+          
+            <section class="card">
+              <table class="wallets-table">
+                <thead>
+                  <tr>
+                    <th>Wallet</th>
+                    <th>Type</th>
+                    <th>Chain</th>
+                    <th>Asset</th>
+                    <th>Balance</th>
+                    <th>Last activity</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+          
+                <tbody id="wallets-table-body">
+                  <!-- injected by JS -->
+                </tbody>
+              </table>
+            </section>
+          
+            <p class="muted" style="margin-top: 10px;">
+              MVP: balances/activity can stay “Manual” until wallet sync is enabled.
+            </p>
+          </section>
+
 
 
           <!-- CONTRACTORS VIEW -->
@@ -3124,6 +3171,175 @@
         if (typeof onWalletListClick !== 'function') return;
         walletsListEl.addEventListener('click', onWalletListClick);
       });
+
+            // -----------------------------
+      // VIEW SWITCHING (tabs inside app.html)
+      // -----------------------------
+      const navLinks = document.querySelectorAll('[data-view]');
+      const views = document.querySelectorAll('.view[data-view]');
+      
+      function showView(viewName) {
+        views.forEach(v => {
+          const isMatch = v.getAttribute('data-view') === viewName;
+          v.classList.toggle('hidden', !isMatch);
+        });
+      
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('data-view') === viewName);
+        });
+      
+        // Optional: keep URL hash tidy
+        history.replaceState(null, '', `#${viewName}`);
+      }
+      
+      // Click nav -> switch view
+      navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const view = link.getAttribute('data-view');
+          showView(view);
+        });
+      });
+      
+      // On load, open correct view from hash
+      const initialView = (location.hash || '#overview').replace('#', '');
+      showView(initialView);
+      
+      
+      // -----------------------------
+      // WALLETS TABLE RENDER
+      // -----------------------------
+      // Single source of truth (MVP can be in-memory; later load from Supabase)
+      let walletsState = walletsState || []; // if you already have a wallets array elsewhere
+      
+      function formatMoney(n) {
+        if (n === null || n === undefined || n === '') return '—';
+        const num = Number(n);
+        if (Number.isNaN(num)) return '—';
+        return `$${num.toLocaleString()}`;
+      }
+      
+      function renderWalletsTable() {
+        const tbody = document.getElementById('wallets-table-body');
+        if (!tbody) return;
+      
+        tbody.innerHTML = '';
+      
+        if (!walletsState.length) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8" style="padding: 16px; opacity: 0.8;">
+                No wallets yet. Click <strong>+ Add wallet</strong> to add your first treasury wallet.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+      
+        walletsState.forEach((w) => {
+          const tr = document.createElement('tr');
+      
+          const label = w.label || w.name || 'Treasury wallet';
+          const address = w.address || '—';
+          const chain = w.chain || '—';
+          const asset = w.asset || 'USDC';
+          const type = w.wallet_type_label || w.wallet_type || '—';
+          const balance = (w.balance_usdc ?? w.balance ?? null);
+          const lastActivity = w.last_activity || '—';
+          const status = w.status || 'Manual';
+      
+          tr.innerHTML = `
+            <td>
+              <div class="wallet-name">${label}</div>
+              <div class="wallet-address mono">${address}</div>
+            </td>
+            <td>${type}</td>
+            <td>${chain}</td>
+            <td>${asset}</td>
+            <td class="mono">${formatMoney(balance)}</td>
+            <td>${lastActivity}</td>
+            <td><span class="status-pill">${status}</span></td>
+            <td class="actions">
+              <button class="icon-btn" type="button" title="More">⋯</button>
+            </td>
+          `;
+      
+          tbody.appendChild(tr);
+        });
+      }
+      
+      // Call once on load
+      renderWalletsTable();
+      
+      
+      // -----------------------------
+      // OPEN MODAL from Wallets tab
+      // -----------------------------
+      // This assumes you already have your wallet modal + open/close logic working.
+      // If your open button ID was used elsewhere, this just ensures it works here too.
+      const openWalletBtn = document.getElementById('open-wallet-modal');
+      if (openWalletBtn) {
+        openWalletBtn.addEventListener('click', () => {
+          // If you already have a function like openWalletModal(), call it.
+          // Otherwise fallback to the simplest toggle:
+          const walletModal = document.getElementById('wallet-modal');
+          if (walletModal) {
+            walletModal.classList.remove('hidden');
+            walletModal.setAttribute('aria-hidden', 'false');
+          }
+        });
+      }
+      
+      // -----------------------------
+      // WHEN wallet form submits -> update walletsState -> rerender table
+      // -----------------------------
+      // Hook into your existing wallet-form submit handler.
+      // If you already handle submit, just add the "push + rerender" lines below.
+      const walletForm = document.getElementById('wallet-form');
+      if (walletForm) {
+        walletForm.addEventListener('submit', (e) => {
+          // If you already preventDefault + do Supabase insert, keep that.
+          // This is the MVP "manual add" behavior (adjust fields to match your form).
+          e.preventDefault();
+      
+          const formData = new FormData(walletForm);
+      
+          const wallet_type = formData.get('wallet_type') || 'safe';
+          const chain = formData.get('chain') || 'base';
+          const address = (formData.get('address') || '').trim();
+      
+          // Grab the label + icon from your custom dropdown text if you want:
+          const walletTypeTextEl = document.getElementById('wallet-type-text');
+          const wallet_type_label = walletTypeTextEl ? walletTypeTextEl.textContent.trim() : wallet_type;
+      
+          if (!address) return;
+      
+          walletsState.unshift({
+            id: crypto.randomUUID(),
+            label: 'Treasury wallet',
+            wallet_type,
+            wallet_type_label,
+            chain,
+            asset: 'USDC',
+            balance_usdc: null,
+            last_activity: '—',
+            status: 'Manual',
+            address
+          });
+      
+          // Reset + rerender
+          walletForm.reset();
+          renderWalletsTable();
+      
+          // Close modal (optional)
+          const walletModal = document.getElementById('wallet-modal');
+          if (walletModal) {
+            walletModal.classList.add('hidden');
+            walletModal.setAttribute('aria-hidden', 'true');
+          }
+        });
+      }
+
     
       // ---------- forms ----------
       const payoutForm = document.getElementById('payout-form');
