@@ -350,9 +350,10 @@
               </div>
           
               <!-- This reuses your existing modal open button id -->
-              <button class="btn primary-btn" id="open-wallet-modal" type="button">
+              <button class="btn primary-btn" id="open-wallet-modal-wallets" type="button">
                 + Add wallet
               </button>
+
             </header>
           
             <section class="card">
@@ -1328,11 +1329,12 @@
   
     const views = {
       dashboard: document.getElementById('view-dashboard'),
+      wallets: document.getElementById('view-wallets'),
       contractors: document.getElementById('view-contractors'),
       payouts: document.getElementById('view-payouts'),
       reports: document.getElementById('view-reports'),
     };
-  
+    
     if (!tabButtons.length) return;
   
     function showTab(target) {
@@ -3122,19 +3124,22 @@
     
       // ---------- wallet modal open/close + submit ----------
       const walletModal = document.getElementById('wallet-modal');
-      const openWalletBtn =
-        document.getElementById('open-wallet-modal') || document.getElementById('wallet-add-btn');
-    
-      bindOnce(openWalletBtn, 'wallet_open', () => {
-        openWalletBtn.addEventListener('click', (e) => {
+      const openWalletBtns = [
+        document.getElementById('open-wallet-modal'),
+        document.getElementById('open-wallet-modal-wallets'),
+        document.getElementById('wallet-add-btn'),
+      ].filter(Boolean);
+      
+      openWalletBtns.forEach((btn, idx) => {
+        if (btn.dataset.bound_wallet_open === '1') return;
+        btn.dataset.bound_wallet_open = '1';
+      
+        btn.addEventListener('click', (e) => {
           e.preventDefault();
-          if (typeof openWalletModal === 'function') {
-            openWalletModal();
-          } else if (walletModal) {
-            walletModal.classList.remove('hidden');
-          }
+          openWalletModal?.();
         });
       });
+
     
       if (walletModal) {
         bindOnce(walletModal, 'wallet_close_clicks', () => {
@@ -3210,7 +3215,7 @@
       // WALLETS TABLE RENDER
       // -----------------------------
       // Single source of truth (MVP can be in-memory; later load from Supabase)
-      let walletsState = walletsState || []; // if you already have a wallets array elsewhere
+      let walletsState = []; // if you already have a wallets array elsewhere
       
       function formatMoney(n) {
         if (n === null || n === undefined || n === '') return '—';
@@ -3276,19 +3281,7 @@
       // OPEN MODAL from Wallets tab
       // -----------------------------
       // This assumes you already have your wallet modal + open/close logic working.
-      // If your open button ID was used elsewhere, this just ensures it works here too.
-      const openWalletBtn = document.getElementById('open-wallet-modal');
-      if (openWalletBtn) {
-        openWalletBtn.addEventListener('click', () => {
-          // If you already have a function like openWalletModal(), call it.
-          // Otherwise fallback to the simplest toggle:
-          const walletModal = document.getElementById('wallet-modal');
-          if (walletModal) {
-            walletModal.classList.remove('hidden');
-            walletModal.setAttribute('aria-hidden', 'false');
-          }
-        });
-      }
+      // If your open button ID was used elsewhere, this just ensures it works here 
       
       // -----------------------------
       // WHEN wallet form submits -> update walletsState -> rerender table
