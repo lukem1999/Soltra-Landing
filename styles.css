@@ -6765,6 +6765,11 @@ body.modal-open .dashboard {
   text-align: right;
 }
 
+.wallet-address {
+  font-size: 12px;
+  opacity: 0.6;
+  letter-spacing: 0.02em;
+}
 
 
 
