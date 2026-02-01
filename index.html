@@ -4,6 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Soltra — Stablecoin Payments for Web3 Teams</title>
+  <meta name="description" content="Soltra turns on-chain USDC activity into a clean, auditable ledger — searchable, export-ready, and non-custodial by design.">
+
+  <meta property="og:title" content="Soltra — One ledger for USDC payouts">
+  <meta property="og:description" content="Track stablecoin payouts across wallets and chains. Export clean CSVs for finance, ops, and audits. Non-custodial by design.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/og.png">
+  <meta property="og:url" content="https://YOURDOMAIN.com">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.ico">
+
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 </head>
@@ -25,6 +36,7 @@
     </nav>
   
     <div class="site-nav-cta">
+      <a href="#waitlist" class="btn primary-btn nav-primary-cta">Join waitlist</a>
       <a href="app.html" class="nav-signin-link">Sign in</a>
     </div>
   </header>
@@ -241,7 +253,7 @@
       </div>
     </section>
 
-    <section class="pricing-page">
+    <section class="pricing-page" id="pricing">
       <div class="pricing-shell">
     
         <header class="pricing-header">
@@ -270,7 +282,7 @@
               <li>Email support</li>
             </ul>
     
-            <a href="#get-started" class="pricing-cta pricing-cta--outline">
+            <a href="#waitlist" class="pricing-cta pricing-cta--outline">
               Get started
             </a>
           </article>
@@ -297,7 +309,7 @@
               <li>Priority email support</li>
             </ul>
     
-            <a href="#upgrade-pro" class="pricing-cta pricing-cta--primary">
+            <a href="#waitlist" class="pricing-cta pricing-cta--primary">
               Upgrade to Pro
             </a>
           </article>
@@ -702,7 +714,7 @@
         <p>Instant CSV/PDF exports for accountants or audits, ready whenever you need them.</p>
       </a>
     
-      <a href="#noncustodial-section" class="feature">
+      <a href="#security" class="feature">
         <div class="feature-icon">🔒</div>
         <h3>Non-Custodial</h3>
         <p>We never touch funds — Soltra keeps your records clean, not your money.</p>
@@ -916,6 +928,7 @@
         btn.disabled = true;
         btn.style.opacity = '0.75';
         btn.style.cursor = 'not-allowed';
+        btn.textContent = 'Joining...';
       }
     
       msgEl.textContent = 'Joining waitlist...';
@@ -949,6 +962,15 @@
           }
     
           form.reset();
+
+          if (btn) {
+            btn.textContent = 'Joined ✓';
+            btn.disabled = true;
+          }
+          
+          const input = form.querySelector('.waitlist-input');
+          if (input) input.disabled = true;
+          
           msgEl.textContent = 'You’re in. We’ll reach out soon.';
           msgEl.className = 'waitlist-message success';
         })
@@ -958,10 +980,12 @@
           msgEl.className = 'waitlist-message error';
         })
         .finally(() => {
-          if (btn) {
+          const isSuccess = msgEl.classList.contains('success');
+          if (btn && !isSuccess) {
             btn.disabled = false;
             btn.style.opacity = '';
             btn.style.cursor = '';
+            btn.textContent = 'Join the waitlist';
           }
         });
     }
